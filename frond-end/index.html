@@ -38,20 +38,24 @@
     Buyurtma berish
   </button>
 </div>
-
 <script>
+const BASE_URL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:5000"
+    : "https://YOUR-RAILWAY-URL.up.railway.app";
+
 async function order(product, price) {
   const name = prompt("Ismingiz:");
   const phone = prompt("Telefon raqamingiz:");
 
   if (!name || !phone) return alert("Ma'lumot kiriting");
 
-  const res = await fetch("http://localhost:5000/order", {
+  const res = await fetch(`${BASE_URL}/order`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, phone, product, price }),
   });
-  
+
   if (res.ok) {
     alert("Buyurtma yuborildi ✅");
   } else {

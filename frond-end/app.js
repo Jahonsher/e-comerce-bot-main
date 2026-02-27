@@ -1,14 +1,16 @@
 const API =
   window.location.hostname === "localhost"
     ? "http://localhost:5000"
-    : "https://e-comerce-bot-main-production.up.railway.app"; // Railway URL bilan almashtir
+    : "https://e-comerce-bot-main-production.up.railway.app";
 
 let products = [];
 let cart = [];
 let telegramId = null;
 let userData = null;
 
-/* TELEGRAM AUTH */
+/* ===========================
+   TELEGRAM AUTH
+=========================== */
 if (window.Telegram && Telegram.WebApp) {
 
   const tg = Telegram.WebApp;
@@ -28,20 +30,27 @@ if (window.Telegram && Telegram.WebApp) {
 }
 
 if (!telegramId) {
-  telegramId = 8523270760;
+  telegramId = 8523270760; // test
 }
 
-/* LOAD PRODUCTS */
+/* ===========================
+   LOAD PRODUCTS
+=========================== */
 function loadProducts() {
+
   fetch(API + "/products")
     .then(res => res.json())
     .then(data => {
+      console.log("PRODUCTS:", data);
       products = data;
       renderProducts(products);
-    });
+    })
+    .catch(err => console.log("PRODUCT FETCH ERROR:", err));
 }
 
-/* RENDER PRODUCTS */
+/* ===========================
+   RENDER PRODUCTS
+=========================== */
 function renderProducts(list) {
 
   const container = document.getElementById("products");
@@ -57,7 +66,9 @@ function renderProducts(list) {
 
         <h3 class="text-lg font-bold">${product.name}</h3>
         <p class="text-gray-400 mb-2">${product.category}</p>
-        <p class="text-emerald-400 font-semibold mb-4">${product.price} so'm</p>
+        <p class="text-emerald-400 font-semibold mb-4">
+          ${product.price} so'm
+        </p>
 
         <button onclick="addToCart(${product.id})"
           class="bg-emerald-600 w-full py-2 rounded hover:bg-emerald-700">
@@ -68,7 +79,9 @@ function renderProducts(list) {
   });
 }
 
-/* FILTER */
+/* ===========================
+   FILTER
+=========================== */
 function filterCategory(category) {
 
   if (category === "all") {
@@ -83,14 +96,21 @@ function filterCategory(category) {
   renderProducts(filtered);
 }
 
-/* CART */
+/* ===========================
+   CART LOGIC
+=========================== */
 function addToCart(id) {
 
   const product = products.find(p => p.id === id);
+  if (!product) return;
+
   const existing = cart.find(p => p.id === id);
 
-  if (existing) existing.quantity++;
-  else cart.push({ ...product, quantity: 1 });
+  if (existing) {
+    existing.quantity++;
+  } else {
+    cart.push({ ...product, quantity: 1 });
+  }
 
   updateCart();
 }
@@ -102,8 +122,9 @@ function changeQty(id, delta) {
 
   item.quantity += delta;
 
-  if (item.quantity <= 0)
+  if (item.quantity <= 0) {
     cart = cart.filter(p => p.id !== id);
+  }
 
   updateCart();
 }
@@ -111,6 +132,8 @@ function changeQty(id, delta) {
 function updateCart() {
 
   const container = document.getElementById("cartItems");
+  if (!container) return;
+
   container.innerHTML = "";
 
   let total = 0;
@@ -145,7 +168,9 @@ function updateCart() {
   document.getElementById("cartTotal").innerText = total;
 }
 
-/* PANELS */
+/* ===========================
+   PANEL CONTROL
+=========================== */
 function toggleCart() {
   openPanel("cartPanel");
 }
@@ -166,8 +191,15 @@ function closePanels() {
   document.getElementById("overlay").classList.add("hidden");
 }
 
-/* CHECKOUT */
+/* ===========================
+   CHECKOUT
+=========================== */
 function checkout() {
+
+  if (!cart.length) {
+    alert("Savatcha bo‘sh!");
+    return;
+  }
 
   fetch(API + "/order", {
     method: "POST",
@@ -179,15 +211,19 @@ function checkout() {
     })
   })
   .then(res => res.json())
-  .then(() => {
+  .then(data => {
+    console.log("ORDER RESPONSE:", data);
     cart = [];
     updateCart();
     closePanels();
     loadUserOrders();
-  });
+  })
+  .catch(err => console.log("ORDER ERROR:", err));
 }
 
-/* USER ORDERS */
+/* ===========================
+   USER ORDERS
+=========================== */
 function loadUserOrders() {
 
   fetch(API + "/user/" + telegramId)
@@ -196,6 +232,8 @@ function loadUserOrders() {
 
       const container =
         document.getElementById("userOrders");
+
+      if (!container) return;
 
       container.innerHTML = "";
 
@@ -208,12 +246,17 @@ function loadUserOrders() {
         container.innerHTML += `
           <div class="bg-[#1e293b] p-4 rounded-lg">
             <p>${items}</p>
-            <p class="text-emerald-400">${order.total} so'm</p>
-            <p class="text-sm text-gray-400">${order.status}</p>
+            <p class="text-emerald-400">
+              ${order.total} so'm
+            </p>
+            <p class="text-sm text-gray-400">
+              ${order.status}
+            </p>
           </div>
         `;
       });
-    });
+    })
+    .catch(err => console.log("USER ORDER ERROR:", err));
 }
 
 function scrollToMenu() {

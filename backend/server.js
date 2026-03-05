@@ -173,13 +173,21 @@ app.post("/order", async (req, res) => {
   try {
     console.log("=== ORDER TRIGGERED, CHEF_ID:", CHEF_ID, "===");
 
-    const { telegramId, items } = req.body;
+    const { telegramId, items, user } = req.body;
 
-    if (!telegramId)          return res.status(400).json({ error: "telegramId yo'q" });
+    if (!telegramId)             return res.status(400).json({ error: "telegramId yo'q" });
     if (!items || !items.length) return res.status(400).json({ error: "items bo'sh" });
 
-    // DB dan user ma'lumotlarini olish
-    const userInfo = await User.findOne({ telegramId: Number(telegramId) });
+    // DB dan user olish, agar yo'q bo'lsa frontenddan kelgan user ishlatiladi
+    let userInfo = await User.findOne({ telegramId: Number(telegramId) });
+    if (!userInfo && user) {
+      // Frontenddan kelgan ma'lumot bilan DB ga yozamiz
+      userInfo = await User.findOneAndUpdate(
+        { telegramId: Number(telegramId) },
+        { telegramId: Number(telegramId), ...user },
+        { upsert: true, new: true }
+      );
+    }
 
     const total = items.reduce((sum, i) => sum + Number(i.price) * i.quantity, 0);
 

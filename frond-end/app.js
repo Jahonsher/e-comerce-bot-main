@@ -3,10 +3,10 @@ const API =
     ? "http://localhost:5000"
     : "https://e-comerce-bot-main-production.up.railway.app";
 
-let products   = [];
-let cart       = [];
-let telegramId = null;
-let userData   = null;
+let products    = [];
+let cart        = [];
+let telegramId  = null;
+let userData    = null;
 let userProfile = null;
 
 /* ===== TELEGRAM AUTH ===== */
@@ -21,13 +21,13 @@ function initTelegramUser() {
   tg.setHeaderColor("#0d0a07");
   tg.setBackgroundColor("#0d0a07");
 
-  // ✅ 1-usul: initDataUnsafe.user dan olish
+  // 1-usul: initDataUnsafe.user
   let tgUser = tg.initDataUnsafe?.user;
 
-  // ✅ 2-usul: initData string dan parse qilish (ba'zi versiyalarda kerak)
+  // 2-usul: initData string dan parse
   if (!tgUser && tg.initData) {
     try {
-      const params = new URLSearchParams(tg.initData);
+      const params  = new URLSearchParams(tg.initData);
       const userStr = params.get("user");
       if (userStr) tgUser = JSON.parse(decodeURIComponent(userStr));
     } catch(e) {
@@ -36,12 +36,12 @@ function initTelegramUser() {
   }
 
   console.log("🔍 tgUser:", tgUser);
-  console.log("🔍 initData:", tg.initData?.substring(0, 100));
 
   if (tgUser && tgUser.id) {
     telegramId = tgUser.id;
     userData   = tgUser;
 
+    // Auth — DB ga yozamiz
     fetch(API + "/auth", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
@@ -53,6 +53,7 @@ function initTelegramUser() {
       })
     })
     .then(r => r.json())
+    // Auth dan keyin to'liq profil (telefon bilan) olamiz
     .then(() => fetch(API + "/user/" + telegramId).then(r => r.json()))
     .then(fullUser => {
       userProfile = fullUser;
@@ -62,16 +63,13 @@ function initTelegramUser() {
     .catch(err => console.error("AUTH ERROR:", err));
 
   } else {
-    // Telegram WebApp bor lekin user kelmadi — ehtimol eski versiya
-    // Shunda ham mahsulotlarni ko'rsatamiz
-    console.warn("⚠️ tgUser kelmadi, initData:", tg.initData);
     showNotTelegramWarning();
   }
 }
 
 function showNotTelegramWarning() {
-  const warning = document.getElementById("tgWarning");
-  if (warning) warning.style.display = "flex";
+  const w = document.getElementById("tgWarning");
+  if (w) w.style.display = "flex";
   telegramId = null;
 }
 
@@ -82,13 +80,13 @@ function renderProfile() {
   const u = userProfile || userData;
   if (!u) return;
 
-  const nameEl   = document.getElementById("profileName");
-  const unameEl  = document.getElementById("profileUsername");
-  const phoneEl  = document.getElementById("profilePhone");
+  const nameEl  = document.getElementById("profileName");
+  const unameEl = document.getElementById("profileUsername");
+  const phoneEl = document.getElementById("profilePhone");
 
   if (nameEl)  nameEl.innerText  = `${u.first_name || ""} ${u.last_name || ""}`.trim() || "Mehmon";
   if (unameEl) unameEl.innerText = u.username ? `@${u.username}` : "";
-  if (phoneEl) phoneEl.innerText = u.phone    ? `📱 ${u.phone}`  : "📱 Telefon biriktirilmagan";
+  if (phoneEl) phoneEl.innerText = u.phone    ? `📱 ${u.phone}`  : "📱 Telefon yo'q";
 }
 
 /* ===== LOAD PRODUCTS ===== */
@@ -100,7 +98,8 @@ function loadProducts() {
       renderProducts(products);
     })
     .catch(err => {
-      document.getElementById("products").innerHTML = `
+      const c = document.getElementById("products");
+      if (c) c.innerHTML = `
         <div class="empty-state" style="grid-column:1/-1">
           <div class="icon">⚠️</div>
           <p>Mahsulotlar yuklanmadi (${err.message})</p>
@@ -134,7 +133,8 @@ function renderProducts(list) {
       </div>`;
     container.appendChild(card);
   });
-  updateProductButtons(); // render bo'lgandan keyin holat yangilanadi
+
+  updateProductButtons();
 }
 
 /* ===== FILTER ===== */
@@ -145,14 +145,14 @@ function filterCategory(cat, btn) {
 }
 
 /* ===== CART ===== */
-function addToCart(id, btnEl) {
+function addToCart(id) {
   const product = products.find(p => p.id === id);
   if (!product) return;
   const ex = cart.find(p => p.id === id);
   if (ex) ex.quantity++;
   else cart.push({ ...product, quantity: 1 });
   updateCart();
-  updateProductButtons(); // barcha tugmalarni yangilash
+  updateProductButtons();
 }
 
 function changeQty(id, delta) {
@@ -164,10 +164,10 @@ function changeQty(id, delta) {
   updateProductButtons();
 }
 
-// Savatchadagi mahsulotlarga qarab tugmalarni yangilash
+// Tugma holatini savatchaga qarab yangilash
 function updateProductButtons() {
   document.querySelectorAll(".add-btn").forEach(btn => {
-    const id = Number(btn.dataset.id);
+    const id     = Number(btn.dataset.id);
     const inCart = cart.find(p => p.id === id);
     if (inCart) {
       btn.innerHTML = "✓ Qo'shildi";
@@ -188,11 +188,9 @@ function updateCart() {
   const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
   const count = cart.reduce((s, i) => s + i.quantity, 0);
 
-  // Badge
   const badge = document.getElementById("cartCount");
   if (badge) badge.innerText = count;
 
-  // Total
   const totalEl = document.getElementById("cartTotal");
   if (totalEl) totalEl.innerText = Number(total).toLocaleString();
 
@@ -233,6 +231,7 @@ function closePanels() {
 /* ===== CHECKOUT ===== */
 function checkout() {
   if (!cart.length) { alert("⚠️ Savatcha bo'sh!"); return; }
+
   if (!telegramId) {
     alert("⚠️ Buyurtma berish uchun Telegram bot orqali kiring!\n\n@mini_shop_jahonsher_bot ga /start yuboring");
     return;
@@ -247,12 +246,11 @@ function checkout() {
     username:   userProfile?.username   || userData?.username   || "",
     phone:      userProfile?.phone      || userData?.phone      || ""
   };
-  console.log("📤 userToSend:", userToSend);
 
   fetch(API + "/order", {
-    method: "POST",
+    method:  "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ telegramId, items: cart, user: userToSend })
+    body:    JSON.stringify({ telegramId, items: cart, user: userToSend })
   })
   .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
   .then(() => {
@@ -270,6 +268,8 @@ function checkout() {
 
 /* ===== USER ORDERS ===== */
 function loadUserOrders() {
+  if (!telegramId) return;
+
   fetch(API + "/user/" + telegramId + "/orders")
     .then(r => r.json())
     .then(data => {

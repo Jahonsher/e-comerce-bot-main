@@ -194,6 +194,42 @@
       <span>Jami:</span>
       <span><span id="cartTotal">0</span> so'm</span>
     </div>
+
+    <!-- Stol tanlash -->
+    <div style="margin-bottom:12px;">
+      <div style="font-family:'Cormorant Garamond',serif; font-size:13px; color:var(--muted); margin-bottom:8px; letter-spacing:1px;">
+        📍 Buyurtma turi
+      </div>
+      <div style="display:flex; gap:8px; margin-bottom:10px;">
+        <button id="btnDineIn"  onclick="selectOrderType('dine_in')"
+          style="flex:1; padding:8px; border-radius:4px; border:1px solid var(--border);
+            background:rgba(201,168,76,0.08); color:var(--muted);
+            font-family:'Jost',sans-serif; font-size:11px; letter-spacing:1px;
+            cursor:pointer; transition:all .2s;">
+          🪑 Restoranda
+        </button>
+        <button id="btnOnline" onclick="selectOrderType('online')"
+          style="flex:1; padding:8px; border-radius:4px; border:1px solid var(--border);
+            background:rgba(201,168,76,0.08); color:var(--muted);
+            font-family:'Jost',sans-serif; font-size:11px; letter-spacing:1px;
+            cursor:pointer; transition:all .2s;">
+          🌐 Online
+        </button>
+      </div>
+
+      <!-- Stol raqami (faqat "Restoranda" tanlanganda ko'rinadi) -->
+      <div id="tableInputWrap" style="display:none;">
+        <input id="tableInput" type="number" min="1" max="50" placeholder="Stol raqamini kiriting..."
+          style="width:100%; padding:10px 12px; background:var(--card);
+            border:1px solid var(--border); border-radius:4px;
+            color:var(--text); font-family:'Jost',sans-serif; font-size:13px;
+            outline:none; transition:border-color .2s;"
+          onfocus="this.style.borderColor='var(--gold)'"
+          onblur="this.style.borderColor='var(--border)'"
+        />
+      </div>
+    </div>
+
     <button class="checkout-btn" id="checkoutBtn" onclick="checkout()">Buyurtma Berish</button>
   </div>
 </div>

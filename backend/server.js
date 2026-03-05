@@ -42,11 +42,13 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model("User", userSchema);
 
 const orderSchema = new mongoose.Schema({
-  telegramId: Number,
-  items:      Array,
-  total:      Number,
-  userInfo:   Object,
-  status:     { type: String, default: "Yangi" }
+  telegramId:  Number,
+  items:       Array,
+  total:       Number,
+  userInfo:    Object,
+  orderType:   String,   // 'dine_in' yoki 'online'
+  tableNumber: String,   // stol raqami yoki 'Online buyurtma'
+  status:      { type: String, default: "Yangi" }
 }, { timestamps: true });
 const Order = mongoose.model("Order", orderSchema);
 
@@ -251,7 +253,7 @@ app.post("/order", async (req, res) => {
   try {
     console.log("=== ORDER TRIGGERED, CHEF_ID:", CHEF_ID, "===");
 
-    const { telegramId, items, user } = req.body;
+    const { telegramId, items, user, orderType, tableNumber } = req.body;
 
     if (!telegramId)             return res.status(400).json({ error: "telegramId yo'q" });
     if (!items || !items.length) return res.status(400).json({ error: "items bo'sh" });
@@ -278,10 +280,12 @@ app.post("/order", async (req, res) => {
     const total = items.reduce((sum, i) => sum + Number(i.price) * i.quantity, 0);
 
     const order = await Order.create({
-      telegramId: Number(telegramId),
+      telegramId:  Number(telegramId),
       items,
       total,
       userInfo,
+      orderType:   orderType   || "online",
+      tableNumber: tableNumber || "Online buyurtma",
       status: "Yangi"
     });
 
@@ -292,7 +296,12 @@ app.post("/order", async (req, res) => {
     const uname = userInfo.username ? ` (@${userInfo.username})` : "";
     const phone = userInfo.phone    ? `\n📱 Tel: ${userInfo.phone}` : "";
 
+    const tableInfo = orderType === "dine_in"
+      ? `🪑 Stol: ${tableNumber}`
+      : `🌐 Online buyurtma`;
+
     let message = `🆕 Yangi buyurtma!\n\n`;
+    message    += `${tableInfo}\n`;
     message    += `👤 Mijoz: ${name}${uname}${phone}\n\n`;
     message    += `📦 Mahsulotlar:\n`;
     items.forEach(it => {

@@ -8,6 +8,8 @@ let cart        = [];
 let telegramId  = null;
 let userData    = null;
 let userProfile = null;
+let orderType   = null;  // 'dine_in' yoki 'online'
+let tableNumber = null;  // stol raqami
 
 /* ===== TELEGRAM AUTH ===== */
 function initTelegramUser() {
@@ -228,6 +230,31 @@ function closePanels() {
   document.getElementById("overlay")?.classList.remove("show");
 }
 
+/* ===== ORDER TYPE ===== */
+function selectOrderType(type) {
+  orderType = type;
+
+  const btnDineIn  = document.getElementById("btnDineIn");
+  const btnOnline  = document.getElementById("btnOnline");
+  const tableWrap  = document.getElementById("tableInputWrap");
+
+  const activeStyle   = "background:var(--gold); color:var(--dark); border-color:var(--gold); font-weight:500;";
+  const inactiveStyle = "background:rgba(201,168,76,0.08); color:var(--muted); border-color:var(--border); font-weight:300;";
+
+  if (type === "dine_in") {
+    btnDineIn.style.cssText  += activeStyle;
+    btnOnline.style.cssText  += inactiveStyle;
+    tableWrap.style.display   = "block";
+    tableNumber = null;
+  } else {
+    btnOnline.style.cssText  += activeStyle;
+    btnDineIn.style.cssText  += inactiveStyle;
+    tableWrap.style.display   = "none";
+    tableNumber = "Online buyurtma";
+    document.getElementById("tableInput").value = "";
+  }
+}
+
 /* ===== CHECKOUT ===== */
 function checkout() {
   if (!cart.length) { alert("⚠️ Savatcha bo'sh!"); return; }
@@ -235,6 +262,23 @@ function checkout() {
   if (!telegramId) {
     alert("⚠️ Buyurtma berish uchun Telegram bot orqali kiring!\n\n@mini_shop_jahonsher_bot ga /start yuboring");
     return;
+  }
+
+  // Buyurtma turini tekshirish
+  if (!orderType) {
+    alert("⚠️ Buyurtma turini tanlang: Restoranda yoki Online");
+    return;
+  }
+
+  // Stol raqamini tekshirish
+  if (orderType === "dine_in") {
+    const tableVal = document.getElementById("tableInput")?.value?.trim();
+    if (!tableVal) {
+      alert("⚠️ Stol raqamini kiriting!");
+      document.getElementById("tableInput")?.focus();
+      return;
+    }
+    tableNumber = tableVal;
   }
 
   const btn = document.getElementById("checkoutBtn");
@@ -250,11 +294,28 @@ function checkout() {
   fetch(API + "/order", {
     method:  "POST",
     headers: { "Content-Type": "application/json" },
-    body:    JSON.stringify({ telegramId, items: cart, user: userToSend })
+    body:    JSON.stringify({
+      telegramId,
+      items: cart,
+      user: userToSend,
+      orderType,
+      tableNumber
+    })
   })
   .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
   .then(() => {
     cart = [];
+    orderType  = null;
+    tableNumber = null;
+    // Tugmalarni reset qilish
+    const btnDineIn = document.getElementById("btnDineIn");
+    const btnOnline = document.getElementById("btnOnline");
+    const tableWrap = document.getElementById("tableInputWrap");
+    const tableInp  = document.getElementById("tableInput");
+    if (btnDineIn) btnDineIn.style.cssText = "";
+    if (btnOnline) btnOnline.style.cssText = "";
+    if (tableWrap) tableWrap.style.display = "none";
+    if (tableInp)  tableInp.value = "";
     updateCart();
     updateProductButtons();
     closePanels();

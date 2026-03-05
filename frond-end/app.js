@@ -20,6 +20,12 @@ if (window.Telegram && Telegram.WebApp) {
   tg.setHeaderColor("#0d0a07");
   tg.setBackgroundColor("#0d0a07");
 
+  // DEBUG — konsolda ko'rsatish
+  console.log("🔍 Telegram.WebApp mavjud:", !!tg);
+  console.log("🔍 initData:", tg.initData);
+  console.log("🔍 initDataUnsafe:", JSON.stringify(tg.initDataUnsafe));
+  console.log("🔍 initDataUnsafe.user:", JSON.stringify(tg.initDataUnsafe?.user));
+
   if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
     userData   = tg.initDataUnsafe.user;
     telegramId = userData.id;

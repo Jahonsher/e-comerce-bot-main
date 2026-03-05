@@ -22,14 +22,21 @@ if (!process.env.CHEF_ID)   { console.error("❌ CHEF_ID yo'q");   process.exit(
 
 const CHEF_ID    = Number(process.env.CHEF_ID);
 const WEBAPP_URL = process.env.WEBAPP_URL || "https://e-comerce-bot.vercel.app";
-const bot        = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
+const RAILWAY_URL = process.env.RAILWAY_URL || process.env.RAILWAY_STATIC_URL;
 
-console.log("🤖 Bot polling ishga tushdi");
+// Webhook rejimida ishlaymiz (Railway uchun polling emas)
+const bot = new TelegramBot(process.env.BOT_TOKEN, { webHook: false });
+
+console.log("🤖 Bot tayyor");
 
 /* ================= MONGODB ================= */
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB ulandi"))
   .catch(err => { console.error("❌ Mongo:", err.message); process.exit(1); });
+
+// Webhook o'rnatish
+const PORT = process.env.PORT || 5000;
+const WEBHOOK_PATH = `/webhook/${process.env.BOT_TOKEN}`;
 
 /* ================= MODELS ================= */
 const userSchema = new mongoose.Schema({
@@ -270,6 +277,12 @@ Boshqa taom tanlashingiz mumkin.`,
   }
 });
 
+/* ================= WEBHOOK ================= */
+app.post(WEBHOOK_PATH, (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
+
 /* ================= API ROUTES ================= */
 
 // Mahsulotlar
@@ -419,5 +432,22 @@ app.post("/order", async (req, res) => {
 });
 
 /* ================= LISTEN ================= */
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server ${PORT} portda ishlayapti`));
+app.listen(PORT, async () => {
+  console.log(`🚀 Server ${PORT} portda ishlayapti`);
+
+  // Webhook ni o'rnatamiz
+  if (RAILWAY_URL) {
+    const webhookUrl = `https://${RAILWAY_URL}${WEBHOOK_PATH}`;
+    try {
+      await bot.setWebHook(webhookUrl);
+      console.log("✅ Webhook o'rnatildi:", webhookUrl);
+    } catch(err) {
+      console.error("❌ Webhook xato:", err.message);
+    }
+  } else {
+    console.warn("⚠️ RAILWAY_URL yo'q, webhook o'rnatilmadi");
+    // Local uchun polling
+    bot.startPolling();
+    console.log("🔄 Local polling ishga tushdi");
+  }
+});

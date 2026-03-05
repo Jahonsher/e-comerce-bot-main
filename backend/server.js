@@ -125,7 +125,32 @@ bot.on("contact", async (msg) => {
   );
 });
 
+// 📞 Bog'lanish
+bot.onText(/📞|[Bb]og|lanish/, async (msg) => {
+  if (!msg.text.includes("lanish")) return;
+  const chatId = msg.chat.id;
+  await bot.sendMessage(chatId,
+    "📞 *Bog\u2019lanish:*
+
+📱 Telefon: +998 77 008 34 13
+💬 Telegram: @Jahonsher
+
+Savollaringiz bo\u2019lsa, to\u2019g\u2019ridan murojaat qiling! 👇",
+    {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [[
+          { text: "📱 Qo\u2019ng\u2019iroq qilish", url: "tel:+998770083413" },
+          { text: "💬 Telegram", url: "https://t.me/Jahonsher" }
+        ]]
+      }
+    }
+  );
+  await bot.sendMessage(chatId, "Boshqa bo\u2019limlar:", { reply_markup: mainKeyboard() });
+});
+
 // 📋 Buyurtmalarim
+
 bot.onText(/Buyurtmalarim/, async (msg) => {
   const chatId = msg.chat.id;
   try {
@@ -191,89 +216,244 @@ bot.onText(/Ish vaqti/, async (msg) => {
   );
 });
 
-// 📞 Bog'lanish
-bot.onText(/Bog'lanish|Boglanish|bog'lanish/, async (msg) => {
-  const chatId = msg.chat.id;
+/* ================= WEBHOOK ================= */
+app.post(WEBHOOK_PATH, (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
 
-  await bot.sendMessage(chatId,
-    `📞 *Bog'lanish:*\n\n` +
-    `📱 Telefon: +998 77 008 34 13\n` +
-    `💬 Telegram: @jahonsher\n\n` +
-    `Savollaringiz bo'lsa, to'g'ridan murojaat qiling! 👇`,
-    {
+/* ================= API ROUTES ================= */
+
+// Mahsulotlar
+app.get("/products", (req, res) => {
+  try {
+    const filePath = path.join(__dirname, "data", "products.json");
+    const data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+    res.json(data);
+  } catch (err) {
+    console.error("PRODUCT ERROR:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Auth — WebApp ochilganda chaqiriladi
+app.post("/auth", async (req, res) => {
+  try {
+    const { id, first_name, last_name, username } = req.body;
+
+    const user = await User.findOneAndUpdate(
+      { telegramId: id },
+      { $set: { telegramId: id, first_name: first_name || "", last_name: last_name || "", username: username || "" } },
+      { upsert: true, new: true }
+    );
+
+    res.json({ ok: true, user });
+  } catch (err) {
+    console.error("AUTH ERROR:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// User profili
+app.get("/user/:telegramId", async (req, res) => {
+  try {
+    const user = await User.findOne({ telegramId: Number(req.params.telegramId) });
+    if (!user) return res.json({});
+    res.json({
+      telegramId: user.telegramId,
+      first_name: user.first_name || "",
+      last_name:  user.last_name  || "",
+      username:   user.username   || "",
+      phone:      user.phone      || ""
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// User buyurtmalari
+app.get("/user/:telegramId/orders", async (req, res) => {
+  try {
+    const orders = await Order.find({
+      telegramId: Number(req.params.telegramId)
+    }).sort({ createdAt: -1 }).limit(30);
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Buyurtma yaratish
+app.post("/order", async (req, res) => {
+  try {
+    console.log("=== ORDER TRIGGERED, CHEF_ID:", CHEF_ID, "===");
+
+    const { telegramId, items, user, orderType, tableNumber } = req.body;
+
+    if (!telegramId)             return res.status(400).json({ error: "telegramId yo'q" });
+    if (!items || !items.length) return res.status(400).json({ error: "items bo'sh" });
+
+    // DB dan user, bo'lmasa frontenddan kelgan ma'lumot
+    let dbUser = await User.findOne({ telegramId: Number(telegramId) });
+
+    const userInfo = {
+      first_name: dbUser?.first_name || user?.first_name || "",
+      last_name:  dbUser?.last_name  || user?.last_name  || "",
+      username:   dbUser?.username   || user?.username   || "",
+      phone:      dbUser?.phone      || user?.phone      || ""
+    };
+
+    // Yangi ma'lumot kelgan bo'lsa DB ga yozamiz
+    if (user?.first_name || user?.phone) {
+      await User.findOneAndUpdate(
+        { telegramId: Number(telegramId) },
+        { telegramId: Number(telegramId), ...userInfo },
+        { upsert: true, new: true }
+      );
+    }
+
+    const total = items.reduce((sum, i) => sum + Number(i.price) * i.quantity, 0);
+
+    const order = await Order.create({
+      telegramId:  Number(telegramId),
+      items,
+      total,
+      userInfo,
+      orderType:   orderType   || "online",
+      tableNumber: tableNumber || "Online buyurtma",
+      status: "Yangi"
+    });
+
+    console.log("✅ Order saqlandi:", order._id);
+
+    // Telegram xabar
+    const name  = `${userInfo.first_name} ${userInfo.last_name}`.trim() || `ID: ${telegramId}`;
+    const uname = userInfo.username ? ` (@${userInfo.username})` : "";
+    const phone = userInfo.phone    ? `\n📱 Tel: ${userInfo.phone}` : "";
+
+    const tableInfo = orderType === "dine_in"
+      ? `🪑 Stol: ${tableNumber}`
+      : `🌐 Online buyurtma`;
+
+    let message = `🆕 Yangi buyurtma!\n\n`;
+    message    += `${tableInfo}\n`;
+    message    += `👤 Mijoz: ${name}${uname}${phone}\n\n`;
+    message    += `📦 Mahsulotlar:\n`;
+    items.forEach(it => {
+      message += `• ${it.name} — ${it.quantity} ta — ${Number(it.price).toLocaleString()} so'm\n`;
+    });
+    message += `\n💰 Jami: ${total.toLocaleString()} so'm`;
+
+    // Oshpazga inline tugma bilan yuboramiz
+    await bot.sendMessage(CHEF_ID, message, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [[
-          { text: "📱 Qo'ng'iroq qilish", url: "tel:+998770083413" },
-          { text: "💬 Telegram", url: "https://t.me/jahonsher" }
+          {
+            text: "✅ Qabul qilish",
+            callback_data: `accept_${order._id}_${telegramId}`
+          },
+          {
+            text: "❌ Bekor qilish",
+            callback_data: `reject_${order._id}_${telegramId}`
+          }
         ]]
       }
-    }
-  );
+    });
+    console.log("✅ Telegram yuborildi!");
 
-  await bot.sendMessage(chatId, "Boshqa bo'limlar:", { reply_markup: mainKeyboard() });
-});
-
-// Oshpaz tugmani bosganida
-bot.on("callback_query", async (query) => {
-  const data = query.data;
-
-  // accept_ORDERID_USERID yoki reject_ORDERID_USERID
-  const [action, orderId, userId] = data.split("_");
-
-  if (action !== "accept" && action !== "reject") return;
-
-  try {
-    if (action === "accept") {
-      // DB da statusni yangilash
-      await Order.findByIdAndUpdate(orderId, { status: "Qabul qilindi" });
-
-      // Oshpazga xabar yangilanadi
-      await bot.editMessageReplyMarkup(
-        { inline_keyboard: [[{ text: "✅ Qabul qilindi", callback_data: "done" }]] },
-        { chat_id: query.message.chat.id, message_id: query.message.message_id }
-      );
-
-      // Userga bildirishnoma
-      await bot.sendMessage(Number(userId),
-        `✅ *Buyurtmangiz qabul qilindi!*
-
-Oshpaz tayyorlashni boshladi 👨‍🍳
-Tez orada tayyor bo'ladi!`,
-        { parse_mode: "Markdown" }
-      );
-
-      console.log("✅ Buyurtma qabul qilindi:", orderId);
-
-    } else if (action === "reject") {
-      // DB da statusni yangilash
-      await Order.findByIdAndUpdate(orderId, { status: "Bekor qilindi" });
-
-      // Oshpazga xabar yangilanadi
-      await bot.editMessageReplyMarkup(
-        { inline_keyboard: [[{ text: "❌ Bekor qilindi", callback_data: "done" }]] },
-        { chat_id: query.message.chat.id, message_id: query.message.message_id }
-      );
-
-      // Userga bildirishnoma
-      await bot.sendMessage(Number(userId),
-        `❌ *Buyurtmangiz bekor qilindi.*
-
-Kechirasiz, hozir bu taom mavjud emas.
-Boshqa taom tanlashingiz mumkin.`,
-        { parse_mode: "Markdown" }
-      );
-
-      console.log("❌ Buyurtma bekor qilindi:", orderId);
-    }
-
-    // Callback query ga javob beramiz (loading animatsiyasini to'xtatish)
-    await bot.answerCallbackQuery(query.id);
+    res.json({ success: true, order });
 
   } catch (err) {
-    console.error("CALLBACK ERROR:", err.message);
-    await bot.answerCallbackQuery(query.id, { text: "Xato yuz berdi!" });
+    console.error("❌ ORDER ERROR:", err.response?.body || err.message);
+    res.status(500).json({ error: err.response?.body?.description || err.message });
   }
+});
+
+/* ================= LISTEN ================= */
+app.listen(PORT, async () => {
+  console.log(`🚀 Server ${PORT} portda ishlayapti`);
+
+  // Webhook ni o'rnatamiz
+  if (RAILWAY_URL) {
+    const webhookUrl = `https://${RAILWAY_URL}${WEBHOOK_PATH}`;
+    try {
+      await bot.setWebHook(webhookUrl);
+      console.log("✅ Webhook o'rnatildi:", webhookUrl);
+    } catch(err) {
+      console.error("❌ Webhook xato:", err.message);
+    }
+  } else {
+    console.warn("⚠️ RAILWAY_URL yo'q, webhook o'rnatilmadi");
+    // Local uchun polling
+    bot.startPolling();
+    console.log("🔄 Local polling ishga tushdi");
+  }
+});// 📋 Buyurtmalarim
+// 📋 Buyurtmalarim
+bot.onText(/Buyurtmalarim/, async (msg) => {
+  const chatId = msg.chat.id;
+  try {
+    const orders = await Order.find({ telegramId: msg.from.id })
+      .sort({ createdAt: -1 }).limit(5);
+
+    if (!orders.length) {
+      await bot.sendMessage(chatId,
+        "📋 Hali buyurtma yo'q.\n\nMenyu va buyurtma uchun 🍽 *Menyu & Buyurtma* tugmasini bosing!",
+        { parse_mode: "Markdown", reply_markup: mainKeyboard() }
+      );
+      return;
+    }
+
+    let text = "📋 *So'nggi buyurtmalaringiz:*\n\n";
+    orders.forEach((o, i) => {
+      const date  = new Date(o.createdAt).toLocaleDateString("uz-UZ");
+      const items = o.items.map(it => `${it.name} × ${it.quantity}`).join(", ");
+      const table = o.tableNumber ? `📍 ${o.tableNumber}` : "";
+      text += `*${i+1}. ${date}* ${table}\n`;
+      text += `${items}\n`;
+      text += `💰 ${Number(o.total).toLocaleString()} so'm — _${o.status || "Yangi"}_\n\n`;
+    });
+
+    await bot.sendMessage(chatId, text, { parse_mode: "Markdown", reply_markup: mainKeyboard() });
+  } catch(err) {
+    console.error("ORDERS CMD ERROR:", err.message);
+  }
+});
+
+// 📍 Manzil
+bot.onText(/Manzil/, async (msg) => {
+  const chatId = msg.chat.id;
+
+  await bot.sendMessage(chatId,
+    `📍 *Bizning manzil:*\n\nToshkent sh., Chilonzor tumani\nNavro'z ko'chasi, 15-uy\n\n🚇 Metro: Chilonzor (5 daqiqa)\n🚗 Parking mavjud`,
+    { parse_mode: "Markdown" }
+  );
+
+  // Xarita yuborish
+  await bot.sendLocation(chatId, 41.2995, 69.2401);
+
+  await bot.sendMessage(chatId, "Yo'l topish uchun 👆", { reply_markup: mainKeyboard() });
+});
+
+// 🕐 Ish vaqti
+bot.onText(/Ish vaqti/, async (msg) => {
+  const chatId = msg.chat.id;
+
+  // Hozirgi vaqtni tekshirish (UTC+5 Toshkent)
+  const now      = new Date();
+  const hour     = (now.getUTCHours() + 5) % 24;
+  const isOpen   = hour >= 10 && hour < 23;
+  const statusEmoji = isOpen ? "🟢" : "🔴";
+  const statusText  = isOpen ? "Hozir OCHIQ" : "Hozir YOPIQ";
+
+  await bot.sendMessage(chatId,
+    `🕐 *Ish vaqtimiz:*\n\n` +
+    `Dushanba — Juma:  10:00 – 23:00\n` +
+    `Shanba — Yakshanba: 09:00 – 00:00\n\n` +
+    `${statusEmoji} *${statusText}*`,
+    { parse_mode: "Markdown", reply_markup: mainKeyboard() }
+  );
 });
 
 /* ================= WEBHOOK ================= */

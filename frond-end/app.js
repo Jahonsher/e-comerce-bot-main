@@ -11,59 +11,67 @@ let userProfile = null;
 
 /* ===== TELEGRAM AUTH ===== */
 function initTelegramUser() {
-  // Telegram WebApp orqali kelgan bo'lsa
-  if (window.Telegram && window.Telegram.WebApp) {
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-    tg.setHeaderColor("#0d0a07");
-    tg.setBackgroundColor("#0d0a07");
+  if (!window.Telegram || !window.Telegram.WebApp) {
+    showNotTelegramWarning();
+    return;
+  }
 
-    const tgUser = tg.initDataUnsafe?.user;
+  const tg = window.Telegram.WebApp;
+  tg.expand();
+  tg.setHeaderColor("#0d0a07");
+  tg.setBackgroundColor("#0d0a07");
 
-    if (tgUser && tgUser.id) {
-      // ✅ Telegram dan kelgan user
-      telegramId = tgUser.id;
-      userData   = tgUser;
+  // ✅ 1-usul: initDataUnsafe.user dan olish
+  let tgUser = tg.initDataUnsafe?.user;
 
-      console.log("✅ Telegram user:", telegramId, tgUser.first_name);
-
-      // DB ga saqlash va to'liq profil olish
-      fetch(API + "/auth", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({
-          id:         tgUser.id,
-          first_name: tgUser.first_name || "",
-          last_name:  tgUser.last_name  || "",
-          username:   tgUser.username   || ""
-        })
-      })
-      .then(r => r.json())
-      .then(() => fetch(API + "/user/" + telegramId).then(r => r.json()))
-      .then(fullUser => {
-        userProfile = fullUser;
-        // Telefon ham userData ga qo'shiladi
-        userData = { ...userData, phone: fullUser.phone || "" };
-        console.log("✅ Profil yuklandi:", userProfile);
-        renderProfile();
-      })
-      .catch(err => console.error("AUTH ERROR:", err));
-
-      return; // ← muvaffaqiyatli, keyingi kod ishlamaydi
+  // ✅ 2-usul: initData string dan parse qilish (ba'zi versiyalarda kerak)
+  if (!tgUser && tg.initData) {
+    try {
+      const params = new URLSearchParams(tg.initData);
+      const userStr = params.get("user");
+      if (userStr) tgUser = JSON.parse(decodeURIComponent(userStr));
+    } catch(e) {
+      console.warn("initData parse xato:", e);
     }
   }
 
-  // ❌ Telegram WebApp dan kelmagan (brauzerda to'g'ri ochilgan)
-  // Foydalanuvchiga xabar ko'rsatamiz
-  console.warn("⚠️ Telegram WebApp orqali ochilmagan!");
-  showNotTelegramWarning();
+  console.log("🔍 tgUser:", tgUser);
+  console.log("🔍 initData:", tg.initData?.substring(0, 100));
+
+  if (tgUser && tgUser.id) {
+    telegramId = tgUser.id;
+    userData   = tgUser;
+
+    fetch(API + "/auth", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({
+        id:         tgUser.id,
+        first_name: tgUser.first_name || "",
+        last_name:  tgUser.last_name  || "",
+        username:   tgUser.username   || ""
+      })
+    })
+    .then(r => r.json())
+    .then(() => fetch(API + "/user/" + telegramId).then(r => r.json()))
+    .then(fullUser => {
+      userProfile = fullUser;
+      userData    = { ...userData, phone: fullUser.phone || "" };
+      renderProfile();
+    })
+    .catch(err => console.error("AUTH ERROR:", err));
+
+  } else {
+    // Telegram WebApp bor lekin user kelmadi — ehtimol eski versiya
+    // Shunda ham mahsulotlarni ko'rsatamiz
+    console.warn("⚠️ tgUser kelmadi, initData:", tg.initData);
+    showNotTelegramWarning();
+  }
 }
 
 function showNotTelegramWarning() {
-  // Agar bot orqali emas ochilgan bo'lsa — ogohlantirish
   const warning = document.getElementById("tgWarning");
   if (warning) warning.style.display = "flex";
-  // Mahsulotlarni baribir ko'rsatamiz, faqat buyurtma berib bo'lmaydi
   telegramId = null;
 }
 

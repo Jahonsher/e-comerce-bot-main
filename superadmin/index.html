@@ -4,348 +4,492 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>SuperAdmin — Boshqaruv Markazi</title>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:     #070b14;
-  --bg2:    #0d1220;
-  --bg3:    #141d2e;
-  --card:   #0f1828;
-  --border: rgba(139,92,246,0.15);
-  --purple: #8b5cf6;
-  --violet: #a78bfa;
-  --gold:   #f59e0b;
-  --green:  #10b981;
-  --red:    #ef4444;
-  --blue:   #3b82f6;
-  --text:   #f1f5f9;
-  --muted:  #64748b;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;min-height:100vh;}
-::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-thumb{background:var(--purple);border-radius:2px;}
-
-/* LOGIN */
-#loginPage{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100;}
-.login-box{width:min(400px,92vw);background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:44px 36px;}
-.login-crown{font-size:40px;text-align:center;margin-bottom:10px;}
-.login-title{font-family:'Playfair Display',serif;font-size:24px;color:var(--violet);text-align:center;margin-bottom:4px;}
-.login-sub{font-size:12px;color:var(--muted);text-align:center;margin-bottom:32px;letter-spacing:2px;text-transform:uppercase;}
-.fg{margin-bottom:16px;}
-.fg label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;}
-.fg input{width:100%;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Manrope',sans-serif;font-size:14px;outline:none;transition:border .2s;}
-.fg input:focus{border-color:var(--purple);}
-.login-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--purple),#6d28d9);color:#fff;border:none;border-radius:10px;font-family:'Manrope',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;letter-spacing:.5px;}
-.login-err{color:var(--red);font-size:13px;text-align:center;margin-top:10px;min-height:18px;}
-
-/* LAYOUT */
-#app{display:none;min-height:100vh;}
-.sidebar{position:fixed;left:0;top:0;bottom:0;width:230px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:30;}
-.sidebar-logo{padding:24px 20px 18px;border-bottom:1px solid var(--border);}
-.logo-badge{display:inline-block;background:linear-gradient(135deg,var(--purple),#6d28d9);color:#fff;font-size:10px;font-weight:700;letter-spacing:2px;padding:3px 8px;border-radius:4px;margin-bottom:6px;}
-.logo-name{font-family:'Playfair Display',serif;font-size:20px;color:var(--violet);}
-.logo-sub{font-size:11px;color:var(--muted);margin-top:2px;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;cursor:pointer;border-left:3px solid transparent;transition:all .2s;font-size:13px;font-weight:500;color:var(--muted);}
-.nav-item:hover{background:rgba(139,92,246,0.07);color:var(--text);}
-.nav-item.active{background:rgba(139,92,246,0.12);border-left-color:var(--purple);color:var(--violet);}
-.nav-icon{font-size:16px;width:22px;text-align:center;}
-.nav-section{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:18px 20px 6px;opacity:.45;}
-.sidebar-bottom{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);}
-.logout-btn{width:100%;padding:9px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:8px;color:#ef4444;font-family:'Manrope',sans-serif;font-size:12px;cursor:pointer;}
-
-.main{margin-left:230px;padding:28px;min-height:100vh;}
-.page-header{margin-bottom:24px;}
-.page-header h1{font-family:'Playfair Display',serif;font-size:26px;}
-.page-header p{font-size:13px;color:var(--muted);margin-top:4px;}
-
-/* STATS */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:24px;}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;}
-.stat-card .icon{font-size:26px;margin-bottom:8px;}
-.stat-card .label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
-.stat-card .value{font-size:30px;font-weight:800;}
-.stat-card .sub{font-size:12px;color:var(--muted);margin-top:4px;}
-
-/* RESTAURANTS TABLE */
-.table-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px;}
-.table-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);}
-.table-header h3{font-size:15px;font-weight:700;}
-table{width:100%;border-collapse:collapse;}
-th{padding:10px 16px;text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);background:var(--bg3);}
-td{padding:13px 16px;font-size:13px;border-bottom:1px solid rgba(139,92,246,0.05);}
-tr:last-child td{border-bottom:none;}
-tr:hover td{background:rgba(139,92,246,0.04);}
-
-.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
-.badge-on{background:rgba(16,185,129,0.15);color:#10b981;}
-.badge-off{background:rgba(239,68,68,0.15);color:#ef4444;}
-
-/* MODAL */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;display:none;align-items:center;justify-content:center;}
-.modal-bg.open{display:flex;}
-.modal{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:30px;width:min(520px,95vw);max-height:90vh;overflow-y:auto;}
-.modal h2{font-family:'Playfair Display',serif;font-size:22px;color:var(--violet);margin-bottom:22px;}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.form-grid .full{grid-column:1/-1;}
-.fg-modal label{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px;}
-.fg-modal input{width:100%;padding:11px 13px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Manrope',sans-serif;font-size:13px;outline:none;}
-.fg-modal input:focus{border-color:var(--purple);}
-.modal-actions{display:flex;gap:10px;margin-top:20px;}
-.btn-primary{flex:1;padding:11px;background:linear-gradient(135deg,var(--purple),#6d28d9);color:#fff;border:none;border-radius:8px;font-family:'Manrope',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
-.btn-secondary{padding:11px 18px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;font-family:'Manrope',sans-serif;font-size:13px;cursor:pointer;}
-
-.add-btn-wrap{display:flex;justify-content:flex-end;margin-bottom:16px;}
-.btn-add{padding:10px 22px;background:linear-gradient(135deg,var(--purple),#6d28d9);color:#fff;border:none;border-radius:8px;font-family:'Manrope',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
-.btn-edit{padding:6px 12px;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);color:var(--violet);border-radius:6px;font-size:12px;cursor:pointer;}
-.btn-del{padding:6px 10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#ef4444;border-radius:6px;font-size:12px;cursor:pointer;margin-left:4px;}
-
-/* RESTAURANT CARD */
-.rest-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
-.rest-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;transition:transform .2s;}
-.rest-card:hover{transform:translateY(-2px);}
-.rest-card-top{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
-.rest-avatar{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--purple),#6d28d9);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
-.rest-name{font-size:15px;font-weight:700;}
-.rest-id{font-size:11px;color:var(--muted);}
-.rest-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
-.rest-stat{background:var(--bg3);border-radius:8px;padding:10px 12px;}
-.rest-stat-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
-.rest-stat-value{font-size:18px;font-weight:700;}
-.rest-actions{display:flex;gap:8px;}
-
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-.page{animation:fadeIn .25s ease;}
-
-/* Chart */
-.chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px;}
-.chart-title{font-size:14px;font-weight:600;margin-bottom:16px;}
+  body { background:#070b14; color:#f1f5f9; font-family:'Manrope',sans-serif; }
+  ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#8b5cf6;border-radius:2px}
+  .si{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;border-left:3px solid transparent;font-size:13px;font-weight:500;color:#64748b;transition:all .2s}
+  .si:hover{background:rgba(139,92,246,0.07);color:#f1f5f9}
+  .si.active{background:rgba(139,92,246,0.12);border-left-color:#8b5cf6;color:#a78bfa}
+  .inp{width:100%;padding:11px 14px;background:#141d2e;border:1px solid rgba(139,92,246,0.15);border-radius:8px;color:#f1f5f9;font-family:'Manrope',sans-serif;font-size:14px;outline:none;transition:border .2s}
+  .inp:focus{border-color:#8b5cf6}
+  .tab-btn{padding:8px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;border:1px solid rgba(139,92,246,0.2);color:#64748b;background:transparent;white-space:nowrap}
+  .tab-btn.active{background:rgba(139,92,246,0.2);color:#a78bfa;border-color:#8b5cf6}
+  .tab-btn:hover:not(.active){background:rgba(139,92,246,0.07);color:#f1f5f9}
+  .pb{padding:5px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;border:1px solid rgba(139,92,246,0.15);color:#64748b;background:transparent}
+  .pb.active{background:#8b5cf6;color:#fff;border-color:#8b5cf6}
+  .pb:hover:not(.active){color:#f1f5f9}
+  .rank-row{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;border:1px solid rgba(139,92,246,0.1);background:#0f1828;margin-bottom:8px;transition:all .2s}
+  .rank-row:hover{border-color:rgba(139,92,246,0.3);transform:translateY(-1px)}
+  .m1{background:linear-gradient(135deg,#f59e0b,#d97706)}
+  .m2{background:linear-gradient(135deg,#94a3b8,#64748b)}
+  .m3{background:linear-gradient(135deg,#cd7f32,#a0522d)}
+  .mo{background:#1a2235}
+  .smc{background:#0f1828;border:1px solid rgba(139,92,246,0.1);border-radius:10px;padding:14px 16px}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .page{animation:fadeIn .22s ease}
+  @media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.mw{margin-left:0!important}}
 </style>
 </head>
 <body>
 
-<div id="loginPage">
-  <div class="login-box">
-    <div class="login-crown">👑</div>
-    <div class="login-title">SuperAdmin</div>
-    <div class="login-sub">Boshqaruv Markazi</div>
-    <div class="fg"><label>Login</label><input type="text" id="loginUser" placeholder="username" onkeydown="if(event.key==='Enter')doLogin()"/></div>
-    <div class="fg"><label>Parol</label><input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
-    <button class="login-btn" onclick="doLogin()">Kirish</button>
-    <div class="login-err" id="loginErr"></div>
+<!-- LOGIN -->
+<div id="loginPage" class="fixed inset-0 flex items-center justify-center z-50" style="background:#070b14">
+  <div class="w-full max-w-sm mx-4 rounded-2xl p-10 border" style="background:#0d1220;border-color:rgba(139,92,246,0.2)">
+    <div class="text-4xl text-center mb-3">👑</div>
+    <div class="font-serif text-2xl text-center mb-1" style="color:#a78bfa">SuperAdmin</div>
+    <div class="text-center text-xs mb-8 tracking-widest uppercase" style="color:#64748b">Boshqaruv Markazi</div>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Login</label><input id="loginUser" type="text" class="inp" placeholder="username"/></div>
+    <div class="mb-2"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Parol</label><input id="loginPass" type="password" class="inp" placeholder="••••••••"/></div>
+    <button id="loginBtn" class="w-full mt-5 py-3 rounded-xl font-bold text-sm text-white" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">Kirish</button>
+    <div id="loginErr" class="text-center text-sm mt-3 min-h-5" style="color:#ef4444"></div>
   </div>
 </div>
 
-<div id="app">
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="logo-badge">SUPERADMIN</div>
-      <div class="logo-name">✦ Boshqaruv</div>
-      <div class="logo-sub" id="saUsername"></div>
+<!-- APP -->
+<div id="app" class="hidden min-h-screen">
+  <button id="hamburger" class="fixed top-4 left-4 z-40 md:hidden flex items-center justify-center w-10 h-10 rounded-xl border text-lg" style="background:#0d1220;border-color:rgba(139,92,246,0.2)">☰</button>
+  <div id="sidebarOverlay" class="hidden fixed inset-0 z-30 md:hidden" style="background:rgba(0,0,0,0.6)"></div>
+  <aside id="sidebar" class="fixed left-0 top-0 bottom-0 w-56 z-40 flex flex-col transition-transform duration-300 border-r" style="background:#0d1220;border-color:rgba(139,92,246,0.12)">
+    <div class="px-5 py-6 border-b" style="border-color:rgba(139,92,246,0.12)">
+      <div class="text-xs font-bold tracking-widest uppercase px-2 py-0.5 rounded inline-block mb-2" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff">SUPERADMIN</div>
+      <div class="font-serif text-lg" style="color:#a78bfa">✦ Boshqaruv</div>
+      <div id="saUsername" class="text-xs mt-1" style="color:#64748b"></div>
     </div>
-    <div style="padding:12px 0">
-      <div class="nav-section">Asosiy</div>
-      <div class="nav-item active" onclick="showPage('dashboard')" data-page="dashboard"><span class="nav-icon">📊</span> Dashboard</div>
-      <div class="nav-item" onclick="showPage('restaurants')" data-page="restaurants"><span class="nav-icon">🏪</span> Restoranlar</div>
-    </div>
-    <div class="sidebar-bottom">
-      <button class="logout-btn" onclick="doLogout()">Chiqish</button>
+    <nav class="py-3 flex-1">
+      <div class="si active" data-page="dashboard"><span>📊</span> Dashboard</div>
+      <div class="si" data-page="restaurants"><span>🏪</span> Restoranlar</div>
+    </nav>
+    <div class="p-4 border-t" style="border-color:rgba(139,92,246,0.12)">
+      <button id="logoutBtn" class="w-full py-2 rounded-lg text-xs font-semibold border" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.2);color:#ef4444">Chiqish</button>
     </div>
   </aside>
-
-  <main class="main" id="mainContent"></main>
+  <main id="mainContent" class="mw ml-56 p-7 min-h-screen"></main>
 </div>
 
 <!-- RESTAURANT MODAL -->
-<div class="modal-bg" id="restModal">
-  <div class="modal">
-    <h2 id="restModalTitle">Yangi restoran qo'shish</h2>
+<div id="restModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,0.8)">
+  <div class="w-full max-w-lg mx-4 rounded-2xl p-7 border overflow-y-auto" style="background:#0d1220;border-color:rgba(139,92,246,0.2);max-height:90vh">
+    <h2 id="restModalTitle" class="font-serif text-xl mb-5" style="color:#a78bfa">Yangi restoran</h2>
     <input type="hidden" id="restEditId"/>
-    <div class="form-grid">
-      <div class="fg-modal full"><label>Restoran nomi</label><input type="text" id="rName" placeholder="Samarqand Oshi"/></div>
-      <div class="fg-modal"><label>Restoran ID</label><input type="text" id="rId" placeholder="samarqand"/></div>
-      <div class="fg-modal"><label>Admin login</label><input type="text" id="rUsername" placeholder="samarqand_admin"/></div>
-      <div class="fg-modal"><label>Parol</label><input type="password" id="rPassword" placeholder="••••••••"/></div>
-      <div class="fg-modal"><label>Telefon</label><input type="text" id="rPhone" placeholder="+998 90 000 00 00"/></div>
-      <div class="fg-modal"><label>Manzil</label><input type="text" id="rAddress" placeholder="Toshkent, ..."/></div>
-      <div class="fg-modal full"><label>Bot Token (@BotFather dan)</label><input type="text" id="rBotToken" placeholder="1234567890:AAF..."/></div>
-      <div class="fg-modal"><label>Chef Telegram ID</label><input type="text" id="rChefId" placeholder="123456789"/></div>
-      <div class="fg-modal"><label>Webapp URL</label><input type="text" id="rWebapp" placeholder="https://...vercel.app"/></div>
+    <div class="grid grid-cols-2 gap-3">
+      <div class="col-span-2"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Restoran nomi *</label><input class="inp" type="text" id="rName" placeholder="Samarqand Oshi"/></div>
+      <div><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Restoran ID *</label><input class="inp" type="text" id="rId" placeholder="samarqand"/></div>
+      <div><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Admin login *</label><input class="inp" type="text" id="rUsername" placeholder="samarqand_admin"/></div>
+      <div><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Parol *</label><input class="inp" type="password" id="rPassword" placeholder="••••••••"/></div>
+      <div><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Telefon</label><input class="inp" type="text" id="rPhone" placeholder="+998 90 000 00 00"/></div>
+      <div class="col-span-2"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Manzil</label><input class="inp" type="text" id="rAddress" placeholder="Toshkent..."/></div>
+      <div class="col-span-2"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Bot Token</label><input class="inp" type="text" id="rBotToken" placeholder="1234567890:AAF..."/></div>
+      <div><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Chef Telegram ID</label><input class="inp" type="text" id="rChefId" placeholder="123456789"/></div>
+      <div><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Webapp URL</label><input class="inp" type="text" id="rWebapp" placeholder="https://..."/></div>
     </div>
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeRestModal()">Bekor</button>
-      <button class="btn-primary" onclick="saveRest()">Saqlash</button>
+    <div class="flex gap-3 mt-6">
+      <button id="restModalCancel" class="px-5 py-2.5 rounded-xl text-sm border" style="border-color:rgba(139,92,246,0.2);color:#64748b">Bekor</button>
+      <button id="restModalSave" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">Saqlash</button>
     </div>
   </div>
 </div>
 
 <script>
-const API = window.location.hostname === 'localhost'
+var API = window.location.hostname === 'localhost'
   ? 'http://localhost:5000'
   : 'https://e-comerce-bot-main-production.up.railway.app';
 
-let token    = localStorage.getItem('saToken');
-let saInfo   = JSON.parse(localStorage.getItem('saInfo') || '{}');
-let restChart = null;
+var token  = localStorage.getItem('saToken');
+var saInfo = JSON.parse(localStorage.getItem('saInfo') || '{}');
+var allRests    = [];
+var restStatsCache = {};
+var currentTab  = null;
+var currentPeriod = 'week';
+var tabChart = null;
 
+// ===== AUTH =====
 async function doLogin() {
-  const username = document.getElementById('loginUser').value.trim();
-  const password = document.getElementById('loginPass').value;
-  const errEl    = document.getElementById('loginErr');
-  errEl.textContent = '';
-  if (!username || !password) { errEl.textContent = 'Login va parolni kiriting'; return; }
+  var u = document.getElementById('loginUser').value.trim();
+  var p = document.getElementById('loginPass').value;
+  var e = document.getElementById('loginErr');
+  e.textContent = '';
+  if (!u || !p) { e.textContent = 'Login va parolni kiriting'; return; }
   try {
-    const r = await fetch(API + '/admin/login', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-    const d = await r.json();
-    if (!d.ok) { errEl.textContent = d.error || 'Xato'; return; }
-    if (d.admin.role !== 'superadmin') { errEl.textContent = 'Superadmin emas'; return; }
+    var r = await fetch(API + '/admin/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:u, password:p}) });
+    var d = await r.json();
+    if (!d.ok) { e.textContent = d.error || 'Xato'; return; }
+    if (d.admin.role !== 'superadmin') { e.textContent = 'Superadmin huquqi yoq'; return; }
     token  = d.token;
     saInfo = d.admin;
     localStorage.setItem('saToken', token);
     localStorage.setItem('saInfo', JSON.stringify(saInfo));
     startApp();
-  } catch(e) { errEl.textContent = 'Server bilan ulanib bo\'lmadi'; }
+  } catch(err) { e.textContent = 'Server bilan ulanib bolmadi'; }
 }
 
 function doLogout() {
   localStorage.removeItem('saToken');
   localStorage.removeItem('saInfo');
-  document.getElementById('app').style.display = 'none';
+  document.getElementById('app').classList.add('hidden');
   document.getElementById('loginPage').style.display = 'flex';
 }
 
-function authH() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }; }
-async function apiFetch(url, opts = {}) {
-  const r = await fetch(API + url, { ...opts, headers: { ...authH(), ...(opts.headers||{}) } });
-  if (r.status === 401) { doLogout(); return null; }
-  return r.json();
+function ah() { return {'Content-Type':'application/json','Authorization':'Bearer '+token}; }
+
+async function api(url, opts) {
+  opts = opts || {};
+  try {
+    var r = await fetch(API + url, { method:opts.method||'GET', headers:ah(), body:opts.body });
+    if (r.status === 401) { doLogout(); return null; }
+    return r.json();
+  } catch(e) { return null; }
 }
 
 function startApp() {
   document.getElementById('loginPage').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
+  document.getElementById('app').classList.remove('hidden');
   document.getElementById('saUsername').textContent = '@' + (saInfo.username || '');
   showPage('dashboard');
 }
 
 if (token) startApp();
 
+// ===== EVENTS =====
+document.getElementById('loginBtn').addEventListener('click', doLogin);
+document.getElementById('loginPass').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+document.getElementById('logoutBtn').addEventListener('click', doLogout);
+document.getElementById('hamburger').addEventListener('click', function(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('hidden');
+});
+document.getElementById('sidebarOverlay').addEventListener('click', function(){
+  document.getElementById('sidebar').classList.remove('open');
+  this.classList.add('hidden');
+});
+document.querySelectorAll('.si').forEach(function(el){
+  el.addEventListener('click', function(){ showPage(el.dataset.page); });
+});
+document.getElementById('restModal').addEventListener('click', function(e){ if(e.target===this) closeRestModal(); });
+document.getElementById('restModalCancel').addEventListener('click', closeRestModal);
+document.getElementById('restModalSave').addEventListener('click', saveRest);
+
 function showPage(page) {
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.page === page));
-  const main = document.getElementById('mainContent');
+  document.querySelectorAll('.si').forEach(function(el){ el.classList.toggle('active', el.dataset.page===page); });
+  if (window.innerWidth < 768) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.add('hidden'); }
+  var main = document.getElementById('mainContent');
   if (page === 'dashboard')   renderDashboard(main);
   if (page === 'restaurants') renderRestaurants(main);
 }
 
 // ===== DASHBOARD =====
 async function renderDashboard(main) {
-  main.innerHTML = `<div class="page">
-    <div class="page-header"><h1>Dashboard</h1><p>Barcha restoranlar umumiy ko'rinishi</p></div>
-    <div class="stats-grid" id="saStats"><div style="color:var(--muted)">Yuklanmoqda...</div></div>
-    <div class="chart-card"><div class="chart-title">🏪 Restoranlar bo'yicha buyurtmalar</div><div style="position:relative;height:260px"><canvas id="restChart"></canvas></div></div>
-  </div>`;
+  main.innerHTML = '<div class="page"><div class="text-center py-20" style="color:#64748b">⏳ Ma\'lumotlar yuklanmoqda...</div></div>';
 
-  const stats = await apiFetch('/superadmin/stats');
-  if (!stats) return;
+  var rests = await api('/superadmin/restaurants');
+  var gStats = await api('/superadmin/stats');
+  if (!rests || !gStats) return;
 
-  document.getElementById('saStats').innerHTML = `
-    <div class="stat-card"><div class="icon">🏪</div><div class="label">Restoranlar</div><div class="value">${stats.totalRestaurants}</div><div class="sub">Faol</div></div>
-    <div class="stat-card"><div class="icon">📦</div><div class="label">Bugungi buyurtmalar</div><div class="value">${stats.todayOrders}</div><div class="sub">Jami: ${stats.totalOrders}</div></div>
-    <div class="stat-card"><div class="icon">💰</div><div class="label">Oylik daromad</div><div class="value">${Number(stats.monthRevenue).toLocaleString()}</div><div class="sub">so'm</div></div>
-    <div class="stat-card"><div class="icon">👥</div><div class="label">Foydalanuvchilar</div><div class="value">${stats.totalUsers}</div><div class="sub">Jami</div></div>`;
+  allRests = rests;
+  if (!currentTab && rests.length) currentTab = rests[0].restaurantId;
 
-  if (restChart) restChart.destroy();
-  const ctx = document.getElementById('restChart')?.getContext('2d');
-  if (ctx && stats.perRestaurant?.length) {
-    restChart = new Chart(ctx, {
+  // Har restoran uchun stats olish
+  for (var i = 0; i < rests.length; i++) {
+    var rs = await api('/admin/stats?restaurantId=' + rests[i].restaurantId);
+    if (rs) restStatsCache[rests[i].restaurantId] = rs;
+  }
+
+  // Oylik daromad bo'yicha reyting
+  var byRevenue = rests.slice().sort(function(a,b){
+    var ar = restStatsCache[a.restaurantId] ? (restStatsCache[a.restaurantId].month.revenue||0) : 0;
+    var br = restStatsCache[b.restaurantId] ? (restStatsCache[b.restaurantId].month.revenue||0) : 0;
+    return br - ar;
+  });
+
+  // Buyurtmalar soni bo'yicha reyting
+  var byOrders = rests.slice().sort(function(a,b){
+    var ao = restStatsCache[a.restaurantId] ? (restStatsCache[a.restaurantId].month.orders||0) : 0;
+    var bo = restStatsCache[b.restaurantId] ? (restStatsCache[b.restaurantId].month.orders||0) : 0;
+    return bo - ao;
+  });
+
+  var totalMonthRev = 0;
+  rests.forEach(function(r){ if(restStatsCache[r.restaurantId]) totalMonthRev += restStatsCache[r.restaurantId].month.revenue||0; });
+
+  main.innerHTML = '<div class="page">' +
+    '<div class="mb-6"><h1 class="font-serif text-3xl font-bold">Dashboard</h1><p class="text-sm mt-1" style="color:#64748b">Barcha restoranlar umumiy tahlili</p></div>' +
+
+    // Umumiy kartalar
+    '<div class="grid gap-4 mb-7" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">' +
+      sc('🏪','Restoranlar',gStats.totalRestaurants,'Ulangan') +
+      sc('📦','Bugungi buyurtmalar',gStats.todayOrders,'Jami') +
+      sc('💰',"Oylik daromad",Number(totalMonthRev).toLocaleString(),"so'm") +
+      sc('👥','Foydalanuvchilar',gStats.totalUsers,'Jami') +
+    '</div>' +
+
+    // Reytinglar
+    '<div class="grid gap-5 mb-7" style="grid-template-columns:1fr 1fr">' +
+      // Daromad reytingi
+      '<div class="rounded-xl border p-5" style="background:#0f1828;border-color:rgba(139,92,246,0.12)">' +
+        '<div class="flex items-center gap-2 mb-4"><span class="text-lg">🏆</span><span class="text-sm font-bold">Daromad reytingi</span><span class="text-xs ml-auto" style="color:#64748b">Oylik</span></div>' +
+        buildRank(byRevenue, function(r){ return restStatsCache[r.restaurantId] ? Number(restStatsCache[r.restaurantId].month.revenue||0).toLocaleString()+" so\'m" : '0'; },
+          function(r){ return restStatsCache[r.restaurantId] ? (restStatsCache[r.restaurantId].month.revenue||0) : 0; }, '#f59e0b') +
+      '</div>' +
+      // Buyurtma reytingi
+      '<div class="rounded-xl border p-5" style="background:#0f1828;border-color:rgba(139,92,246,0.12)">' +
+        '<div class="flex items-center gap-2 mb-4"><span class="text-lg">📦</span><span class="text-sm font-bold">Buyurtma reytingi</span><span class="text-xs ml-auto" style="color:#64748b">Oylik</span></div>' +
+        buildRank(byOrders, function(r){ return restStatsCache[r.restaurantId] ? (restStatsCache[r.restaurantId].month.orders||0)+' ta' : '0 ta'; },
+          function(r){ return restStatsCache[r.restaurantId] ? (restStatsCache[r.restaurantId].month.orders||0) : 0; }, '#60a5fa') +
+      '</div>' +
+    '</div>' +
+
+    // Tabs
+    '<div class="flex items-center gap-3 mb-4 flex-wrap">' +
+      '<span class="text-sm font-bold">📊 Restoran tahlili</span>' +
+      '<div class="flex gap-2 flex-wrap" id="restTabs">' +
+        rests.map(function(r){
+          return '<button class="tab-btn '+(currentTab===r.restaurantId?'active':'')+'" data-rid="'+r.restaurantId+'">'+r.restaurantName+'</button>';
+        }).join('') +
+      '</div>' +
+    '</div>' +
+    '<div id="tabContent"></div>' +
+  '</div>';
+
+  document.getElementById('restTabs').addEventListener('click', function(e){
+    var btn = e.target.closest('.tab-btn');
+    if (!btn) return;
+    currentTab = btn.dataset.rid;
+    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.rid===currentTab); });
+    renderTab(currentTab, currentPeriod);
+  });
+
+  if (currentTab) renderTab(currentTab, currentPeriod);
+}
+
+function sc(icon, label, value, sub) {
+  return '<div class="rounded-xl border p-4" style="background:#0f1828;border-color:rgba(139,92,246,0.12)">'+
+    '<div class="text-2xl mb-2">'+icon+'</div>'+
+    '<div class="text-xs uppercase tracking-widest mb-1" style="color:#64748b">'+label+'</div>'+
+    '<div class="text-2xl font-bold">'+value+'</div>'+
+    '<div class="text-xs mt-1" style="color:#64748b">'+sub+'</div>'+
+  '</div>';
+}
+
+function buildRank(list, valFn, numFn, color) {
+  var maxVal = list.length ? numFn(list[0]) : 1;
+  if (maxVal === 0) maxVal = 1;
+  var html = '';
+  list.forEach(function(r, i) {
+    var val = numFn(r);
+    var pct = Math.round(val / maxVal * 100);
+    var mc  = i===0?'m1':i===1?'m2':i===2?'m3':'mo';
+    html += '<div class="rank-row">'+
+      '<div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 '+mc+'">'+( i+1)+'</div>'+
+      '<div style="flex:1">'+
+        '<div class="flex justify-between mb-1.5">'+
+          '<span class="text-sm font-semibold">'+r.restaurantName+'</span>'+
+          '<span class="text-xs font-bold" style="color:'+color+'">'+valFn(r)+'</span>'+
+        '</div>'+
+        '<div style="height:5px;background:#1a2235;border-radius:3px;overflow:hidden">'+
+          '<div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,#8b5cf6,'+color+');border-radius:3px;transition:width .5s"></div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  });
+  return html || '<div class="text-sm py-3" style="color:#64748b">Hali maʼlumot yoʼq</div>';
+}
+
+// ===== TAB CONTENT =====
+function getPeriodData(stats, period) {
+  if (!stats) return { orders:0, revenue:0, label:'—' };
+  if (period === 'today')  return { orders: stats.today.orders,  revenue: stats.today.revenue,  label:'Bugun' };
+  if (period === 'week')   return { orders: stats.weekly.reduce(function(s,d){return s+d.orders;},0), revenue: stats.weekly.reduce(function(s,d){return s+(d.revenue||0);},0), label:'Hafta' };
+  if (period === 'month')  return { orders: stats.month.orders,  revenue: stats.month.revenue,  label:'Oy' };
+  if (period === 'year')   return { orders: stats.month.orders * 12, revenue: stats.month.revenue * 12, label:'Yil (taxminiy)' };
+  return { orders:0, revenue:0 };
+}
+
+function getChartData(stats, period) {
+  if (!stats || !stats.weekly) return { labels:[], orders:[], revenue:[] };
+  if (period === 'today' || period === 'week') {
+    return {
+      labels:  stats.weekly.map(function(d){ return d.date; }),
+      orders:  stats.weekly.map(function(d){ return d.orders; }),
+      revenue: stats.weekly.map(function(d){ return d.revenue||0; })
+    };
+  }
+  // month/year — weekly ma'lumotni ko'rsatamiz
+  return {
+    labels:  stats.weekly.map(function(d){ return d.date; }),
+    orders:  stats.weekly.map(function(d){ return d.orders; }),
+    revenue: stats.weekly.map(function(d){ return d.revenue||0; })
+  };
+}
+
+function renderTab(rId, period) {
+  currentPeriod = period;
+  var stats = restStatsCache[rId];
+  var pd    = getPeriodData(stats, period);
+  var cd    = getChartData(stats, period);
+  var rest  = allRests.find(function(r){ return r.restaurantId === rId; });
+
+  var periods = [
+    { key:'today', label:'Bugun' },
+    { key:'week',  label:'Hafta' },
+    { key:'month', label:'Oy' },
+    { key:'year',  label:'Yil' }
+  ];
+
+  var html =
+    '<div class="rounded-xl border p-5 mb-5" style="background:#0f1828;border-color:rgba(139,92,246,0.12)">' +
+      // Period tugmalari
+      '<div class="flex gap-2 mb-5 flex-wrap">' +
+        periods.map(function(p){
+          return '<button class="pb '+(period===p.key?'active':'')+'" data-period="'+p.key+'">'+p.label+'</button>';
+        }).join('') +
+      '</div>' +
+
+      // Mini stats
+      '<div class="grid gap-3 mb-5" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">' +
+        '<div class="smc"><div class="text-xs uppercase tracking-widest mb-1" style="color:#64748b">'+pd.label+' buyurtmalar</div><div class="text-2xl font-bold" style="color:#a78bfa">'+pd.orders+'</div></div>' +
+        '<div class="smc"><div class="text-xs uppercase tracking-widest mb-1" style="color:#64748b">'+pd.label+" daromad</div><div class="text-xl font-bold" style="color:#f59e0b\">"+Number(pd.revenue).toLocaleString()+" so'm</div></div>" +
+        '<div class="smc"><div class="text-xs uppercase tracking-widest mb-1" style="color:#64748b">Online / Zal</div><div class="text-2xl font-bold">'+(stats?(stats.today.online+' / '+stats.today.dineIn):'—')+'</div></div>' +
+        '<div class="smc"><div class="text-xs uppercase tracking-widest mb-1" style="color:#64748b">Reyting ⭐</div><div class="text-2xl font-bold" style="color:#f59e0b">'+(stats&&stats.rating&&stats.rating.avg?stats.rating.avg:'—')+'</div></div>' +
+        '<div class="smc"><div class="text-xs uppercase tracking-widest mb-1" style="color:#64748b">Foydalanuvchilar</div><div class="text-2xl font-bold">'+(stats?stats.totalUsers:0)+'</div></div>' +
+      '</div>' +
+
+      // Grafik
+      '<div class="mb-2 text-xs font-semibold" style="color:#64748b">📈 So\'nggi 7 kunlik grafik</div>' +
+      '<div style="position:relative;height:200px"><canvas id="tabChart"></canvas></div>' +
+    '</div>' +
+
+    // TOP mahsulotlar
+    (stats && stats.topProducts && stats.topProducts.length ?
+      '<div class="rounded-xl border p-5 mb-5" style="background:#0f1828;border-color:rgba(139,92,246,0.12)">' +
+        '<div class="text-sm font-bold mb-4">🏆 Ko\'p sotilgan mahsulotlar — ' + (rest?rest.restaurantName:'') + '</div>' +
+        stats.topProducts.map(function(p, i){
+          var pct = stats.topProducts[0].quantity ? Math.round(p.quantity/stats.topProducts[0].quantity*100) : 0;
+          return '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">'+
+            '<div style="width:22px;height:22px;border-radius:50%;background:#8b5cf6;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">'+(i+1)+'</div>'+
+            '<div style="flex:1">'+
+              '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'+
+                '<span style="font-size:13px;font-weight:600">'+p._id+'</span>'+
+                '<span style="font-size:12px;color:#f59e0b">'+p.quantity+' ta &middot; '+Number(p.total).toLocaleString()+" so'm</span>"+
+              '</div>'+
+              '<div style="height:5px;background:#1a2235;border-radius:3px;overflow:hidden">'+
+                '<div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,#8b5cf6,#f59e0b);border-radius:3px"></div>'+
+              '</div>'+
+            '</div>'+
+          '</div>';
+        }).join('') +
+      '</div>'
+    : '') +
+    '';
+
+  document.getElementById('tabContent').innerHTML = html;
+
+  // Period events
+  document.querySelectorAll('.pb').forEach(function(btn){
+    btn.addEventListener('click', function(){ renderTab(rId, btn.dataset.period); });
+  });
+
+  // Chart
+  if (tabChart) { tabChart.destroy(); tabChart = null; }
+  var ctx = document.getElementById('tabChart');
+  if (ctx && cd.labels.length) {
+    tabChart = new Chart(ctx.getContext('2d'), {
       type: 'bar',
       data: {
-        labels: stats.perRestaurant.map(r => r._id),
-        datasets: [{
-          label: 'Buyurtmalar',
-          data: stats.perRestaurant.map(r => r.count),
-          backgroundColor: 'rgba(139,92,246,0.6)',
-          borderColor: '#8b5cf6', borderRadius: 8, borderWidth: 1
-        }]
+        labels: cd.labels,
+        datasets: [
+          { label:'Buyurtmalar', data:cd.orders, backgroundColor:'rgba(139,92,246,0.6)', borderColor:'#8b5cf6', borderRadius:5, borderWidth:1, yAxisID:'y' },
+          { label:"Daromad (so'm)", data:cd.revenue, type:'line', borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,0.08)', borderWidth:2, pointRadius:3, fill:true, tension:0.3, yAxisID:'y1' }
+        ]
       },
       options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(139,92,246,0.06)' } },
-          y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(139,92,246,0.06)' } }
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ position:'top', labels:{ color:'#94a3b8', font:{size:11}, boxWidth:12 } } },
+        scales:{
+          x:{ ticks:{color:'#64748b',font:{size:11}}, grid:{color:'rgba(139,92,246,0.06)'} },
+          y:{ ticks:{color:'#a78bfa',font:{size:11}}, grid:{color:'rgba(139,92,246,0.06)'}, position:'left' },
+          y1:{ ticks:{color:'#f59e0b',font:{size:10}}, grid:{display:false}, position:'right' }
         }
       }
     });
   }
 }
 
-// ===== RESTAURANTS =====
+// ===== RESTAURANTS PAGE =====
 async function renderRestaurants(main) {
-  main.innerHTML = `<div class="page">
-    <div class="page-header"><h1>Restoranlar</h1><p>Barcha ulangan restoranlar</p></div>
-    <div class="add-btn-wrap"><button class="btn-add" onclick="openRestModal()">＋ Yangi restoran qo'shish</button></div>
-    <div class="rest-cards" id="restCards"><div style="color:var(--muted)">Yuklanmoqda...</div></div>
-  </div>`;
+  main.innerHTML = '<div class="page"><div class="mb-6"><h1 class="font-serif text-3xl font-bold">Restoranlar</h1><p class="text-sm mt-1" style="color:#64748b">Barcha ulangan restoranlar</p></div>' +
+    '<div class="flex justify-end mb-4"><button id="addRestBtn" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">+ Yangi restoran</button></div>' +
+    '<div id="restCards" class="grid gap-4" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))"><div style="color:#64748b">Yuklanmoqda...</div></div>' +
+  '</div>';
+  document.getElementById('addRestBtn').addEventListener('click', function(){ openRestModal(null); });
   loadRestCards();
 }
 
 async function loadRestCards() {
-  const rests = await apiFetch('/superadmin/restaurants');
+  var rests = await api('/superadmin/restaurants');
   if (!rests) return;
-  const el = document.getElementById('restCards');
+  var el = document.getElementById('restCards');
   if (!el) return;
-  if (!rests.length) { el.innerHTML = `<div style="color:var(--muted);padding:20px">Hali restoran qo'shilmagan</div>`; return; }
-  el.innerHTML = rests.map(r => `
-    <div class="rest-card">
-      <div class="rest-card-top">
-        <div class="rest-avatar">🏪</div>
-        <div>
-          <div class="rest-name">${r.restaurantName}</div>
-          <div class="rest-id">ID: ${r.restaurantId} · @${r.username}</div>
-        </div>
-        <span class="badge ${r.active !== false ? 'badge-on' : 'badge-off'}" style="margin-left:auto">${r.active !== false ? 'Faol' : 'Bloklangan'}</span>
-      </div>
-      <div class="rest-stats">
-        <div class="rest-stat"><div class="rest-stat-label">Bugun</div><div class="rest-stat-value" style="color:var(--violet)">${r.todayOrders}</div></div>
-        <div class="rest-stat"><div class="rest-stat-label">Jami</div><div class="rest-stat-value">${r.totalOrders}</div></div>
-      </div>
-      ${r.phone ? `<div style="font-size:12px;color:var(--muted);margin-bottom:10px">📞 ${r.phone}</div>` : ''}
-      ${r.address ? `<div style="font-size:12px;color:var(--muted);margin-bottom:12px">📍 ${r.address}</div>` : ''}
-      <div class="rest-actions">
-        <button class="btn-edit" style="flex:1" onclick='openRestModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>✏️ Tahrirlash</button>
-        <button class="btn-edit" style="flex:1;background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3);color:#10b981" onclick="toggleActive('${r._id}', ${r.active !== false})">${r.active !== false ? '🔒 Bloklash' : '✅ Faollashtirish'}</button>
-        <button class="btn-del" onclick="deleteRest('${r._id}')">🗑</button>
-      </div>
-    </div>`).join('');
+  if (!rests.length) { el.innerHTML = '<div style="color:#64748b" class="p-5">Hali restoran qo\'shilmagan</div>'; return; }
+  el.innerHTML = '';
+  rests.forEach(function(r) {
+    var div = document.createElement('div');
+    div.className = 'rounded-xl border p-5 transition-transform hover:-translate-y-0.5';
+    div.style.cssText = 'background:#0f1828;border-color:rgba(139,92,246,0.12)';
+    div.innerHTML =
+      '<div class="flex items-center gap-3 mb-4">'+
+        '<div class="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">🏪</div>'+
+        '<div class="flex-1">'+
+          '<div class="font-bold text-sm">'+r.restaurantName+'</div>'+
+          '<div class="text-xs mt-0.5" style="color:#64748b">ID: '+r.restaurantId+' · @'+r.username+'</div>'+
+        '</div>'+
+        '<span class="text-xs px-2.5 py-1 rounded-full font-semibold '+(r.active!==false?'bg-green-900/30 text-green-400':'bg-red-900/30 text-red-400')+'">'+( r.active!==false?'Faol':'Bloklangan')+'</span>'+
+      '</div>'+
+      '<div class="grid grid-cols-2 gap-2 mb-4">'+
+        '<div class="rounded-lg p-3" style="background:#141d2e"><div class="text-xs mb-1" style="color:#64748b">Bugun</div><div class="text-xl font-bold" style="color:#a78bfa">'+r.todayOrders+'</div></div>'+
+        '<div class="rounded-lg p-3" style="background:#141d2e"><div class="text-xs mb-1" style="color:#64748b">Jami</div><div class="text-xl font-bold">'+r.totalOrders+'</div></div>'+
+      '</div>'+
+      (r.phone ? '<div class="text-xs mb-1" style="color:#64748b">📞 '+r.phone+'</div>' : '')+
+      (r.address ? '<div class="text-xs mb-3" style="color:#64748b">📍 '+r.address+'</div>' : '')+
+      '<div class="flex gap-2">'+
+        '<button class="edit-btn flex-1 py-2 rounded-lg text-xs font-semibold border" style="background:rgba(139,92,246,0.12);border-color:rgba(139,92,246,0.3);color:#a78bfa">✏️ Tahrirlash</button>'+
+        '<button class="tog-btn py-2 px-3 rounded-lg text-xs border '+(r.active!==false?'text-yellow-400':'text-green-400')+'" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.2)">'+(r.active!==false?'🔒':'✅')+'</button>'+
+        '<button class="del-btn py-2 px-3 rounded-lg text-xs border" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.2);color:#ef4444">🗑</button>'+
+      '</div>';
+    div.querySelector('.edit-btn').addEventListener('click', function(){ openRestModal(r); });
+    div.querySelector('.tog-btn').addEventListener('click', function(){ toggleRest(r._id, r.active!==false); });
+    div.querySelector('.del-btn').addEventListener('click', function(){ deleteRest(r._id); });
+    el.appendChild(div);
+  });
 }
 
 function openRestModal(r) {
-  document.getElementById('restModalTitle').textContent = r ? 'Restoranni tahrirlash' : 'Yangi restoran qo\'shish';
-  document.getElementById('restEditId').value  = r?._id || '';
-  document.getElementById('rName').value       = r?.restaurantName || '';
-  document.getElementById('rId').value         = r?.restaurantId || '';
-  document.getElementById('rUsername').value   = r?.username || '';
-  document.getElementById('rPassword').value   = '';
-  document.getElementById('rPhone').value      = r?.phone || '';
-  document.getElementById('rAddress').value    = r?.address || '';
-  document.getElementById('rBotToken').value   = r?.botToken || '';
-  document.getElementById('rChefId').value     = r?.chefId || '';
-  document.getElementById('rWebapp').value     = r?.webappUrl || '';
-  // Tahrirlashda ID o'zgartirib bo'lmaydi
-  document.getElementById('rId').disabled      = !!r;
+  document.getElementById('restModalTitle').textContent = r ? 'Restoranni tahrirlash' : "Yangi restoran qo'shish";
+  document.getElementById('restEditId').value   = r ? r._id : '';
+  document.getElementById('rName').value        = r ? (r.restaurantName||'') : '';
+  document.getElementById('rId').value          = r ? (r.restaurantId||'') : '';
+  document.getElementById('rUsername').value    = r ? (r.username||'') : '';
+  document.getElementById('rPassword').value    = '';
+  document.getElementById('rPhone').value       = r ? (r.phone||'') : '';
+  document.getElementById('rAddress').value     = r ? (r.address||'') : '';
+  document.getElementById('rBotToken').value    = r ? (r.botToken||'') : '';
+  document.getElementById('rChefId').value      = r ? (r.chefId||'') : '';
+  document.getElementById('rWebapp').value      = r ? (r.webappUrl||'') : '';
+  document.getElementById('rId').disabled       = !!r;
   document.getElementById('rUsername').disabled = !!r;
-  document.getElementById('restModal').classList.add('open');
+  document.getElementById('restModal').classList.remove('hidden');
+  document.getElementById('restModal').style.display = 'flex';
 }
 
-function closeRestModal() { document.getElementById('restModal').classList.remove('open'); }
+function closeRestModal() {
+  document.getElementById('restModal').classList.add('hidden');
+  document.getElementById('restModal').style.display = '';
+}
 
 async function saveRest() {
-  const id = document.getElementById('restEditId').value;
-  const body = {
+  var id = document.getElementById('restEditId').value;
+  var body = {
     restaurantName: document.getElementById('rName').value.trim(),
     restaurantId:   document.getElementById('rId').value.trim().toLowerCase().replace(/\s+/g,'_'),
     username:       document.getElementById('rUsername').value.trim(),
@@ -354,35 +498,33 @@ async function saveRest() {
     address:        document.getElementById('rAddress').value.trim(),
     botToken:       document.getElementById('rBotToken').value.trim(),
     chefId:         Number(document.getElementById('rChefId').value),
-    webappUrl:      document.getElementById('rWebapp').value.trim(),
+    webappUrl:      document.getElementById('rWebapp').value.trim()
   };
   if (!body.restaurantName) { alert('Restoran nomi majburiy'); return; }
-  let result;
+  var result;
   if (id) {
-    const { username, restaurantId, ...updateBody } = body;
-    if (!updateBody.password) delete updateBody.password;
-    result = await apiFetch(`/superadmin/restaurants/${id}`, { method: 'PUT', body: JSON.stringify(updateBody) });
+    var upd = { restaurantName:body.restaurantName, phone:body.phone, address:body.address, botToken:body.botToken, chefId:body.chefId, webappUrl:body.webappUrl };
+    if (body.password) upd.password = body.password;
+    result = await api('/superadmin/restaurants/'+id, { method:'PUT', body:JSON.stringify(upd) });
   } else {
     if (!body.username || !body.password || !body.restaurantId) { alert('Login, parol va ID majburiy'); return; }
-    result = await apiFetch('/superadmin/restaurants', { method: 'POST', body: JSON.stringify(body) });
+    result = await api('/superadmin/restaurants', { method:'POST', body:JSON.stringify(body) });
   }
-  if (result?.error) { alert(result.error); return; }
+  if (result && result.error) { alert(result.error); return; }
   closeRestModal();
   loadRestCards();
 }
 
-async function toggleActive(id, isActive) {
-  await apiFetch(`/superadmin/restaurants/${id}`, { method: 'PUT', body: JSON.stringify({ active: !isActive }) });
+async function toggleRest(id, isActive) {
+  await api('/superadmin/restaurants/'+id, { method:'PUT', body:JSON.stringify({active:!isActive}) });
   loadRestCards();
 }
 
 async function deleteRest(id) {
-  if (!confirm('Bu restoranni o\'chirishni xohlaysizmi? Buyurtmalar o\'chib ketmaydi.')) return;
-  await apiFetch(`/superadmin/restaurants/${id}`, { method: 'DELETE' });
+  if (!confirm("Rostdan o'chirasizmi?")) return;
+  await api('/superadmin/restaurants/'+id, { method:'DELETE' });
   loadRestCards();
 }
-
-document.getElementById('restModal').addEventListener('click', function(e) { if(e.target===this) closeRestModal(); });
 </script>
 </body>
 </html>

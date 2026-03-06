@@ -526,7 +526,7 @@
     document.getElementById(id)?.scrollIntoView({ behavior:'smooth' });
   }
 
-  // ===== EVENTS SLIDER =====
+  // ===== EVENTS SLIDER + SWIPE =====
   let currentSlide = 0;
   const totalSlides = 3;
   setInterval(() => goSlide((currentSlide+1) % totalSlides), 5000);
@@ -539,12 +539,42 @@
   function nextSlide() { goSlide((currentSlide+1) % totalSlides); }
   function prevSlide() { goSlide((currentSlide-1+totalSlides) % totalSlides); }
 
+  // Swipe for events slider
+  (function() {
+    const el = document.getElementById('eventsTrack');
+    let startX = 0, startY = 0, dragging = false;
+    el.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      dragging = true;
+    }, { passive: true });
+    el.addEventListener('touchend', e => {
+      if (!dragging) return;
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+        dx < 0 ? nextSlide() : prevSlide();
+      }
+      dragging = false;
+    }, { passive: true });
+    // Mouse drag (desktop)
+    let mouseStartX = 0, mouseDown = false;
+    el.addEventListener('mousedown', e => { mouseStartX = e.clientX; mouseDown = true; });
+    el.addEventListener('mouseup', e => {
+      if (!mouseDown) return;
+      const dx = e.clientX - mouseStartX;
+      if (Math.abs(dx) > 40) dx < 0 ? nextSlide() : prevSlide();
+      mouseDown = false;
+    });
+    el.addEventListener('mouseleave', () => mouseDown = false);
+  })();
+
   // Band qilish — @Jahonsher ga yo'naltirish
   function bookEvent() {
     window.open('https://t.me/Jahonsher', '_blank');
   }
 
-  // ===== GALLERY LIGHTBOX =====
+  // ===== GALLERY LIGHTBOX + SWIPE =====
   const galleryImages = [
     'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=90',
     'https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=1200&q=90',
@@ -570,6 +600,32 @@
   document.getElementById('lightbox').addEventListener('click', function(e) {
     if (e.target === this) closeLightbox();
   });
+
+  // Swipe for lightbox
+  (function() {
+    const lb = document.getElementById('lightbox');
+    let startX = 0, startY = 0;
+    lb.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, { passive: true });
+    lb.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+        lbShift(dx < 0 ? 1 : -1);
+      }
+    }, { passive: true });
+    // Mouse drag for lightbox
+    let mouseStartX = 0, mouseDown = false;
+    lb.addEventListener('mousedown', e => { if(e.target !== lb) { mouseStartX = e.clientX; mouseDown = true; }});
+    lb.addEventListener('mouseup', e => {
+      if (!mouseDown) return;
+      const dx = e.clientX - mouseStartX;
+      if (Math.abs(dx) > 40) lbShift(dx < 0 ? 1 : -1);
+      mouseDown = false;
+    });
+  })();
 </script>
 
 <script src="app.js"></script>

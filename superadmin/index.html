@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SuperAdmin — Boshqaruv Markazi</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:     #070b14;
+  --bg2:    #0d1220;
+  --bg3:    #141d2e;
+  --card:   #0f1828;
+  --border: rgba(139,92,246,0.15);
+  --purple: #8b5cf6;
+  --violet: #a78bfa;
+  --gold:   #f59e0b;
+  --green:  #10b981;
+  --red:    #ef4444;
+  --blue:   #3b82f6;
+  --text:   #f1f5f9;
+  --muted:  #64748b;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;min-height:100vh;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-thumb{background:var(--purple);border-radius:2px;}
+
+/* LOGIN */
+#loginPage{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100;}
+.login-box{width:min(400px,92vw);background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:44px 36px;}
+.login-crown{font-size:40px;text-align:center;margin-bottom:10px;}
+.login-title{font-family:'Playfair Display',serif;font-size:24px;color:var(--violet);text-align:center;margin-bottom:4px;}
+.login-sub{font-size:12px;color:var(--muted);text-align:center;margin-bottom:32px;letter-spacing:2px;text-transform:uppercase;}
+.fg{margin-bottom:16px;}
+.fg label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;}
+.fg input{width:100%;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Manrope',sans-serif;font-size:14px;outline:none;transition:border .2s;}
+.fg input:focus{border-color:var(--purple);}
+.login-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--purple),#6d28d9);color:#fff;border:none;border-radius:10px;font-family:'Manrope',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;letter-spacing:.5px;}
+.login-err{color:var(--red);font-size:13px;text-align:center;margin-top:10px;min-height:18px;}
+
+/* LAYOUT */
+#app{display:none;min-height:100vh;}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:230px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:30;}
+.sidebar-logo{padding:24px 20px 18px;border-bottom:1px solid var(--border);}
+.logo-badge{display:inline-block;background:linear-gradient(135deg,var(--purple),#6d28d9);color:#fff;font-size:10px;font-weight:700;letter-spacing:2px;padding:3px 8px;border-radius:4px;margin-bottom:6px;}
+.logo-name{font-family:'Playfair Display',serif;font-size:20px;color:var(--violet);}
+.logo-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;cursor:pointer;border-left:3px solid transparent;transition:all .2s;font-size:13px;font-weight:500;color:var(--muted);}
+.nav-item:hover{background:rgba(139,92,246,0.07);color:var(--text);}
+.nav-item.active{background:rgba(139,92,246,0.12);border-left-color:var(--purple);color:var(--violet);}
+.nav-icon{font-size:16px;width:22px;text-align:center;}
+.nav-section{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:18px 20px 6px;opacity:.45;}
+.sidebar-bottom{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);}
+.logout-btn{width:100%;padding:9px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:8px;color:#ef4444;font-family:'Manrope',sans-serif;font-size:12px;cursor:pointer;}
+
+.main{margin-left:230px;padding:28px;min-height:100vh;}
+.page-header{margin-bottom:24px;}
+.page-header h1{font-family:'Playfair Display',serif;font-size:26px;}
+.page-header p{font-size:13px;color:var(--muted);margin-top:4px;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:24px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;}
+.stat-card .icon{font-size:26px;margin-bottom:8px;}
+.stat-card .label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.stat-card .value{font-size:30px;font-weight:800;}
+.stat-card .sub{font-size:12px;color:var(--muted);margin-top:4px;}
+
+/* RESTAURANTS TABLE */
+.table-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px;}
+.table-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);}
+.table-header h3{font-size:15px;font-weight:700;}
+table{width:100%;border-collapse:collapse;}
+th{padding:10px 16px;text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);background:var(--bg3);}
+td{padding:13px 16px;font-size:13px;border-bottom:1px solid rgba(139,92,246,0.05);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(139,92,246,0.04);}
+
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-on{background:rgba(16,185,129,0.15);color:#10b981;}
+.badge-off{background:rgba(239,68,68,0.15);color:#ef4444;}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;display:none;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:30px;width:min(520px,95vw);max-height:90vh;overflow-y:auto;}
+.modal h2{font-family:'Playfair Display',serif;font-size:22px;color:var(--violet);margin-bottom:22px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-grid .full{grid-column:1/-1;}
+.fg-modal label{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px;}
+.fg-modal input{width:100%;padding:11px 13px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Manrope',sans-serif;font-size:13px;outline:none;}
+.fg-modal input:focus{border-color:var(--purple);}
+.modal-actions{display:flex;gap:10px;margin-top:20px;}
+.btn-primary{flex:1;padding:11px;background:linear-gradient(135deg,var(--purple),#6d28d9);color:#fff;border:none;border-radius:8px;font-family:'Manrope',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+.btn-secondary{padding:11px 18px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;font-family:'Manrope',sans-serif;font-size:13px;cursor:pointer;}
+
+.add-btn-wrap{display:flex;justify-content:flex-end;margin-bottom:16px;}
+.btn-add{padding:10px 22px;background:linear-gradient(135deg,var(--purple),#6d28d9);color:#fff;border:none;border-radius:8px;font-family:'Manrope',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+.btn-edit{padding:6px 12px;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);color:var(--violet);border-radius:6px;font-size:12px;cursor:pointer;}
+.btn-del{padding:6px 10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#ef4444;border-radius:6px;font-size:12px;cursor:pointer;margin-left:4px;}
+
+/* RESTAURANT CARD */
+.rest-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.rest-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;transition:transform .2s;}
+.rest-card:hover{transform:translateY(-2px);}
+.rest-card-top{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.rest-avatar{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--purple),#6d28d9);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.rest-name{font-size:15px;font-weight:700;}
+.rest-id{font-size:11px;color:var(--muted);}
+.rest-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.rest-stat{background:var(--bg3);border-radius:8px;padding:10px 12px;}
+.rest-stat-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.rest-stat-value{font-size:18px;font-weight:700;}
+.rest-actions{display:flex;gap:8px;}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.page{animation:fadeIn .25s ease;}
+
+/* Chart */
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px;}
+.chart-title{font-size:14px;font-weight:600;margin-bottom:16px;}
+</style>
+</head>
+<body>
+
+<div id="loginPage">
+  <div class="login-box">
+    <div class="login-crown">👑</div>
+    <div class="login-title">SuperAdmin</div>
+    <div class="login-sub">Boshqaruv Markazi</div>
+    <div class="fg"><label>Login</label><input type="text" id="loginUser" placeholder="username" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <div class="fg"><label>Parol</label><input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <button class="login-btn" onclick="doLogin()">Kirish</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<div id="app">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-badge">SUPERADMIN</div>
+      <div class="logo-name">✦ Boshqaruv</div>
+      <div class="logo-sub" id="saUsername"></div>
+    </div>
+    <div style="padding:12px 0">
+      <div class="nav-section">Asosiy</div>
+      <div class="nav-item active" onclick="showPage('dashboard')" data-page="dashboard"><span class="nav-icon">📊</span> Dashboard</div>
+      <div class="nav-item" onclick="showPage('restaurants')" data-page="restaurants"><span class="nav-icon">🏪</span> Restoranlar</div>
+    </div>
+    <div class="sidebar-bottom">
+      <button class="logout-btn" onclick="doLogout()">Chiqish</button>
+    </div>
+  </aside>
+
+  <main class="main" id="mainContent"></main>
+</div>
+
+<!-- RESTAURANT MODAL -->
+<div class="modal-bg" id="restModal">
+  <div class="modal">
+    <h2 id="restModalTitle">Yangi restoran qo'shish</h2>
+    <input type="hidden" id="restEditId"/>
+    <div class="form-grid">
+      <div class="fg-modal full"><label>Restoran nomi</label><input type="text" id="rName" placeholder="Samarqand Oshi"/></div>
+      <div class="fg-modal"><label>Restoran ID</label><input type="text" id="rId" placeholder="samarqand"/></div>
+      <div class="fg-modal"><label>Admin login</label><input type="text" id="rUsername" placeholder="samarqand_admin"/></div>
+      <div class="fg-modal"><label>Parol</label><input type="password" id="rPassword" placeholder="••••••••"/></div>
+      <div class="fg-modal"><label>Telefon</label><input type="text" id="rPhone" placeholder="+998 90 000 00 00"/></div>
+      <div class="fg-modal"><label>Manzil</label><input type="text" id="rAddress" placeholder="Toshkent, ..."/></div>
+      <div class="fg-modal full"><label>Bot Token (@BotFather dan)</label><input type="text" id="rBotToken" placeholder="1234567890:AAF..."/></div>
+      <div class="fg-modal"><label>Chef Telegram ID</label><input type="text" id="rChefId" placeholder="123456789"/></div>
+      <div class="fg-modal"><label>Webapp URL</label><input type="text" id="rWebapp" placeholder="https://...vercel.app"/></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeRestModal()">Bekor</button>
+      <button class="btn-primary" onclick="saveRest()">Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = window.location.hostname === 'localhost'
+  ? 'http://localhost:5000'
+  : 'https://e-comerce-bot-main-production.up.railway.app';
+
+let token    = localStorage.getItem('saToken');
+let saInfo   = JSON.parse(localStorage.getItem('saInfo') || '{}');
+let restChart = null;
+
+async function doLogin() {
+  const username = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value;
+  const errEl    = document.getElementById('loginErr');
+  errEl.textContent = '';
+  if (!username || !password) { errEl.textContent = 'Login va parolni kiriting'; return; }
+  try {
+    const r = await fetch(API + '/admin/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const d = await r.json();
+    if (!d.ok) { errEl.textContent = d.error || 'Xato'; return; }
+    if (d.admin.role !== 'superadmin') { errEl.textContent = 'Superadmin emas'; return; }
+    token  = d.token;
+    saInfo = d.admin;
+    localStorage.setItem('saToken', token);
+    localStorage.setItem('saInfo', JSON.stringify(saInfo));
+    startApp();
+  } catch(e) { errEl.textContent = 'Server bilan ulanib bo\'lmadi'; }
+}
+
+function doLogout() {
+  localStorage.removeItem('saToken');
+  localStorage.removeItem('saInfo');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+}
+
+function authH() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }; }
+async function apiFetch(url, opts = {}) {
+  const r = await fetch(API + url, { ...opts, headers: { ...authH(), ...(opts.headers||{}) } });
+  if (r.status === 401) { doLogout(); return null; }
+  return r.json();
+}
+
+function startApp() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('saUsername').textContent = '@' + (saInfo.username || '');
+  showPage('dashboard');
+}
+
+if (token) startApp();
+
+function showPage(page) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.page === page));
+  const main = document.getElementById('mainContent');
+  if (page === 'dashboard')   renderDashboard(main);
+  if (page === 'restaurants') renderRestaurants(main);
+}
+
+// ===== DASHBOARD =====
+async function renderDashboard(main) {
+  main.innerHTML = `<div class="page">
+    <div class="page-header"><h1>Dashboard</h1><p>Barcha restoranlar umumiy ko'rinishi</p></div>
+    <div class="stats-grid" id="saStats"><div style="color:var(--muted)">Yuklanmoqda...</div></div>
+    <div class="chart-card"><div class="chart-title">🏪 Restoranlar bo'yicha buyurtmalar</div><div style="position:relative;height:260px"><canvas id="restChart"></canvas></div></div>
+  </div>`;
+
+  const stats = await apiFetch('/superadmin/stats');
+  if (!stats) return;
+
+  document.getElementById('saStats').innerHTML = `
+    <div class="stat-card"><div class="icon">🏪</div><div class="label">Restoranlar</div><div class="value">${stats.totalRestaurants}</div><div class="sub">Faol</div></div>
+    <div class="stat-card"><div class="icon">📦</div><div class="label">Bugungi buyurtmalar</div><div class="value">${stats.todayOrders}</div><div class="sub">Jami: ${stats.totalOrders}</div></div>
+    <div class="stat-card"><div class="icon">💰</div><div class="label">Oylik daromad</div><div class="value">${Number(stats.monthRevenue).toLocaleString()}</div><div class="sub">so'm</div></div>
+    <div class="stat-card"><div class="icon">👥</div><div class="label">Foydalanuvchilar</div><div class="value">${stats.totalUsers}</div><div class="sub">Jami</div></div>`;
+
+  if (restChart) restChart.destroy();
+  const ctx = document.getElementById('restChart')?.getContext('2d');
+  if (ctx && stats.perRestaurant?.length) {
+    restChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: stats.perRestaurant.map(r => r._id),
+        datasets: [{
+          label: 'Buyurtmalar',
+          data: stats.perRestaurant.map(r => r.count),
+          backgroundColor: 'rgba(139,92,246,0.6)',
+          borderColor: '#8b5cf6', borderRadius: 8, borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(139,92,246,0.06)' } },
+          y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(139,92,246,0.06)' } }
+        }
+      }
+    });
+  }
+}
+
+// ===== RESTAURANTS =====
+async function renderRestaurants(main) {
+  main.innerHTML = `<div class="page">
+    <div class="page-header"><h1>Restoranlar</h1><p>Barcha ulangan restoranlar</p></div>
+    <div class="add-btn-wrap"><button class="btn-add" onclick="openRestModal()">＋ Yangi restoran qo'shish</button></div>
+    <div class="rest-cards" id="restCards"><div style="color:var(--muted)">Yuklanmoqda...</div></div>
+  </div>`;
+  loadRestCards();
+}
+
+async function loadRestCards() {
+  const rests = await apiFetch('/superadmin/restaurants');
+  if (!rests) return;
+  const el = document.getElementById('restCards');
+  if (!el) return;
+  if (!rests.length) { el.innerHTML = `<div style="color:var(--muted);padding:20px">Hali restoran qo'shilmagan</div>`; return; }
+  el.innerHTML = rests.map(r => `
+    <div class="rest-card">
+      <div class="rest-card-top">
+        <div class="rest-avatar">🏪</div>
+        <div>
+          <div class="rest-name">${r.restaurantName}</div>
+          <div class="rest-id">ID: ${r.restaurantId} · @${r.username}</div>
+        </div>
+        <span class="badge ${r.active !== false ? 'badge-on' : 'badge-off'}" style="margin-left:auto">${r.active !== false ? 'Faol' : 'Bloklangan'}</span>
+      </div>
+      <div class="rest-stats">
+        <div class="rest-stat"><div class="rest-stat-label">Bugun</div><div class="rest-stat-value" style="color:var(--violet)">${r.todayOrders}</div></div>
+        <div class="rest-stat"><div class="rest-stat-label">Jami</div><div class="rest-stat-value">${r.totalOrders}</div></div>
+      </div>
+      ${r.phone ? `<div style="font-size:12px;color:var(--muted);margin-bottom:10px">📞 ${r.phone}</div>` : ''}
+      ${r.address ? `<div style="font-size:12px;color:var(--muted);margin-bottom:12px">📍 ${r.address}</div>` : ''}
+      <div class="rest-actions">
+        <button class="btn-edit" style="flex:1" onclick='openRestModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>✏️ Tahrirlash</button>
+        <button class="btn-edit" style="flex:1;background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3);color:#10b981" onclick="toggleActive('${r._id}', ${r.active !== false})">${r.active !== false ? '🔒 Bloklash' : '✅ Faollashtirish'}</button>
+        <button class="btn-del" onclick="deleteRest('${r._id}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+function openRestModal(r) {
+  document.getElementById('restModalTitle').textContent = r ? 'Restoranni tahrirlash' : 'Yangi restoran qo\'shish';
+  document.getElementById('restEditId').value  = r?._id || '';
+  document.getElementById('rName').value       = r?.restaurantName || '';
+  document.getElementById('rId').value         = r?.restaurantId || '';
+  document.getElementById('rUsername').value   = r?.username || '';
+  document.getElementById('rPassword').value   = '';
+  document.getElementById('rPhone').value      = r?.phone || '';
+  document.getElementById('rAddress').value    = r?.address || '';
+  document.getElementById('rBotToken').value   = r?.botToken || '';
+  document.getElementById('rChefId').value     = r?.chefId || '';
+  document.getElementById('rWebapp').value     = r?.webappUrl || '';
+  // Tahrirlashda ID o'zgartirib bo'lmaydi
+  document.getElementById('rId').disabled      = !!r;
+  document.getElementById('rUsername').disabled = !!r;
+  document.getElementById('restModal').classList.add('open');
+}
+
+function closeRestModal() { document.getElementById('restModal').classList.remove('open'); }
+
+async function saveRest() {
+  const id = document.getElementById('restEditId').value;
+  const body = {
+    restaurantName: document.getElementById('rName').value.trim(),
+    restaurantId:   document.getElementById('rId').value.trim().toLowerCase().replace(/\s+/g,'_'),
+    username:       document.getElementById('rUsername').value.trim(),
+    password:       document.getElementById('rPassword').value,
+    phone:          document.getElementById('rPhone').value.trim(),
+    address:        document.getElementById('rAddress').value.trim(),
+    botToken:       document.getElementById('rBotToken').value.trim(),
+    chefId:         Number(document.getElementById('rChefId').value),
+    webappUrl:      document.getElementById('rWebapp').value.trim(),
+  };
+  if (!body.restaurantName) { alert('Restoran nomi majburiy'); return; }
+  let result;
+  if (id) {
+    const { username, restaurantId, ...updateBody } = body;
+    if (!updateBody.password) delete updateBody.password;
+    result = await apiFetch(`/superadmin/restaurants/${id}`, { method: 'PUT', body: JSON.stringify(updateBody) });
+  } else {
+    if (!body.username || !body.password || !body.restaurantId) { alert('Login, parol va ID majburiy'); return; }
+    result = await apiFetch('/superadmin/restaurants', { method: 'POST', body: JSON.stringify(body) });
+  }
+  if (result?.error) { alert(result.error); return; }
+  closeRestModal();
+  loadRestCards();
+}
+
+async function toggleActive(id, isActive) {
+  await apiFetch(`/superadmin/restaurants/${id}`, { method: 'PUT', body: JSON.stringify({ active: !isActive }) });
+  loadRestCards();
+}
+
+async function deleteRest(id) {
+  if (!confirm('Bu restoranni o\'chirishni xohlaysizmi? Buyurtmalar o\'chib ketmaydi.')) return;
+  await apiFetch(`/superadmin/restaurants/${id}`, { method: 'DELETE' });
+  loadRestCards();
+}
+
+document.getElementById('restModal').addEventListener('click', function(e) { if(e.target===this) closeRestModal(); });
+</script>
+</body>
+</html>

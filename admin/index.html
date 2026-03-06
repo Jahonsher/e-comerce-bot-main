@@ -1,695 +1,149 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="uz" class="dark">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Imperial — Admin Panel</title>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        bg:      '#0b0f1a',
+        bg2:     '#111827',
+        bg3:     '#1a2235',
+        card:    '#131c2e',
+        accent:  '#3b82f6',
+        gold:    '#f59e0b',
+      },
+      fontFamily: {
+        sans: ['Manrope', 'sans-serif'],
+        serif: ['Playfair Display', 'serif'],
+      }
+    }
+  }
+}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-:root {
-  --bg:      #0b0f1a;
-  --bg2:     #111827;
-  --bg3:     #1a2235;
-  --border:  rgba(99,179,237,0.12);
-  --accent:  #3b82f6;
-  --accent2: #60a5fa;
-  --gold:    #f59e0b;
-  --green:   #10b981;
-  --red:     #ef4444;
-  --text:    #f1f5f9;
-  --muted:   #64748b;
-  --card:    #131c2e;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;font-weight:400;min-height:100vh;}
-::-webkit-scrollbar{width:4px;height:4px;}
-::-webkit-scrollbar-track{background:var(--bg);}
-::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px;}
-
-/* ===== LOGIN ===== */
-#loginPage{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100;}
-.login-box{width:min(380px,90vw);background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px 32px;}
-.login-logo{font-family:'Playfair Display',serif;font-size:26px;color:var(--gold);text-align:center;margin-bottom:6px;}
-.login-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:32px;}
-.form-group{margin-bottom:16px;}
-.form-group label{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;}
-.form-group input{width:100%;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Manrope',sans-serif;font-size:14px;outline:none;transition:border-color .2s;}
-.form-group input:focus{border-color:var(--accent);}
-.login-btn{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:'Manrope',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .2s;margin-top:8px;}
-.login-btn:hover{opacity:.88;}
-.login-err{color:var(--red);font-size:13px;text-align:center;margin-top:10px;min-height:18px;}
-
-/* ===== LAYOUT ===== */
-#app{display:none;min-height:100vh;}
-.sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:30;transition:transform .3s;}
-.sidebar-logo{padding:24px 20px 16px;border-bottom:1px solid var(--border);}
-.sidebar-logo .name{font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);}
-.sidebar-logo .sub{font-size:11px;color:var(--muted);margin-top:2px;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;cursor:pointer;border-left:3px solid transparent;transition:all .2s;font-size:13px;font-weight:500;color:var(--muted);}
-.nav-item:hover{background:rgba(59,130,246,0.07);color:var(--text);}
-.nav-item.active{background:rgba(59,130,246,0.1);border-left-color:var(--accent);color:var(--accent2);}
-.nav-icon{font-size:17px;width:22px;text-align:center;}
-.nav-section{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:18px 20px 6px;opacity:.5;}
-.sidebar-bottom{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);}
-.logout-btn{width:100%;padding:9px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:8px;color:#ef4444;font-family:'Manrope',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;}
-.logout-btn:hover{background:rgba(239,68,68,0.2);}
-
-.main{margin-left:220px;padding:28px;min-height:100vh;}
-.page-header{margin-bottom:24px;}
-.page-header h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;}
-.page-header p{font-size:13px;color:var(--muted);margin-top:4px;}
-
-/* ===== CARDS ===== */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;}
-.stat-card .label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
-.stat-card .value{font-size:28px;font-weight:700;color:var(--text);}
-.stat-card .sub{font-size:12px;color:var(--muted);margin-top:4px;}
-.stat-card .icon{font-size:28px;margin-bottom:8px;}
-
-/* ===== CHARTS ===== */
-.charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:24px;}
-.chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;}
-.chart-title{font-size:14px;font-weight:600;margin-bottom:16px;color:var(--text);}
-.chart-wrap{position:relative;height:220px;}
-
-/* ===== TABLE ===== */
-.table-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;}
-.table-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);}
-.table-header h3{font-size:14px;font-weight:600;}
-.table-filters{display:flex;gap:8px;flex-wrap:wrap;}
-.filter-btn{padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Manrope',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;}
-.filter-btn.active,.filter-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
-table{width:100%;border-collapse:collapse;}
-th{padding:10px 16px;text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);background:var(--bg3);}
-td{padding:12px 16px;font-size:13px;border-bottom:1px solid rgba(99,179,237,0.05);}
-tr:last-child td{border-bottom:none;}
-tr:hover td{background:rgba(59,130,246,0.04);}
-
-/* STATUS BADGE */
-.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
-.badge-new{background:rgba(245,158,11,0.15);color:#f59e0b;}
-.badge-accepted{background:rgba(16,185,129,0.15);color:#10b981;}
-.badge-rejected{background:rgba(239,68,68,0.15);color:#ef4444;}
-.badge-ready{background:rgba(59,130,246,0.15);color:#60a5fa;}
-.badge-online{background:rgba(139,92,246,0.15);color:#a78bfa;}
-.badge-dinein{background:rgba(245,158,11,0.15);color:#f59e0b;}
-
-/* ===== PRODUCTS ===== */
-.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
-.product-admin-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:transform .2s;}
-.product-admin-card:hover{transform:translateY(-2px);}
-.product-admin-card img{width:100%;height:140px;object-fit:cover;display:block;}
-.product-admin-card .img-ph{width:100%;height:140px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:36px;}
-.product-admin-info{padding:14px;}
-.product-admin-name{font-size:15px;font-weight:600;margin-bottom:2px;}
-.product-admin-price{font-size:14px;color:var(--gold);margin-bottom:4px;}
-.product-admin-cat{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
-.product-admin-actions{display:flex;gap:8px;}
-.btn-edit{flex:1;padding:7px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);color:var(--accent2);border-radius:6px;font-size:12px;cursor:pointer;transition:all .2s;font-family:'Manrope',sans-serif;}
-.btn-edit:hover{background:rgba(59,130,246,0.25);}
-.btn-del{padding:7px 10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#ef4444;border-radius:6px;font-size:12px;cursor:pointer;transition:all .2s;}
-.btn-del:hover{background:rgba(239,68,68,0.2);}
-.inactive-overlay{opacity:0.45;}
-
-/* ===== MODAL ===== */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:none;align-items:center;justify-content:center;}
-.modal-bg.open{display:flex;}
-.modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px;width:min(460px,95vw);max-height:90vh;overflow-y:auto;}
-.modal h2{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:20px;color:var(--gold);}
-.modal .form-group{margin-bottom:14px;}
-.modal-actions{display:flex;gap:10px;margin-top:20px;}
-.btn-primary{flex:1;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:'Manrope',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
-.btn-secondary{padding:11px 20px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;font-family:'Manrope',sans-serif;font-size:13px;cursor:pointer;}
-.btn-secondary:hover{color:var(--text);}
-select.form-input{width:100%;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Manrope',sans-serif;font-size:14px;outline:none;}
-
-/* ADD PRODUCT BTN */
-.add-btn-wrap{display:flex;justify-content:flex-end;margin-bottom:16px;}
-.btn-add{padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:'Manrope',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;}
-
-/* ===== RATING ===== */
-.rating-summary{display:flex;align-items:center;gap:20px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;}
-.rating-big{font-size:52px;font-weight:700;color:var(--gold);line-height:1;}
-.rating-stars{font-size:22px;margin-bottom:4px;}
-.rating-count{font-size:13px;color:var(--muted);}
-.rating-bars{flex:1;}
-.rating-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-.rating-bar-label{font-size:12px;color:var(--muted);width:12px;}
-.rating-bar-track{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;}
-.rating-bar-fill{height:100%;background:var(--gold);border-radius:3px;transition:width .5s;}
-.rating-bar-count{font-size:12px;color:var(--muted);width:20px;text-align:right;}
-
-/* ===== RESPONSIVE ===== */
-@media(max-width:768px){
-  .sidebar{transform:translateX(-100%);}
-  .sidebar.open{transform:translateX(0);}
-  .main{margin-left:0;}
-  .charts-grid{grid-template-columns:1fr;}
-  .hamburger{display:flex;}
-}
-.hamburger{display:none;position:fixed;top:16px;left:16px;z-index:40;background:var(--bg2);border:1px solid var(--border);width:40px;height:40px;border-radius:8px;align-items:center;justify-content:center;cursor:pointer;font-size:18px;}
-.overlay-sidebar{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:29;}
-
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
-.page{animation:fadeIn .25s ease;}
+  body { background:#0b0f1a; color:#f1f5f9; font-family:'Manrope',sans-serif; }
+  ::-webkit-scrollbar { width:4px; height:4px; }
+  ::-webkit-scrollbar-thumb { background:#3b82f6; border-radius:2px; }
+  .sidebar-item { display:flex; align-items:center; gap:10px; padding:10px 20px; cursor:pointer; border-left:3px solid transparent; font-size:13px; font-weight:500; color:#64748b; transition:all .2s; }
+  .sidebar-item:hover { background:rgba(59,130,246,0.07); color:#f1f5f9; }
+  .sidebar-item.active { background:rgba(59,130,246,0.1); border-left-color:#3b82f6; color:#60a5fa; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+  .badge-new      { background:rgba(245,158,11,0.15);  color:#f59e0b; }
+  .badge-accepted { background:rgba(16,185,129,0.15);  color:#10b981; }
+  .badge-rejected { background:rgba(239,68,68,0.15);   color:#ef4444; }
+  .badge-ready    { background:rgba(59,130,246,0.15);  color:#60a5fa; }
+  .badge-online   { background:rgba(139,92,246,0.15);  color:#a78bfa; }
+  .badge-dinein   { background:rgba(245,158,11,0.15);  color:#f59e0b; }
+  .cat-row { display:flex; align-items:center; gap:12px; padding:12px 20px; border-bottom:1px solid rgba(99,179,237,0.05); cursor:grab; transition:background .15s; }
+  .cat-row:last-child { border-bottom:none; }
+  .cat-row.drag-over { background:rgba(59,130,246,0.08); }
+  .cat-row.dragging  { opacity:.4; }
+  .inp { width:100%; padding:11px 14px; background:#1a2235; border:1px solid rgba(99,179,237,0.12); border-radius:8px; color:#f1f5f9; font-family:'Manrope',sans-serif; font-size:14px; outline:none; transition:border-color .2s; }
+  .inp:focus { border-color:#3b82f6; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .page { animation:fadeIn .22s ease; }
+  @media(max-width:768px){ .sidebar{ transform:translateX(-100%); } .sidebar.open{ transform:translateX(0); } .main-wrap{ margin-left:0 !important; } }
 </style>
 </head>
 <body>
 
 <!-- LOGIN -->
-<div id="loginPage">
-  <div class="login-box">
-    <div class="login-logo">✦ Imperial</div>
-    <div class="login-sub">Admin Panel</div>
-    <div class="form-group">
-      <label>Login</label>
-      <input type="text" id="loginUser" placeholder="username" autocomplete="username"/>
+<div id="loginPage" class="fixed inset-0 flex items-center justify-center z-50" style="background:#0b0f1a">
+  <div class="w-full max-w-sm mx-4 rounded-2xl p-10 border" style="background:#111827;border-color:rgba(99,179,237,0.12)">
+    <div class="font-serif text-2xl text-center mb-1" style="color:#f59e0b">✦ Imperial</div>
+    <div class="text-center text-xs mb-8 tracking-widest uppercase" style="color:#64748b">Admin Panel</div>
+    <div class="mb-4">
+      <label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Login</label>
+      <input id="loginUser" type="text" class="inp" placeholder="username" autocomplete="username"/>
     </div>
-    <div class="form-group">
-      <label>Parol</label>
-      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <div class="mb-2">
+      <label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Parol</label>
+      <input id="loginPass" type="password" class="inp" placeholder="••••••••" autocomplete="current-password"/>
     </div>
-    <button class="login-btn" onclick="doLogin()">Kirish</button>
-    <div class="login-err" id="loginErr"></div>
+    <button id="loginBtn" class="w-full mt-4 py-3 rounded-xl font-bold text-sm text-white transition-opacity hover:opacity-90" style="background:#3b82f6">Kirish</button>
+    <div id="loginErr" class="text-center text-sm mt-3 min-h-5" style="color:#ef4444"></div>
   </div>
 </div>
 
 <!-- APP -->
-<div id="app">
-  <button class="hamburger" id="hamburger" onclick="toggleSidebar()">☰</button>
-  <div class="overlay-sidebar" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<div id="app" class="hidden min-h-screen">
 
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
-      <div class="name">✦ Imperial</div>
-      <div class="sub" id="sidebarRestName">Admin Panel</div>
+  <!-- Hamburger -->
+  <button id="hamburger" class="fixed top-4 left-4 z-40 md:hidden flex items-center justify-center w-10 h-10 rounded-xl border text-lg" style="background:#111827;border-color:rgba(99,179,237,0.12)">☰</button>
+  <div id="sidebarOverlay" class="hidden fixed inset-0 z-30 md:hidden" style="background:rgba(0,0,0,0.5)"></div>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar fixed left-0 top-0 bottom-0 w-56 z-40 flex flex-col transition-transform duration-300 border-r" style="background:#111827;border-color:rgba(99,179,237,0.12)">
+    <div class="px-5 py-6 border-b" style="border-color:rgba(99,179,237,0.12)">
+      <div class="font-serif text-lg" style="color:#f59e0b">✦ Imperial</div>
+      <div id="sidebarRestName" class="text-xs mt-1" style="color:#64748b">Admin Panel</div>
     </div>
-    <div style="padding:12px 0;">
-      <div class="nav-section">Asosiy</div>
-      <div class="nav-item active" onclick="showPage('dashboard')" data-page="dashboard">
-        <span class="nav-icon">📊</span> Dashboard
-      </div>
-      <div class="nav-item" onclick="showPage('orders')" data-page="orders">
-        <span class="nav-icon">📦</span> Buyurtmalar
-      </div>
-      <div class="nav-section">Boshqaruv</div>
-      <div class="nav-item" onclick="showPage('products')" data-page="products">
-        <span class="nav-icon">🍽</span> Menyu
-      </div>
-      <div class="nav-item" onclick="showPage('ratings')" data-page="ratings">
-        <span class="nav-icon">⭐</span> Reytinglar
-      </div>
-      <div class="nav-item" onclick="showPage('users')" data-page="users">
-        <span class="nav-icon">👥</span> Foydalanuvchilar
-      </div>
-    </div>
-    <div class="sidebar-bottom">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;" id="adminUsername"></div>
-      <button class="logout-btn" onclick="doLogout()">Chiqish</button>
+    <nav class="py-3 flex-1">
+      <div class="px-5 py-3 text-xs uppercase tracking-widest opacity-40" style="color:#64748b">Asosiy</div>
+      <div class="sidebar-item active" data-page="dashboard"><span>📊</span> Dashboard</div>
+      <div class="sidebar-item" data-page="orders"><span>📦</span> Buyurtmalar</div>
+      <div class="px-5 py-3 text-xs uppercase tracking-widest opacity-40" style="color:#64748b">Boshqaruv</div>
+      <div class="sidebar-item" data-page="products"><span>🍽</span> Menyu</div>
+      <div class="sidebar-item" data-page="categories"><span>🗂</span> Kategoriyalar</div>
+      <div class="sidebar-item" data-page="ratings"><span>⭐</span> Reytinglar</div>
+      <div class="sidebar-item" data-page="users"><span>👥</span> Foydalanuvchilar</div>
+    </nav>
+    <div class="p-4 border-t" style="border-color:rgba(99,179,237,0.12)">
+      <div id="adminUsername" class="text-xs mb-2" style="color:#64748b"></div>
+      <button id="logoutBtn" class="w-full py-2 rounded-lg text-xs font-semibold border transition-all hover:bg-red-900/30" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.2);color:#ef4444">Chiqish</button>
     </div>
   </aside>
 
-  <main class="main" id="mainContent"></main>
+  <!-- Main -->
+  <main id="mainContent" class="main-wrap ml-56 p-7 min-h-screen"></main>
 </div>
 
 <!-- PRODUCT MODAL -->
-<div class="modal-bg" id="productModal">
-  <div class="modal">
-    <h2 id="modalTitle">Taom qo'shish</h2>
+<div id="productModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,0.75)">
+  <div class="w-full max-w-md mx-4 rounded-2xl p-7 border max-h-screen overflow-y-auto" style="background:#111827;border-color:rgba(99,179,237,0.12)">
+    <h2 id="modalTitle" class="font-serif text-xl mb-5" style="color:#f59e0b">Taom qo'shish</h2>
     <input type="hidden" id="productEditId"/>
-    <div class="form-group"><label>Nomi (UZ)</label><input class="form-input" type="text" id="pName" placeholder="Osh"/></div>
-    <div class="form-group"><label>Nomi (RU)</label><input class="form-input" type="text" id="pNameRu" placeholder="Плов"/></div>
-    <div class="form-group"><label>Narxi (so'm)</label><input class="form-input" type="number" id="pPrice" placeholder="45000"/></div>
-    <div class="form-group">
-      <label>Kategoriya</label>
-      <select class="form-input" id="pCategory">
-        <option value="Taom">Taom</option>
-        <option value="Ichimlik">Ichimlik</option>
-      </select>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Nomi (UZ)</label><input class="inp" type="text" id="pName" placeholder="Osh"/></div>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Nomi (RU)</label><input class="inp" type="text" id="pNameRu" placeholder="Плов"/></div>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Narxi (so'm)</label><input class="inp" type="number" id="pPrice" placeholder="45000"/></div>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Kategoriya</label><select class="inp" id="pCategory"></select></div>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Rasm URL</label><input class="inp" type="text" id="pImage" placeholder="https://..."/></div>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Holati</label>
+      <select class="inp" id="pActive"><option value="true">Aktiv</option><option value="false">Yashirilgan</option></select>
     </div>
-    <div class="form-group"><label>Rasm URL</label><input class="form-input" type="text" id="pImage" placeholder="https://..."/></div>
-    <div class="form-group">
-      <label>Holati</label>
-      <select class="form-input" id="pActive">
-        <option value="true">Aktiv</option>
-        <option value="false">Yashirilgan</option>
-      </select>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal()">Bekor</button>
-      <button class="btn-primary" onclick="saveProduct()">Saqlash</button>
+    <div class="flex gap-3 mt-6">
+      <button id="productModalCancel" class="px-5 py-2.5 rounded-xl text-sm border transition-colors hover:text-white" style="border-color:rgba(99,179,237,0.12);color:#64748b">Bekor</button>
+      <button id="productModalSave" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style="background:#3b82f6">Saqlash</button>
     </div>
   </div>
 </div>
 
-<script>
-const API = window.location.hostname === 'localhost'
-  ? 'http://localhost:5000'
-  : 'https://e-comerce-bot-main-production.up.railway.app';
-
-let token = localStorage.getItem('adminToken');
-let adminInfo = JSON.parse(localStorage.getItem('adminInfo') || '{}');
-let weeklyChart = null;
-let typeChart = null;
-let currentOrderFilter = 'all';
-
-// ===== AUTH =====
-async function doLogin() {
-  const username = document.getElementById('loginUser').value.trim();
-  const password = document.getElementById('loginPass').value;
-  const errEl = document.getElementById('loginErr');
-  errEl.textContent = '';
-  if (!username || !password) { errEl.textContent = 'Login va parolni kiriting'; return; }
-  try {
-    const r = await fetch(API + '/admin/login', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ username, password })
-    });
-    const d = await r.json();
-    if (!d.ok) { errEl.textContent = d.error || 'Xato'; return; }
-    token = d.token;
-    adminInfo = d.admin;
-    localStorage.setItem('adminToken', token);
-    localStorage.setItem('adminInfo', JSON.stringify(adminInfo));
-    startApp();
-  } catch(e) { errEl.textContent = 'Server bilan bog\'lanib bo\'lmadi'; }
-}
-
-function doLogout() {
-  localStorage.removeItem('adminToken');
-  localStorage.removeItem('adminInfo');
-  token = null;
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('loginPage').style.display = 'flex';
-}
-
-function authHeaders() {
-  return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token };
-}
-
-async function apiFetch(url, opts = {}) {
-  const r = await fetch(API + url, { ...opts, headers: { ...authHeaders(), ...(opts.headers||{}) } });
-  if (r.status === 401) { doLogout(); return null; }
-  return r.json();
-}
-
-// ===== START =====
-function startApp() {
-  document.getElementById('loginPage').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  document.getElementById('sidebarRestName').textContent = adminInfo.restaurantName || 'Restoran';
-  document.getElementById('adminUsername').textContent = '@' + (adminInfo.username || '');
-  showPage('dashboard');
-}
-
-if (token) startApp();
-
-// ===== SIDEBAR =====
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sidebarOverlay').style.display =
-    document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none';
-}
-
-function showPage(page) {
-  document.querySelectorAll('.nav-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.page === page);
-  });
-  if (window.innerWidth < 768) {
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('sidebarOverlay').style.display = 'none';
-  }
-  const main = document.getElementById('mainContent');
-  if (page === 'dashboard') renderDashboard(main);
-  else if (page === 'orders') renderOrders(main);
-  else if (page === 'products') renderProducts(main);
-  else if (page === 'ratings') renderRatings(main);
-  else if (page === 'users') renderUsers(main);
-}
-
-// ===== DASHBOARD =====
-async function renderDashboard(main) {
-  main.innerHTML = `<div class="page">
-    <div class="page-header"><h1>Dashboard</h1><p>Bugungi holat va statistika</p></div>
-    <div class="stats-grid" id="statsGrid"><div style="color:var(--muted);padding:20px;">Yuklanmoqda...</div></div>
-    <div class="charts-grid">
-      <div class="chart-card"><div class="chart-title">📈 Haftalik buyurtmalar</div><div class="chart-wrap"><canvas id="weeklyChart"></canvas></div></div>
-      <div class="chart-card"><div class="chart-title">🔵 Buyurtma turi (bugun)</div><div class="chart-wrap"><canvas id="typeChart"></canvas></div></div>
+<!-- CATEGORY MODAL -->
+<div id="catModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,0.75)">
+  <div class="w-full max-w-sm mx-4 rounded-2xl p-7 border" style="background:#111827;border-color:rgba(99,179,237,0.12)">
+    <h2 id="catModalTitle" class="font-serif text-xl mb-5" style="color:#f59e0b">Kategoriya qo'shish</h2>
+    <input type="hidden" id="catEditId"/>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Nomi (UZ)</label><input class="inp" type="text" id="cName" placeholder="Taom"/></div>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Nomi (RU)</label><input class="inp" type="text" id="cNameRu" placeholder="Еда"/></div>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Emoji</label><input class="inp" type="text" id="cEmoji" placeholder="🍽"/></div>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Holati</label>
+      <select class="inp" id="cActive"><option value="true">Ko'rinadi</option><option value="false">Yashirilgan</option></select>
     </div>
-    <div class="chart-card" style="margin-bottom:24px;">
-      <div class="chart-title">🏆 Ko'p sotilgan mahsulotlar (TOP 5)</div>
-      <div id="topProductsChart" style="padding:8px 0;"></div>
+    <div class="flex gap-3 mt-6">
+      <button id="catModalCancel" class="px-5 py-2.5 rounded-xl text-sm border transition-colors hover:text-white" style="border-color:rgba(99,179,237,0.12);color:#64748b">Bekor</button>
+      <button id="catModalSave" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style="background:#3b82f6">Saqlash</button>
     </div>
-    <div class="table-card">
-      <div class="table-header"><h3>Oxirgi buyurtmalar</h3></div>
-      <div id="recentOrders"><div style="padding:20px;color:var(--muted);">Yuklanmoqda...</div></div>
-    </div>
-  </div>`;
+  </div>
+</div>
 
-  const stats = await apiFetch('/admin/stats');
-  if (!stats) return;
-
-  document.getElementById('statsGrid').innerHTML = `
-    <div class="stat-card">
-      <div class="icon">📦</div>
-      <div class="label">Bugungi buyurtmalar</div>
-      <div class="value">${stats.today.orders}</div>
-      <div class="sub">Oylik: ${stats.month.orders} ta</div>
-    </div>
-    <div class="stat-card">
-      <div class="icon">💰</div>
-      <div class="label">Bugungi daromad</div>
-      <div class="value">${Number(stats.today.revenue).toLocaleString()}</div>
-      <div class="sub">Oylik: ${Number(stats.month.revenue).toLocaleString()} so'm</div>
-    </div>
-    <div class="stat-card">
-      <div class="icon">🌐</div>
-      <div class="label">Online / Restoranda</div>
-      <div class="value">${stats.today.online} / ${stats.today.dineIn}</div>
-      <div class="sub">Bugun</div>
-    </div>
-    <div class="stat-card">
-      <div class="icon">⭐</div>
-      <div class="label">O'rtacha reyting</div>
-      <div class="value">${stats.rating.avg || '—'}</div>
-      <div class="sub">${stats.rating.count} ta baho</div>
-    </div>
-    <div class="stat-card">
-      <div class="icon">👥</div>
-      <div class="label">Jami foydalanuvchilar</div>
-      <div class="value">${stats.totalUsers}</div>
-      <div class="sub">Ro'yxatdan o'tgan</div>
-    </div>`;
-
-  // Weekly chart
-  if (weeklyChart) weeklyChart.destroy();
-  const wCtx = document.getElementById('weeklyChart')?.getContext('2d');
-  if (wCtx) {
-    weeklyChart = new Chart(wCtx, {
-      type: 'bar',
-      data: {
-        labels: stats.weekly.map(d => d.date),
-        datasets: [{
-          label: 'Buyurtmalar',
-          data: stats.weekly.map(d => d.orders),
-          backgroundColor: 'rgba(59,130,246,0.6)',
-          borderColor: '#3b82f6',
-          borderRadius: 6,
-          borderWidth: 1,
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: 'rgba(99,179,237,0.06)' } },
-          y: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: 'rgba(99,179,237,0.06)' } }
-        }
-      }
-    });
-  }
-
-  // Type donut
-  if (typeChart) typeChart.destroy();
-  const tCtx = document.getElementById('typeChart')?.getContext('2d');
-  if (tCtx) {
-    typeChart = new Chart(tCtx, {
-      type: 'doughnut',
-      data: {
-        labels: ['Online', 'Restoranda'],
-        datasets: [{ data: [stats.today.online || 0, stats.today.dineIn || 0],
-          backgroundColor: ['rgba(139,92,246,0.7)', 'rgba(245,158,11,0.7)'],
-          borderColor: ['#8b5cf6','#f59e0b'], borderWidth: 2 }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 12 } } } },
-        cutout: '65%'
-      }
-    });
-  }
-
-  // Top products
-  if (stats.topProducts?.length) {
-    const maxQty = stats.topProducts[0].quantity;
-    document.getElementById('topProductsChart').innerHTML = stats.topProducts.map((p, i) => `
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-        <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">${i+1}</div>
-        <div style="flex:1;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
-            <span style="font-size:13px;font-weight:600;">${p._id}</span>
-            <span style="font-size:12px;color:var(--gold);">${p.quantity} ta · ${Number(p.total).toLocaleString()} so'm</span>
-          </div>
-          <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;">
-            <div style="height:100%;width:${Math.round(p.quantity/maxQty*100)}%;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:3px;transition:width .6s;"></div>
-          </div>
-        </div>
-      </div>`).join('');
-  }
-
-  // Recent orders
-  const ordersData = await apiFetch('/admin/orders?limit=8');
-  if (ordersData?.orders) {
-    document.getElementById('recentOrders').innerHTML = `
-      <table><thead><tr>
-        <th>Mijoz</th><th>Mahsulotlar</th><th>Jami</th><th>Tur</th><th>Status</th><th>Vaqt</th>
-      </tr></thead><tbody>
-      ${ordersData.orders.map(o => `<tr>
-        <td>${o.userInfo?.first_name || ''} ${o.userInfo?.last_name || ''}<br><small style="color:var(--muted)">${o.userInfo?.phone || ''}</small></td>
-        <td style="max-width:180px;font-size:12px;">${o.items.map(i=>i.name+'×'+i.quantity).join(', ')}</td>
-        <td style="color:var(--gold)">${Number(o.total).toLocaleString()}</td>
-        <td><span class="badge ${o.orderType==='online'?'badge-online':'badge-dinein'}">${o.orderType==='online'?'Online':'Restoran'}</span></td>
-        <td>${statusBadge(o.status)}</td>
-        <td style="color:var(--muted);font-size:12px;">${new Date(o.createdAt).toLocaleString('uz-UZ',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
-      </tr>`).join('')}
-      </tbody></table>`;
-  }
-}
-
-// ===== ORDERS =====
-async function renderOrders(main, filter = 'all') {
-  currentOrderFilter = filter;
-  main.innerHTML = `<div class="page">
-    <div class="page-header"><h1>Buyurtmalar</h1><p>Barcha buyurtmalar</p></div>
-    <div class="table-card">
-      <div class="table-header">
-        <h3>Ro'yxat</h3>
-        <div class="table-filters">
-          <button class="filter-btn ${filter==='all'?'active':''}" onclick="renderOrders(document.getElementById('mainContent'),'all')">Barchasi</button>
-          <button class="filter-btn ${filter==='Yangi'?'active':''}" onclick="renderOrders(document.getElementById('mainContent'),'Yangi')">Yangi</button>
-          <button class="filter-btn ${filter==='Qabul qilindi'?'active':''}" onclick="renderOrders(document.getElementById('mainContent'),'Qabul qilindi')">Qabul</button>
-          <button class="filter-btn ${filter==='Bekor qilindi'?'active':''}" onclick="renderOrders(document.getElementById('mainContent'),'Bekor qilindi')">Bekor</button>
-        </div>
-      </div>
-      <div id="ordersTable"><div style="padding:20px;color:var(--muted);">Yuklanmoqda...</div></div>
-    </div>
-  </div>`;
-
-  const params = filter !== 'all' ? `?status=${encodeURIComponent(filter)}&limit=100` : '?limit=100';
-  const data = await apiFetch('/admin/orders' + params);
-  if (!data) return;
-
-  document.getElementById('ordersTable').innerHTML = `
-    <table><thead><tr>
-      <th>#</th><th>Mijoz</th><th>Mahsulotlar</th><th>Jami</th><th>Stol</th><th>Tur</th><th>Status</th><th>Vaqt</th><th>Amal</th>
-    </tr></thead><tbody>
-    ${data.orders.map((o,i) => `<tr>
-      <td style="color:var(--muted)">${i+1}</td>
-      <td>${o.userInfo?.first_name||''} ${o.userInfo?.last_name||''}<br><small style="color:var(--muted)">${o.userInfo?.phone||''}</small></td>
-      <td style="font-size:12px;max-width:180px">${o.items.map(x=>x.name+'×'+x.quantity).join(', ')}</td>
-      <td style="color:var(--gold);font-weight:600">${Number(o.total).toLocaleString()}</td>
-      <td style="color:var(--muted)">${o.tableNumber||'—'}</td>
-      <td><span class="badge ${o.orderType==='online'?'badge-online':'badge-dinein'}">${o.orderType==='online'?'Online':'Restoran'}</span></td>
-      <td>${statusBadge(o.status)}</td>
-      <td style="color:var(--muted);font-size:12px">${new Date(o.createdAt).toLocaleString('uz-UZ',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
-      <td>
-        <select onchange="changeOrderStatus('${o._id}',this.value,this)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:12px;cursor:pointer;">
-          <option value="">O'zgartir</option>
-          <option value="Yangi">Yangi</option>
-          <option value="Qabul qilindi">Qabul qilindi</option>
-          <option value="Tayyorlanmoqda">Tayyorlanmoqda</option>
-          <option value="Tayyor">Tayyor</option>
-          <option value="Bekor qilindi">Bekor qilindi</option>
-        </select>
-      </td>
-    </tr>`).join('')}
-    </tbody></table>`;
-}
-
-async function changeOrderStatus(id, status, selectEl) {
-  if (!status) return;
-  await apiFetch(`/admin/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
-  selectEl.value = '';
-  renderOrders(document.getElementById('mainContent'), currentOrderFilter);
-}
-
-// ===== PRODUCTS =====
-async function renderProducts(main) {
-  main.innerHTML = `<div class="page">
-    <div class="page-header"><h1>Menyu boshqaruvi</h1><p>Taomlarni qo'shish, tahrirlash, o'chirish</p></div>
-    <div class="add-btn-wrap">
-      <button class="btn-add" onclick="openProductModal()">＋ Taom qo'shish</button>
-    </div>
-    <div class="products-grid" id="productsGrid"><div style="color:var(--muted)">Yuklanmoqda...</div></div>
-  </div>`;
-
-  loadProductsGrid();
-}
-
-async function loadProductsGrid() {
-  const products = await apiFetch('/admin/products');
-  if (!products) return;
-  const grid = document.getElementById('productsGrid');
-  if (!grid) return;
-  grid.innerHTML = products.map(p => `
-    <div class="product-admin-card ${p.active===false?'inactive-overlay':''}">
-      ${p.image ? `<img src="${p.image}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
-      <div class="img-ph" style="display:${p.image?'none':'flex'}">🍽</div>
-      <div class="product-admin-info">
-        <div class="product-admin-name">${p.name}</div>
-        ${p.name_ru ? `<div style="font-size:12px;color:var(--muted)">${p.name_ru}</div>` : ''}
-        <div class="product-admin-price">${Number(p.price).toLocaleString()} so'm</div>
-        <div class="product-admin-cat">${p.category} ${p.active===false?'· Yashirilgan':''}</div>
-        <div class="product-admin-actions">
-          <button class="btn-edit" onclick="openProductModal(${JSON.stringify(p).replace(/"/g,'&quot;')})">✏️ Tahrirlash</button>
-          <button class="btn-del" onclick="deleteProduct(${p.id})">🗑</button>
-        </div>
-      </div>
-    </div>`).join('');
-}
-
-function openProductModal(product) {
-  document.getElementById('modalTitle').textContent = product ? 'Taomni tahrirlash' : 'Yangi taom qo\'shish';
-  document.getElementById('productEditId').value = product ? product.id : '';
-  document.getElementById('pName').value = product?.name || '';
-  document.getElementById('pNameRu').value = product?.name_ru || '';
-  document.getElementById('pPrice').value = product?.price || '';
-  document.getElementById('pCategory').value = product?.category || 'Taom';
-  document.getElementById('pImage').value = product?.image || '';
-  document.getElementById('pActive').value = product?.active === false ? 'false' : 'true';
-  document.getElementById('productModal').classList.add('open');
-}
-
-function closeModal() {
-  document.getElementById('productModal').classList.remove('open');
-}
-
-async function saveProduct() {
-  const id = document.getElementById('productEditId').value;
-  const body = {
-    name:     document.getElementById('pName').value.trim(),
-    name_ru:  document.getElementById('pNameRu').value.trim(),
-    price:    Number(document.getElementById('pPrice').value),
-    category: document.getElementById('pCategory').value,
-    image:    document.getElementById('pImage').value.trim(),
-    active:   document.getElementById('pActive').value === 'true'
-  };
-  if (!body.name || !body.price) { alert('Nom va narx majburiy'); return; }
-
-  if (id) {
-    await apiFetch(`/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(body) });
-  } else {
-    await apiFetch('/admin/products', { method: 'POST', body: JSON.stringify(body) });
-  }
-  closeModal();
-  loadProductsGrid();
-}
-
-async function deleteProduct(id) {
-  if (!confirm('O\'chirilsinmi?')) return;
-  await apiFetch(`/admin/products/${id}`, { method: 'DELETE' });
-  loadProductsGrid();
-}
-
-// ===== RATINGS =====
-async function renderRatings(main) {
-  main.innerHTML = `<div class="page">
-    <div class="page-header"><h1>Reytinglar</h1><p>Mijozlar baholari</p></div>
-    <div id="ratingsContent"><div style="color:var(--muted)">Yuklanmoqda...</div></div>
-  </div>`;
-
-  const data = await apiFetch('/admin/orders?limit=500');
-  if (!data) return;
-
-  const rated = data.orders.filter(o => o.rating);
-  const avg = rated.length ? (rated.reduce((s,o)=>s+o.rating,0)/rated.length).toFixed(1) : null;
-  const dist = [5,4,3,2,1].map(n => ({ star: n, count: rated.filter(o=>o.rating===n).length }));
-
-  document.getElementById('ratingsContent').innerHTML = `
-    <div class="rating-summary">
-      <div>
-        <div class="rating-big">${avg || '—'}</div>
-        <div class="rating-stars">${avg ? '⭐'.repeat(Math.round(avg)) : '—'}</div>
-        <div class="rating-count">${rated.length} ta baho</div>
-      </div>
-      <div class="rating-bars">
-        ${dist.map(d => `
-          <div class="rating-bar-row">
-            <span class="rating-bar-label">${d.star}</span>
-            <div class="rating-bar-track">
-              <div class="rating-bar-fill" style="width:${rated.length?Math.round(d.count/rated.length*100):0}%"></div>
-            </div>
-            <span class="rating-bar-count">${d.count}</span>
-          </div>`).join('')}
-      </div>
-    </div>
-    <div class="table-card">
-      <div class="table-header"><h3>Baholangan buyurtmalar</h3></div>
-      <table><thead><tr><th>Mijoz</th><th>Mahsulotlar</th><th>Baho</th><th>Vaqt</th></tr></thead>
-      <tbody>
-        ${rated.slice(0,50).map(o => `<tr>
-          <td>${o.userInfo?.first_name||''} ${o.userInfo?.last_name||''}</td>
-          <td style="font-size:12px">${o.items.map(i=>i.name).join(', ')}</td>
-          <td>${'⭐'.repeat(o.rating)}</td>
-          <td style="color:var(--muted);font-size:12px">${new Date(o.createdAt).toLocaleString('uz-UZ',{month:'short',day:'numeric'})}</td>
-        </tr>`).join('')}
-      </tbody></table>
-    </div>`;
-}
-
-// ===== USERS =====
-async function renderUsers(main) {
-  main.innerHTML = `<div class="page">
-    <div class="page-header"><h1>Foydalanuvchilar</h1><p>Ro'yxatdan o'tgan mijozlar</p></div>
-    <div class="table-card">
-      <div id="usersTable"><div style="padding:20px;color:var(--muted)">Yuklanmoqda...</div></div>
-    </div>
-  </div>`;
-
-  const users = await apiFetch('/admin/users');
-  if (!users) return;
-  document.getElementById('usersTable').innerHTML = `
-    <table><thead><tr><th>#</th><th>Ism</th><th>Username</th><th>Telefon</th><th>Telegram ID</th><th>Sana</th></tr></thead>
-    <tbody>
-    ${users.map((u,i) => `<tr>
-      <td style="color:var(--muted)">${i+1}</td>
-      <td>${u.first_name||''} ${u.last_name||''}</td>
-      <td style="color:var(--accent2)">${u.username?'@'+u.username:'—'}</td>
-      <td>${u.phone||'—'}</td>
-      <td style="color:var(--muted);font-size:12px">${u.telegramId}</td>
-      <td style="color:var(--muted);font-size:12px">${new Date(u.createdAt).toLocaleDateString('uz-UZ')}</td>
-    </tr>`).join('')}
-    </tbody></table>`;
-}
-
-// ===== HELPERS =====
-function statusBadge(status) {
-  const map = {
-    'Yangi': 'badge-new',
-    'Qabul qilindi': 'badge-accepted',
-    'Bekor qilindi': 'badge-rejected',
-    'Tayyor': 'badge-ready',
-    'Tayyorlanmoqda': 'badge-ready'
-  };
-  return `<span class="badge ${map[status]||'badge-new'}">${status}</span>`;
-}
-
-// Close modal on bg click
-document.getElementById('productModal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
-});
-</script>
+<script src="admin.js"></script>
 </body>
 </html>

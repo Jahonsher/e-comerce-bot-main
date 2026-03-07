@@ -14,27 +14,21 @@ let tableNumber = null;
 /* ===== I18N — TIL TARJIMALARI ===== */
 const translations = {
   uz: {
-    // Topbar
     "nav.title": "✦ Imperial",
-    // Hero
     "hero.badge": "Toshkent, O'zbekiston",
     "hero.title": "Imperial Restoran",
     "hero.subtitle": "Eng yaxshi ta'm — eng yaxshi xizmat",
     "hero.btn": "Menuni Ko'rish",
-    // Menu section
     "menu.sub": "Bizning taomlar",
     "menu.title": "Menyu",
-    // Filter tabs
     "tab.all": "Barchasi",
     "tab.food": "Taomlar",
     "tab.drink": "Ichimliklar",
-    // Product
     "product.add": "Qo'shish",
     "product.added": "✓ Qo'shildi",
     "product.loading": "Yuklanmoqda...",
     "product.notfound": "Mahsulotlar topilmadi",
     "product.error": "Mahsulotlar yuklanmadi",
-    // Cart panel
     "cart.title": "Savatcha",
     "cart.empty": "Savatcha bo'sh",
     "cart.total": "Jami:",
@@ -45,24 +39,20 @@ const translations = {
     "cart.tableplaceholder": "Stol raqamini kiriting...",
     "cart.checkout": "Buyurtma Berish",
     "cart.sending": "Yuborilmoqda...",
-    // User panel
     "user.title": "Profilim",
     "user.loading": "Yuklanmoqda...",
     "user.nophone": "📱 Telefon yo'q",
     "user.orders": "Buyurtmalarim",
     "user.noorders": "Hali buyurtma yo'q",
-    // Alerts
     "alert.emptycart": "⚠️ Savatcha bo'sh!",
     "alert.notelegram": "⚠️ Buyurtma berish uchun Telegram bot orqali kiring!\n\n@mini_shop_jahonsher_bot ga /start yuboring",
     "alert.selecttype": "⚠️ Buyurtma turini tanlang: Restoranda yoki Online",
     "alert.entertable": "⚠️ Stol raqamini kiriting!",
     "alert.success": "✅ Buyurtma muvaffaqiyatli qabul qilindi!",
     "alert.error": "❌ Xato: ",
-    // Telegram warning
     "tg.title": "Telegram orqali kiring",
     "tg.desc": "Bu ilova faqat Telegram bot orqali ishlaydi.<br><br>Quyidagi botga o'ting va <strong style=\"color:#c9a84c\">/start</strong> bosing:",
     "tg.btn": "Botga o'tish →",
-    // Events
     "events.sub": "Maxsus tadbirlar",
     "events.title": "Tadbirlar",
     "events.from": "Narx kelishiladi",
@@ -82,10 +72,8 @@ const translations = {
     "events.corporate.f1": "Biznes prezentatsiya uchun ekran",
     "events.corporate.f2": "Biznes menyu va bufet",
     "events.corporate.f3": "Alohida kirish va xizmat",
-    // Gallery
     "gallery.sub": "Restoran muhiti",
     "gallery.title": "Galereya",
-    // Location
     "location.sub": "Bizni toping",
     "location.title": "Manzil",
     "location.addr.label": "Manzil",
@@ -95,9 +83,7 @@ const translations = {
     "location.phone.label": "Telefon",
     "location.metro.label": "Metro",
     "location.metro.val": "Chilonzor (5 daqiqa yurish)",
-    // Hero extra
     "hero.bookbtn": "Band qilish",
-    // Footer
     "footer.nav": "Tezkor o'tish",
     "footer.actions": "Amallar",
     "footer.admin": "Admin @Jahonsher",
@@ -107,31 +93,24 @@ const translations = {
     "footer.callus": "Qo'ng'iroq qilish",
     "footer.contact": "Bog'lanish",
     "footer.text": "Barcha huquqlar himoyalangan",
-    // Profile
     "profile.guest": "Mehmon",
   },
   ru: {
-    // Topbar
     "nav.title": "✦ Imperial",
-    // Hero
     "hero.badge": "Ташкент, Узбекистан",
     "hero.title": "Ресторан Imperial",
     "hero.subtitle": "Лучший вкус — лучший сервис",
     "hero.btn": "Смотреть меню",
-    // Menu section
     "menu.sub": "Наши блюда",
     "menu.title": "Меню",
-    // Filter tabs
     "tab.all": "Все",
     "tab.food": "Блюда",
     "tab.drink": "Напитки",
-    // Product
     "product.add": "Добавить",
     "product.added": "✓ Добавлено",
     "product.loading": "Загрузка...",
     "product.notfound": "Товары не найдены",
     "product.error": "Не удалось загрузить товары",
-    // Cart panel
     "cart.title": "Корзина",
     "cart.empty": "Корзина пуста",
     "cart.total": "Итого:",
@@ -142,47 +121,41 @@ const translations = {
     "cart.tableplaceholder": "Введите номер стола...",
     "cart.checkout": "Оформить заказ",
     "cart.sending": "Отправляем...",
-    // User panel
     "user.title": "Мой профиль",
     "user.loading": "Загрузка...",
     "user.nophone": "📱 Телефон не указан",
     "user.orders": "Мои заказы",
     "user.noorders": "Заказов пока нет",
-    // Alerts
     "alert.emptycart": "⚠️ Корзина пуста!",
     "alert.notelegram": "⚠️ Для заказа войдите через Telegram бот!\n\nОтправьте /start боту @mini_shop_jahonsher_bot",
     "alert.selecttype": "⚠️ Выберите тип заказа: В ресторане или Онлайн",
     "alert.entertable": "⚠️ Введите номер стола!",
     "alert.success": "✅ Заказ успешно принят!",
     "alert.error": "❌ Ошибка: ",
-    // Telegram warning
     "tg.title": "Войдите через Telegram",
     "tg.desc": "Это приложение работает только через Telegram бот.<br><br>Перейдите к боту и нажмите <strong style=\"color:#c9a84c\">/start</strong>:",
     "tg.btn": "Перейти к боту →",
-    // Events
     "events.sub": "Специальные мероприятия",
     "events.title": "Мероприятия",
     "events.from": "Цена договорная",
     "events.book": "Забронировать",
     "events.birthday.title": "День рождения",
-    "events.birthday.desc": "Отпразднуйте незабываемый день рождения в Imperial Ресторане с близкими. Специальный декор, торт и индивидуальное меню.",
+    "events.birthday.desc": "Отпразднуйте незабываемый день рождения в Imperial Ресторане с близкими.",
     "events.birthday.f1": "Специальное оформление стола",
     "events.birthday.f2": "Индивидуальный выбор меню",
     "events.birthday.f3": "Свечи и поздравительная песня",
     "events.private.title": "Частный банкет",
-    "events.private.desc": "Забронируйте весь зал только для вас и ваших гостей. Персональное обслуживание и полная конфиденциальность.",
+    "events.private.desc": "Забронируйте весь зал только для вас и ваших гостей.",
     "events.private.f1": "Аренда всего зала",
     "events.private.f2": "Персональный официант",
     "events.private.f3": "Аудиосистема и проектор",
     "events.corporate.title": "Корпоратив",
-    "events.corporate.desc": "Идеальная атмосфера для деловых встреч и корпоративных мероприятий. Профессиональный сервис и комфортные условия.",
+    "events.corporate.desc": "Идеальная атмосфера для деловых встреч и корпоративных мероприятий.",
     "events.corporate.f1": "Экран для презентаций",
     "events.corporate.f2": "Бизнес-меню и фуршет",
     "events.corporate.f3": "Отдельный вход и обслуживание",
-    // Gallery
     "gallery.sub": "Атмосфера ресторана",
     "gallery.title": "Галерея",
-    // Location
     "location.sub": "Найдите нас",
     "location.title": "Адрес",
     "location.addr.label": "Адрес",
@@ -192,9 +165,7 @@ const translations = {
     "location.phone.label": "Телефон",
     "location.metro.label": "Метро",
     "location.metro.val": "Чиланзар (5 минут пешком)",
-    // Hero extra
     "hero.bookbtn": "Забронировать",
-    // Footer
     "footer.nav": "Быстрый переход",
     "footer.actions": "Действия",
     "footer.admin": "Админ @Jahonsher",
@@ -204,7 +175,6 @@ const translations = {
     "footer.callus": "Позвонить",
     "footer.contact": "Связаться",
     "footer.text": "Все права защищены",
-    // Profile
     "profile.guest": "Гость",
   }
 };
@@ -219,19 +189,13 @@ function setLang(lang) {
   currentLang = lang;
   localStorage.setItem("lang", lang);
   applyTranslations();
-
-  // Aktiv kategoriyani aniqlab, cardlarni qayta chizish
   const activeTab = document.querySelector(".tab-btn.active");
   const activeCat = activeTab?.dataset?.cat || "all";
   const filtered  = activeCat === "all" ? products : products.filter(p => p.category === activeCat);
   renderProducts(filtered);
-
-  // Savatchani qayta chizish (nomlar yangilansin)
   updateCart();
   updateProductButtons();
   renderProfile();
-
-  // Til tugmalarini yangilash
   document.querySelectorAll(".lang-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.lang === lang);
   });
@@ -278,7 +242,6 @@ function initTelegramUser() {
     telegramId = tgUser.id;
     userData   = tgUser;
 
-    // Telegram tili asosida avtomatik til o'rnatish
     if (!localStorage.getItem("lang")) {
       const tgLang = tgUser.language_code || "uz";
       currentLang = tgLang === "ru" ? "ru" : "uz";
@@ -321,14 +284,42 @@ initTelegramUser();
 function renderProfile() {
   const u = userProfile || userData;
   if (!u) return;
-
   const nameEl  = document.getElementById("profileName");
   const unameEl = document.getElementById("profileUsername");
   const phoneEl = document.getElementById("profilePhone");
-
   if (nameEl)  nameEl.textContent  = `${u.first_name || ""} ${u.last_name || ""}`.trim() || t("profile.guest");
   if (unameEl) unameEl.textContent = u.username ? `@${u.username}` : "";
   if (phoneEl) phoneEl.textContent = u.phone    ? `📱 ${u.phone}`  : t("user.nophone");
+}
+
+/* ===== LOAD CATEGORIES — DINAMIK ===== */
+function loadCategories() {
+  fetch(API + "/categories?restaurantId=imperial")
+    .then(res => res.json())
+    .then(cats => {
+      const tabsContainer = document.getElementById("filterTabs");
+      if (!tabsContainer) return;
+
+      // "Barchasi" tugmasi (doim birinchi)
+      let html = '<button class="tab-btn active" data-cat="all" onclick="filterCategory(\'all\',this)">' + t("tab.all") + '</button>';
+
+      // Har bir kategoriya uchun tugma
+      cats.forEach(cat => {
+        const name = cat.name || cat;
+        html += '<button class="tab-btn" data-cat="' + name + '" onclick="filterCategory(\'' + name + '\',this)">' + name + '</button>';
+      });
+
+      tabsContainer.innerHTML = html;
+    })
+    .catch(err => {
+      console.error("Kategoriyalar yuklanmadi:", err);
+      // Xato bo'lsa standart ko'rinishi qolsin
+      const tabsContainer = document.getElementById("filterTabs");
+      if (tabsContainer) {
+        tabsContainer.innerHTML =
+          '<button class="tab-btn active" data-cat="all" onclick="filterCategory(\'all\',this)">' + t("tab.all") + '</button>';
+      }
+    });
 }
 
 /* ===== LOAD PRODUCTS ===== */
@@ -341,11 +332,8 @@ function loadProducts() {
     })
     .catch(err => {
       const c = document.getElementById("products");
-      if (c) c.innerHTML = `
-        <div class="empty-state" style="grid-column:1/-1">
-          <div class="icon">⚠️</div>
-          <p>${t("product.error")} (${err.message})</p>
-        </div>`;
+      if (c) c.innerHTML =
+        '<div class="empty-state" style="grid-column:1/-1"><div class="icon">⚠️</div><p>' + t("product.error") + ' (' + err.message + ')</p></div>';
     });
 }
 
@@ -355,25 +343,24 @@ function renderProducts(list) {
   container.innerHTML = "";
 
   if (!list || !list.length) {
-    container.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="icon">🍽</div><p>${t("product.notfound")}</p></div>`;
+    container.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="icon">🍽</div><p>' + t("product.notfound") + '</p></div>';
     return;
   }
 
   list.forEach((p, i) => {
     const card = document.createElement("div");
     card.className = "product-card";
-    card.style.animationDelay = `${i * 60}ms`;
+    card.style.animationDelay = (i * 60) + "ms";
     const displayName = (currentLang === "ru" && p.name_ru) ? p.name_ru : p.name;
-    card.innerHTML = `
-      <img src="${p.image}" alt="${displayName}"
-           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-      <div class="img-placeholder" style="display:none">🍽</div>
-      <div class="product-info">
-        <h3>${displayName}</h3>
-        <div class="cat">${p.category}</div>
-        <span class="price">${Number(p.price).toLocaleString()} ${t("cart.currency")}</span>
-        <button class="add-btn" data-id="${p.id}" onclick="addToCart(${p.id})">${t("product.add")}</button>
-      </div>`;
+    card.innerHTML =
+      '<img src="' + p.image + '" alt="' + displayName + '" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\'">' +
+      '<div class="img-placeholder" style="display:none">🍽</div>' +
+      '<div class="product-info">' +
+        '<h3>' + displayName + '</h3>' +
+        '<div class="cat">' + p.category + '</div>' +
+        '<span class="price">' + Number(p.price).toLocaleString() + ' ' + t("cart.currency") + '</span>' +
+        '<button class="add-btn" data-id="' + p.id + '" onclick="addToCart(' + p.id + ')">' + t("product.add") + '</button>' +
+      '</div>';
     container.appendChild(card);
   });
 
@@ -383,10 +370,7 @@ function renderProducts(list) {
 /* ===== FILTER ===== */
 function filterCategory(cat, btn) {
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-  if (btn) {
-    btn.classList.add("active");
-    btn.dataset.cat = cat;
-  }
+  if (btn) btn.classList.add("active");
   renderProducts(cat === "all" ? products : products.filter(p => p.category === cat));
 }
 
@@ -440,22 +424,24 @@ function updateCart() {
   if (totalEl) totalEl.textContent = Number(total).toLocaleString();
 
   if (!cart.length) {
-    container.innerHTML = `<div class="empty-state"><div class="icon">🛒</div><p>${t("cart.empty")}</p></div>`;
+    container.innerHTML = '<div class="empty-state"><div class="icon">🛒</div><p>' + t("cart.empty") + '</p></div>';
     return;
   }
 
-  container.innerHTML = cart.map(item => `
-    <div class="cart-item">
-      <div>
-        <div class="cart-item-name">${(currentLang === "ru" && item.name_ru) ? item.name_ru : item.name}</div>
-        <div class="cart-item-price">${Number(item.price).toLocaleString()} ${t("cart.currency")}</div>
-      </div>
-      <div class="qty-controls">
-        <button class="qty-btn" onclick="changeQty(${item.id}, -1)">−</button>
-        <span class="qty-num">${item.quantity}</span>
-        <button class="qty-btn" onclick="changeQty(${item.id}, 1)">+</button>
-      </div>
-    </div>`).join("");
+  container.innerHTML = cart.map(item => {
+    const name = (currentLang === "ru" && item.name_ru) ? item.name_ru : item.name;
+    return '<div class="cart-item">' +
+      '<div>' +
+        '<div class="cart-item-name">' + name + '</div>' +
+        '<div class="cart-item-price">' + Number(item.price).toLocaleString() + ' ' + t("cart.currency") + '</div>' +
+      '</div>' +
+      '<div class="qty-controls">' +
+        '<button class="qty-btn" onclick="changeQty(' + item.id + ', -1)">−</button>' +
+        '<span class="qty-num">' + item.quantity + '</span>' +
+        '<button class="qty-btn" onclick="changeQty(' + item.id + ', 1)">+</button>' +
+      '</div>' +
+    '</div>';
+  }).join("");
 }
 
 /* ===== PANELS ===== */
@@ -476,14 +462,11 @@ function closePanels() {
 /* ===== ORDER TYPE ===== */
 function selectOrderType(type) {
   orderType = type;
-
   const btnDineIn  = document.getElementById("btnDineIn");
   const btnOnline  = document.getElementById("btnOnline");
   const tableWrap  = document.getElementById("tableInputWrap");
-
   const activeStyle   = "background:var(--gold); color:var(--dark); border-color:var(--gold); font-weight:500;";
   const inactiveStyle = "background:rgba(201,168,76,0.08); color:var(--muted); border-color:var(--border); font-weight:300;";
-
   if (type === "dine_in") {
     btnDineIn.style.cssText  += activeStyle;
     btnOnline.style.cssText  += inactiveStyle;
@@ -501,16 +484,8 @@ function selectOrderType(type) {
 /* ===== CHECKOUT ===== */
 function checkout() {
   if (!cart.length) { alert(t("alert.emptycart")); return; }
-
-  if (!telegramId) {
-    alert(t("alert.notelegram"));
-    return;
-  }
-
-  if (!orderType) {
-    alert(t("alert.selecttype"));
-    return;
-  }
+  if (!telegramId)  { alert(t("alert.notelegram")); return; }
+  if (!orderType)   { alert(t("alert.selecttype")); return; }
 
   if (orderType === "dine_in") {
     const tableVal = document.getElementById("tableInput")?.value?.trim();
@@ -535,13 +510,7 @@ function checkout() {
   fetch(API + "/order", {
     method:  "POST",
     headers: { "Content-Type": "application/json" },
-    body:    JSON.stringify({
-      telegramId,
-      items: cart,
-      user: userToSend,
-      orderType,
-      tableNumber
-    })
+    body:    JSON.stringify({ telegramId, items: cart, user: userToSend, orderType, tableNumber })
   })
   .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
   .then(() => {
@@ -570,31 +539,27 @@ function checkout() {
 /* ===== USER ORDERS ===== */
 function loadUserOrders() {
   if (!telegramId) return;
-
   fetch(API + "/user/" + telegramId + "/orders")
     .then(r => r.json())
     .then(data => {
       const c = document.getElementById("userOrders");
       if (!c) return;
-
       if (!data || !data.length) {
-        c.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>${t("user.noorders")}</p></div>`;
+        c.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>' + t("user.noorders") + '</p></div>';
         return;
       }
-
       c.innerHTML = data.map(order => {
         const items = order.items.map(i => {
           const n = (currentLang === "ru" && i.name_ru) ? i.name_ru : i.name;
-          return `${n} × ${i.quantity}`;
+          return n + " × " + i.quantity;
         }).join(", ");
-        const date  = new Date(order.createdAt).toLocaleDateString(currentLang === "ru" ? "ru-RU" : "uz-UZ");
-        return `
-          <div class="order-card">
-            <div class="order-items">${items}</div>
-            <div class="order-total">${Number(order.total).toLocaleString()} ${t("cart.currency")}</div>
-            <div><span class="order-status">${order.status || "Yangi"}</span></div>
-            <div class="order-date">🕐 ${date}</div>
-          </div>`;
+        const date = new Date(order.createdAt).toLocaleDateString(currentLang === "ru" ? "ru-RU" : "uz-UZ");
+        return '<div class="order-card">' +
+          '<div class="order-items">' + items + '</div>' +
+          '<div class="order-total">' + Number(order.total).toLocaleString() + ' ' + t("cart.currency") + '</div>' +
+          '<div><span class="order-status">' + (order.status || "Yangi") + '</span></div>' +
+          '<div class="order-date">🕐 ' + date + '</div>' +
+        '</div>';
       }).join("");
     })
     .catch(err => console.error("USER ORDERS ERROR:", err));
@@ -604,13 +569,13 @@ function scrollToMenu() {
   document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
 }
 
-// Sahifa yuklanganda tarjimalarni qo'llash
 document.addEventListener("DOMContentLoaded", () => {
   applyTranslations();
-  // Aktiv til tugmasini belgilash
   document.querySelectorAll(".lang-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.lang === currentLang);
   });
 });
 
+// Kategoriyalar va mahsulotlarni yuklash
+loadCategories();
 loadProducts();

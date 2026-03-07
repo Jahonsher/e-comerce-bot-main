@@ -239,11 +239,12 @@
     <h2 data-i18n="menu.title">Menyu</h2>
     <div class="gold-line"><span>✦</span></div>
   </div>
-  <div class="filter-tabs">
-    <button class="tab-btn active" data-cat="all" onclick="filterCategory('all',this)" data-i18n="tab.all">Barchasi</button>
-    <button class="tab-btn" data-cat="Taom" onclick="filterCategory('Taom',this)" data-i18n="tab.food">Taomlar</button>
-    <button class="tab-btn" data-cat="Ichimlik" onclick="filterCategory('Ichimlik',this)" data-i18n="tab.drink">Ichimliklar</button>
+
+  <!-- FILTER TUGMALAR — app.js tomonidan dinamik yuklanadi -->
+  <div class="filter-tabs" id="filterTabs">
+    <button class="tab-btn active" data-cat="all" onclick="filterCategory('all',this)">Barchasi</button>
   </div>
+
   <div class="product-grid" id="products">
     <div class="empty-state" style="grid-column:1/-1">
       <div class="icon">🍽</div>
@@ -516,48 +517,37 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <script>
-  // ===== NAVBAR SCROLL =====
   window.addEventListener('scroll', () => {
     document.getElementById('topbar').classList.toggle('scrolled', window.scrollY > 60);
   });
 
-  // ===== SCROLL TO SECTION =====
   function scrollToSection(id) {
     document.getElementById(id)?.scrollIntoView({ behavior:'smooth' });
   }
 
-  // ===== EVENTS SLIDER + SWIPE =====
   let currentSlide = 0;
   const totalSlides = 3;
   setInterval(() => goSlide((currentSlide+1) % totalSlides), 5000);
 
   function goSlide(n) {
     currentSlide = n;
-    document.getElementById('eventsTrack').style.transform = `translateX(-${n*100}%)`;
+    document.getElementById('eventsTrack').style.transform = 'translateX(-' + (n*100) + '%)';
     document.querySelectorAll('.dot').forEach((d,i) => d.classList.toggle('active', i===n));
   }
   function nextSlide() { goSlide((currentSlide+1) % totalSlides); }
   function prevSlide() { goSlide((currentSlide-1+totalSlides) % totalSlides); }
 
-  // Swipe for events slider
   (function() {
     const el = document.getElementById('eventsTrack');
     let startX = 0, startY = 0, dragging = false;
-    el.addEventListener('touchstart', e => {
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      dragging = true;
-    }, { passive: true });
+    el.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; dragging = true; }, { passive:true });
     el.addEventListener('touchend', e => {
       if (!dragging) return;
       const dx = e.changedTouches[0].clientX - startX;
       const dy = e.changedTouches[0].clientY - startY;
-      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
-        dx < 0 ? nextSlide() : prevSlide();
-      }
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) { dx < 0 ? nextSlide() : prevSlide(); }
       dragging = false;
-    }, { passive: true });
-    // Mouse drag (desktop)
+    }, { passive:true });
     let mouseStartX = 0, mouseDown = false;
     el.addEventListener('mousedown', e => { mouseStartX = e.clientX; mouseDown = true; });
     el.addEventListener('mouseup', e => {
@@ -569,12 +559,8 @@
     el.addEventListener('mouseleave', () => mouseDown = false);
   })();
 
-  // Band qilish — @Jahonsher ga yo'naltirish
-  function bookEvent() {
-    window.open('https://t.me/Jahonsher', '_blank');
-  }
+  function bookEvent() { window.open('https://t.me/Jahonsher', '_blank'); }
 
-  // ===== GALLERY LIGHTBOX + SWIPE =====
   const galleryImages = [
     'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=90',
     'https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=1200&q=90',
@@ -590,9 +576,7 @@
     document.getElementById('lightboxImg').src = galleryImages[i];
     document.getElementById('lightbox').classList.add('open');
   }
-  function closeLightbox() {
-    document.getElementById('lightbox').classList.remove('open');
-  }
+  function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
   function lbShift(dir) {
     lbIndex = (lbIndex + dir + galleryImages.length) % galleryImages.length;
     document.getElementById('lightboxImg').src = galleryImages[lbIndex];
@@ -601,22 +585,15 @@
     if (e.target === this) closeLightbox();
   });
 
-  // Swipe for lightbox
   (function() {
     const lb = document.getElementById('lightbox');
     let startX = 0, startY = 0;
-    lb.addEventListener('touchstart', e => {
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-    }, { passive: true });
+    lb.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; }, { passive:true });
     lb.addEventListener('touchend', e => {
       const dx = e.changedTouches[0].clientX - startX;
       const dy = e.changedTouches[0].clientY - startY;
-      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
-        lbShift(dx < 0 ? 1 : -1);
-      }
-    }, { passive: true });
-    // Mouse drag for lightbox
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) { lbShift(dx < 0 ? 1 : -1); }
+    }, { passive:true });
     let mouseStartX = 0, mouseDown = false;
     lb.addEventListener('mousedown', e => { if(e.target !== lb) { mouseStartX = e.clientX; mouseDown = true; }});
     lb.addEventListener('mouseup', e => {

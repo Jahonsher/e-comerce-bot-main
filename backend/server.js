@@ -11,7 +11,8 @@ const bcrypt      = require("bcryptjs");
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
 const TOKEN      = process.env.BOT_TOKEN;
 const CHEF_ID    = Number(process.env.CHEF_ID);
@@ -471,23 +472,36 @@ app.post("/admin/broadcast", authMiddleware, async (req, res) => {
     let sent = 0, failed = 0;
     const errors = [];
 
+    let cachedFileId = null; // birinchi yuborishdan file_id saqlanadi
+
     for (const user of users) {
       try {
         const tgId = Number(user.telegramId);
         if (!tgId) { failed++; continue; }
 
-        if (imageBase64) {
-          // Fayl orqali yuklangan rasm — buffer sifatida yuborish
-          const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
-          const imgBuffer  = Buffer.from(base64Data, "base64");
-          await bot.sendPhoto(tgId, imgBuffer, {
+        if (imageBase64 || imageUrl) {
+          let photoSource;
+
+          if (cachedFileId) {
+            // Keyingi userlarga file_id orqali (tez!)
+            photoSource = cachedFileId;
+          } else if (imageBase64) {
+            // Birinchi marta — buffer yuboramiz
+            const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+            photoSource = Buffer.from(base64Data, "base64");
+          } else {
+            photoSource = imageUrl;
+          }
+
+          const msg = await bot.sendPhoto(tgId, photoSource, {
             caption:    text || "",
             parse_mode: "HTML"
           });
-        } else if (imageUrl && text) {
-          await bot.sendPhoto(tgId, imageUrl, { caption: text, parse_mode: "HTML" });
-        } else if (imageUrl) {
-          await bot.sendPhoto(tgId, imageUrl);
+
+          // Birinchi yuborishdan file_id ni saqlab olamiz
+          if (!cachedFileId && msg.photo) {
+            cachedFileId = msg.photo[msg.photo.length - 1].file_id;
+          }
         } else {
           await bot.sendMessage(tgId, text, { parse_mode: "HTML" });
         }

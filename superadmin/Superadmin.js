@@ -12,11 +12,21 @@ var tabChart      = null;
 
 // ===== AUTH =====
 async function doLogin() {
-  var u = document.getElementById('loginUser').value.trim();
-  var p = document.getElementById('loginPass').value;
-  var e = document.getElementById('loginErr');
-  e.textContent = '';
-  if (!u || !p) { e.textContent = 'Login va parolni kiriting'; return; }
+  var u   = document.getElementById('loginUser').value.trim();
+  var p   = document.getElementById('loginPass').value;
+  var err = document.getElementById('loginErr');
+  var btn = document.getElementById('loginBtn');
+
+  err.style.display = 'none';
+  err.textContent = '';
+
+  if (!u && !p) { showErr(err, '⚠️ Login va parolni kiriting'); return; }
+  if (!u) { showErr(err, '⚠️ Login kiritilmagan'); return; }
+  if (!p) { showErr(err, '⚠️ Parol kiritilmagan'); return; }
+
+  btn.textContent = 'Tekshirilmoqda...';
+  btn.disabled = true;
+
   try {
     var r = await fetch(API + '/admin/login', {
       method: 'POST',
@@ -24,16 +34,40 @@ async function doLogin() {
       body: JSON.stringify({ username: u, password: p })
     });
     var d = await r.json();
-    if (!d.ok) { e.textContent = d.error || 'Xato'; return; }
-    if (d.admin.role !== 'superadmin') { e.textContent = 'Superadmin huquqi yoq'; return; }
+
+    if (!d.ok) {
+      showErr(err, '❌ Login yoki parol noto`g`ri');
+      document.getElementById('loginPass').value = '';
+      document.getElementById('loginPass').focus();
+      btn.textContent = 'Kirish';
+      btn.disabled = false;
+      return;
+    }
+    if (d.admin.role !== 'superadmin') {
+      showErr(err, '🚫 Sizda superadmin huquqi yo`q');
+      btn.textContent = 'Kirish';
+      btn.disabled = false;
+      return;
+    }
+
+    btn.textContent = '✓ Kirish...';
     token  = d.token;
     saInfo = d.admin;
     localStorage.setItem('saToken', token);
     localStorage.setItem('saInfo', JSON.stringify(saInfo));
     startApp();
-  } catch(err) {
-    e.textContent = 'Server bilan ulanib bolmadi';
+  } catch(e) {
+    showErr(err, '🔌 Server bilan ulanib bolmadi. Internet aloqasini tekshiring.');
+    btn.textContent = 'Kirish';
+    btn.disabled = false;
   }
+}
+
+function showErr(el, msg) {
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.animation = 'none';
+  setTimeout(function() { el.style.animation = 'shake .3s ease'; }, 10);
 }
 
 function doLogout() {

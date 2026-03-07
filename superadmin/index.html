@@ -56,6 +56,13 @@ tailwind.config = {
     .sidebar.open { transform:translateX(0); }
     .mw { margin-left:0 !important; }
   }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-6px)}
+    40%{transform:translateX(6px)}
+    60%{transform:translateX(-4px)}
+    80%{transform:translateX(4px)}
+  }
 </style>
 </head>
 <body>
@@ -75,7 +82,7 @@ tailwind.config = {
       <input id="loginPass" type="password" class="inp" placeholder="••••••••" autocomplete="current-password"/>
     </div>
     <button id="loginBtn" class="w-full mt-5 py-3 rounded-xl font-bold text-sm text-white transition-opacity hover:opacity-90" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">Kirish</button>
-    <div id="loginErr" class="text-center text-sm mt-3 min-h-5" style="color:#ef4444"></div>
+    <div id="loginErr" class="text-center text-sm mt-3 rounded-lg px-3 py-2" style="color:#ef4444;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);display:none"></div>
   </div>
 </div>
 

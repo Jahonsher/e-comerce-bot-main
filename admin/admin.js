@@ -14,8 +14,18 @@ async function doLogin() {
   var username = document.getElementById('loginUser').value.trim();
   var password = document.getElementById('loginPass').value;
   var errEl    = document.getElementById('loginErr');
+  var btn      = document.getElementById('loginBtn');
+
   errEl.textContent = '';
-  if (!username || !password) { errEl.textContent = 'Login va parolni kiriting'; return; }
+  errEl.style.display = 'none';
+
+  if (!username && !password) { showErr(errEl, '⚠️ Login va parolni kiriting'); return; }
+  if (!username) { showErr(errEl, '⚠️ Login kiritilmagan'); return; }
+  if (!password) { showErr(errEl, '⚠️ Parol kiritilmagan'); return; }
+
+  btn.textContent = 'Tekshirilmoqda...';
+  btn.disabled = true;
+
   try {
     var r = await fetch(API + '/admin/login', {
       method: 'POST',
@@ -23,15 +33,32 @@ async function doLogin() {
       body: JSON.stringify({ username: username, password: password })
     });
     var d = await r.json();
-    if (!d.ok) { errEl.textContent = d.error || 'Xato'; return; }
+    if (!d.ok) {
+      showErr(errEl, '❌ Login yoki parol noto`g`ri');
+      document.getElementById('loginPass').value = '';
+      document.getElementById('loginPass').focus();
+      btn.textContent = 'Kirish';
+      btn.disabled = false;
+      return;
+    }
+    btn.textContent = '✓ Kirish...';
     token     = d.token;
     adminInfo = d.admin;
     localStorage.setItem('adminToken', token);
     localStorage.setItem('adminInfo', JSON.stringify(adminInfo));
     startApp();
   } catch(e) {
-    errEl.textContent = 'Server bilan boglanib bolmadi';
+    showErr(errEl, '🔌 Server bilan ulanib bolmadi. Internet aloqasini tekshiring.');
+    btn.textContent = 'Kirish';
+    btn.disabled = false;
   }
+}
+
+function showErr(el, msg) {
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.animation = 'none';
+  setTimeout(function() { el.style.animation = 'shake .3s ease'; }, 10);
 }
 
 function doLogout() {

@@ -189,6 +189,18 @@ function setLang(lang) {
   currentLang = lang;
   localStorage.setItem("lang", lang);
   applyTranslations();
+
+  // Filter tugmalar nomini yangilash
+  document.querySelectorAll(".tab-btn[data-cat]").forEach(btn => {
+    const cat = btn.dataset.cat;
+    if (cat === "all") {
+      btn.textContent = t("tab.all");
+    } else {
+      const nameRu = btn.dataset.nameRu || cat;
+      btn.textContent = (lang === "ru" && nameRu) ? nameRu : cat;
+    }
+  });
+
   const activeTab = document.querySelector(".tab-btn.active");
   const activeCat = activeTab?.dataset?.cat || "all";
   const filtered  = activeCat === "all" ? products : products.filter(p => p.category === activeCat);
@@ -305,8 +317,10 @@ function loadCategories() {
 
       // Har bir kategoriya uchun tugma
       cats.forEach(cat => {
-        const name = cat.name || cat;
-        html += '<button class="tab-btn" data-cat="' + name + '" onclick="filterCategory(\'' + name + '\',this)">' + name + '</button>';
+        const name    = cat.name || cat;
+        const nameRu  = cat.name_ru || name;
+        const display = (currentLang === 'ru' && nameRu) ? nameRu : name;
+        html += '<button class="tab-btn" data-cat="' + name + '" data-name-ru="' + nameRu + '" onclick="filterCategory(\'' + name + '\',this)">' + display + '</button>';
       });
 
       tabsContainer.innerHTML = html;

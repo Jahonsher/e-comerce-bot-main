@@ -630,10 +630,10 @@ async function renderEmployees(main) {
     '</div>' +
     '<div id="empList"><div class="p-5" style="color:#64748b">Yuklanmoqda...</div></div>' +
   '</div>';
-  loadEmpList();
+  renderEmployees(document.getElementById("mainContent"));
 }
 
-async function loadEmpList() {
+async function renderEmployees(main) {
   var emps = await apiFetch('/admin/employees');
   var el   = document.getElementById('empList');
   if (!el) return;
@@ -742,17 +742,10 @@ async function saveEmp(id) {
 
   if (d.ok || d._id || d.employee) {
     closeEmpModal();
-    loadEmpList();
+    renderEmployees(document.getElementById("mainContent"));
   } else {
     alert('Xato: ' + (d.error || 'Nomalum xato'));
   }
-}
-
-async function deleteEmp(id) {
-  if (!confirm('Ishchini o\'chirishni tasdiqlaysizmi?')) return;
-  var d = await apiFetch('/admin/employees/' + id, { method: 'DELETE' });
-  if (d.ok) loadEmpList();
-  else alert('Xato: ' + (d.error || 'Nomalum xato'));
 }
 
 // ===================================================
@@ -1220,6 +1213,18 @@ async function saveEmp(id) {
   } else {
     errEl.textContent = d.error || 'Xato yuz berdi';
     errEl.style.display = 'block';
+  }
+}
+
+
+async function cleanupInactive() {
+  if (!confirm("Eski o'chirilgan ishchilarni MongoDB dan butunlay o'chirasizmi?")) return;
+  var d = await apiFetch('/admin/employees-cleanup', { method: 'DELETE' });
+  if (d.ok) {
+    alert((d.deleted || 0) + " ta eski yozuv o'chirildi");
+    renderEmployees(document.getElementById('mainContent'));
+  } else {
+    alert('Xato: ' + (d.error || ''));
   }
 }
 

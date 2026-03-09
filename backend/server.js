@@ -244,10 +244,18 @@ bot.onText(/Boglanish/, async (msg) => {
 
 
 // ===== EMPLOYEE MIDDLEWARE =====
-function empMiddleware(req, res, next) {
+async function empMiddleware(req, res, next) {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) return res.status(401).json({ error: "Token kerak" });
-  try { req.employee = jwt.verify(token, JWT_SECRET); next(); }
+  try {
+    req.employee = jwt.verify(token, JWT_SECRET);
+    // Ishchi hali ham mavjudligini tekshirish
+    const emp = await Employee.findById(req.employee.id).select("active");
+    if (!emp || !emp.active) {
+      return res.status(401).json({ error: "Akkaunt o'chirilgan", deleted: true });
+    }
+    next();
+  }
   catch(e) { res.status(401).json({ error: "Token yaroqsiz" }); }
 }
 
@@ -866,8 +874,9 @@ app.get("/employee/face-descriptor", empMiddleware, async (req, res) => {
 app.post("/employee/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-    const emp = await Employee.findOne({ username, active: true });
+    const emp = await Employee.findOne({ username });
     if (!emp) return res.status(401).json({ error: "Ishchi topilmadi" });
+    if (!emp.active) return res.status(401).json({ error: "Akkaunt o'chirilgan. Administratorga murojaat qiling." });
     const ok = await bcrypt.compare(password, emp.password);
     if (!ok) return res.status(401).json({ error: "Parol noto'g'ri" });
     const token = jwt.sign(
@@ -1068,10 +1077,26 @@ app.put("/admin/employees/:id", authMiddleware, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// --- Ishchi o'chirish ---
+// --- Ishchi o'chirish (to'liq) ---
+
+// --- Eski active:false ishchilarni tozalash (bir martalik migration) ---
+app.delete("/admin/employees-cleanup", authMiddleware, async (req, res) => {
+  try {
+    const result = await Employee.deleteMany({ 
+      restaurantId: req.admin.restaurantId, 
+      active: false 
+    });
+    res.json({ ok: true, deleted: result.deletedCount });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 app.delete("/admin/employees/:id", authMiddleware, async (req, res) => {
   try {
-    await Employee.findByIdAndUpdate(req.params.id, { active: false });
+    const emp = await Employee.findById(req.params.id);
+    if (!emp) return res.status(404).json({ error: "Ishchi topilmadi" });
+    // Davomat yozuvlarini ham o'chirish
+    await Attendance.deleteMany({ employeeId: req.params.id });
+    await Employee.findByIdAndDelete(req.params.id);
     res.json({ ok: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });

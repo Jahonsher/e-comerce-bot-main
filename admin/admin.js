@@ -82,11 +82,12 @@ async function apiFetch(url, opts) {
       headers: authHeaders(),
       body:    opts.body || undefined
     });
-    if (r.status === 401) { doLogout(); return null; }
-    return r.json();
+    if (r.status === 401) { doLogout(); return { error: 'Sessiya tugadi' }; }
+    var data = await r.json();
+    return data;
   } catch(e) {
-    console.error('apiFetch error:', e);
-    return null;
+    console.error('apiFetch error:', url, e.message);
+    return { error: e.message };
   }
 }
 
@@ -672,16 +673,7 @@ async function renderEmployees(main) {
         '</div>' +
       '</div>' +
 
-      // Modal
-      '<div id="empModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;display:none;align-items:center;justify-content:center;padding:16px">' +
-        '<div style="background:#1e293b;border:1px solid rgba(99,179,237,0.15);border-radius:16px;padding:24px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">' +
-            '<div id="empModalTitle" style="font-size:16px;font-weight:700;color:#f1f5f9">Ishchi qo\'shish</div>' +
-            '<button onclick="closeEmpModal()" style="background:none;border:none;color:#64748b;font-size:20px;cursor:pointer">✕</button>' +
-          '</div>' +
-          '<div id="empModalBody"></div>' +
-        '</div>' +
-      '</div>' +
+      // Modal — index.html da statik
     '</div>';
 }
 
@@ -755,7 +747,7 @@ async function openEmpModal(empJson) {
       '</div>' +
 
       '<div id="empErr" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;padding:10px;border-radius:8px;font-size:13px"></div>' +
-      '<button onclick="saveEmp(\'' + (emp?._id||'') + '\')" style="width:100%;padding:12px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);border:none;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">' +
+      '<button id="empSaveBtn" onclick="saveEmp(\'' + (emp?._id||'') + '\')" style="width:100%;padding:12px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);border:none;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">' +
         (emp ? '💾 Saqlash' : '+ Qoshish') +
       '</button>' +
     '</div>';
@@ -772,52 +764,63 @@ function closeEmpModal() {
   document.getElementById('empModal').style.display = 'none';
 }
 
-async function saveEmp(id) {
+async function saveEmp(empId) {
   var errEl = document.getElementById('empErr');
+  if (!errEl) return;
   errEl.style.display = 'none';
 
-  var name      = document.getElementById('empName').value.trim();
-  var phone     = document.getElementById('empPhone').value.trim();
-  var position  = document.getElementById('empPosition').value.trim();
-  var username  = document.getElementById('empUsername').value.trim();
-  var password  = document.getElementById('empPassword').value;
-  var salary    = Number(document.getElementById('empSalary').value) || 0;
-  var workStart = document.getElementById('empWorkStart').value || '09:00';
-  var workEnd   = document.getElementById('empWorkEnd').value || '18:00';
-  var telegramId = document.getElementById('empTgId').value || null;
+  var name      = (document.getElementById('empName')?.value || '').trim();
+  var username  = (document.getElementById('empUsername')?.value || '').trim();
+  var password  = document.getElementById('empPassword')?.value || '';
+  var phone     = (document.getElementById('empPhone')?.value || '').trim();
+  var position  = (document.getElementById('empPosition')?.value || '').trim();
+  var salary    = Number(document.getElementById('empSalary')?.value) || 0;
+  var workStart = document.getElementById('empWorkStart')?.value || '09:00';
+  var workEnd   = document.getElementById('empWorkEnd')?.value   || '18:00';
+  var branchId  = document.getElementById('empBranchId')?.value  || '';
+  var weeklyOff = document.getElementById('empWeeklyOff')?.value || 'sunday';
 
-  if (!name)     { errEl.textContent = 'Ism kiritilmagan'; errEl.style.display='block'; return; }
-  if (!username) { errEl.textContent = 'Login kiritilmagan'; errEl.style.display='block'; return; }
-  if (!id && !password) { errEl.textContent = 'Parol kiritilmagan'; errEl.style.display='block'; return; }
+  if (!name)            { errEl.textContent = 'Ism kiritilmagan';    errEl.style.display='block'; return; }
+  if (!username)        { errEl.textContent = 'Login kiritilmagan';  errEl.style.display='block'; return; }
+  if (!empId && !password) { errEl.textContent = 'Parol kiritilmagan'; errEl.style.display='block'; return; }
+  if (!branchId)        { errEl.textContent = 'Filial tanlanmagan!'; errEl.style.display='block'; return; }
 
-  var branchId = document.getElementById('empBranchId')?.value || null;
-  var weeklyOff  = document.getElementById('empWeeklyOff')?.value || 'sunday';
-  var photoData  = _empPhotoBase64 || null;
-  var faceDesc   = window._empFaceDescriptor || null;
-
-  if (!branchId) {
-    errEl.textContent = 'Filial tanlanmagan!';
-    errEl.style.display = 'block';
-    document.getElementById('empBranchId')?.focus();
-    return;
+  // Rasmni kichiklashtirish
+  var photoData = null;
+  if (_empPhotoBase64) {
+    try {
+      var img2 = new Image();
+      img2.src = _empPhotoBase64;
+      await new Promise(function(r) { img2.onload = r; });
+      var cvs = document.createElement('canvas');
+      cvs.width = 200; cvs.height = 200;
+      var ctx = cvs.getContext('2d');
+      var sz = Math.min(img2.width, img2.height);
+      ctx.drawImage(img2, (img2.width-sz)/2, (img2.height-sz)/2, sz, sz, 0, 0, 200, 200);
+      photoData = cvs.toDataURL('image/jpeg', 0.7);
+    } catch(e2) { photoData = null; }
   }
 
-  var body = { name, phone, position, username, salary, workStart, workEnd, branchId: branchId||null, weeklyOff,
-    photo: photoData, faceDescriptor: faceDesc };
-  if (password)  body.password  = password;
-  if (telegramId) body.telegramId = Number(telegramId);
+  var body = { name, phone, position, username, salary, workStart, workEnd, branchId, weeklyOff };
+  if (password)  body.password = password;
+  if (photoData) body.photo    = photoData;
 
-  var url    = id ? '/admin/employees/' + id : '/admin/employees';
-  var method = id ? 'PUT' : 'POST';
+  var btn = document.getElementById('empSaveBtn');
+  if (btn) { btn.textContent = 'Saqlanmoqda...'; btn.disabled = true; }
 
-  var d = await apiFetch(url, { method, body: JSON.stringify(body) });
-  if (d.ok) {
-    closeEmpModal();
-    renderEmployees(document.getElementById('mainContent'));
-  } else {
-    errEl.textContent = d.error || 'Xato yuz berdi';
-    errEl.style.display = 'block';
-  }
+  var url    = empId ? '/admin/employees/' + empId : '/admin/employees';
+  var method = empId ? 'PUT' : 'POST';
+
+  var d = await apiFetch(url, { method: method, body: JSON.stringify(body) });
+
+  if (btn) { btn.textContent = empId ? 'Saqlash' : '+ Qoshish'; btn.disabled = false; }
+
+  if (!d) { errEl.textContent = 'Server javob bermadi'; errEl.style.display='block'; return; }
+  if (d.error) { errEl.textContent = d.error; errEl.style.display='block'; return; }
+
+  closeEmpModal();
+  _empPhotoBase64 = null;
+  renderEmployees(document.getElementById('mainContent'));
 }
 
 
@@ -1191,16 +1194,7 @@ async function renderBranches(main) {
         '</div>'
       ) +
 
-      // Modal
-      '<div id="branchModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;align-items:center;justify-content:center;padding:16px">' +
-        '<div style="background:#1e293b;border:1px solid rgba(99,179,237,0.15);border-radius:16px;padding:24px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">' +
-            '<div id="branchModalTitle" style="font-size:16px;font-weight:700;color:#f1f5f9">Filial qo\'shish</div>' +
-            '<button onclick="closeBranchModal()" style="background:none;border:none;color:#64748b;font-size:22px;cursor:pointer;line-height:1">✕</button>' +
-          '</div>' +
-          '<div id="branchModalBody"></div>' +
-        '</div>' +
-      '</div>' +
+      // branchModal — index.html da statik +
     '</div>';
 }
 

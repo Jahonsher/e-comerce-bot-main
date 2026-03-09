@@ -160,5 +160,30 @@ tailwind.config = {
 </div>
 
 <script src="admin.js"></script>
+
+<!-- ===== ISHCHI MODAL ===== -->
+<div id="empModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.8);align-items:center;justify-content:center;padding:16px">
+  <div style="background:#1e293b;border:1px solid rgba(99,179,237,0.15);border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.5)">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px 0">
+      <h3 id="empModalTitle" style="font-size:17px;font-weight:700;color:#f1f5f9;margin:0">Yangi ishchi</h3>
+      <button onclick="closeEmpModal()" style="background:none;border:none;color:#64748b;font-size:22px;cursor:pointer;line-height:1">×</button>
+    </div>
+    <div id="empModalBody" style="padding:20px 24px 24px">
+      <div style="text-align:center;padding:20px;color:#475569">Yuklanmoqda...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FILIAL MODAL ===== -->
+<div id="branchModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.8);align-items:center;justify-content:center;padding:16px">
+  <div style="background:#1e293b;border:1px solid rgba(99,179,237,0.15);border-radius:16px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px 0">
+      <h3 id="branchModalTitle" style="font-size:17px;font-weight:700;color:#f1f5f9;margin:0">Filial</h3>
+      <button onclick="closeBranchModal()" style="background:none;border:none;color:#64748b;font-size:22px;cursor:pointer;line-height:1">×</button>
+    </div>
+    <div id="branchModalBody" style="padding:20px 24px 24px"></div>
+  </div>
+</div>
+
 </body>
 </html>

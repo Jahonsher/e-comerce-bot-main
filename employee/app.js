@@ -22,18 +22,28 @@ async function loadFaceModels() {
 // selfieEl — video yoki canvas element
 // return: { match: true/false, distance: 0.0-1.0 }
 async function verifyFace(selfieEl, etalonDescriptor) {
-  if (!faceModelsLoaded || !etalonDescriptor || etalonDescriptor.length === 0) {
-    return { match: true, distance: 0, skipped: true }; // descriptor yo'q → o'tkazib yuborish
+  if (!etalonDescriptor || etalonDescriptor.length === 0) {
+    return { match: true, skipped: true, reason: 'descriptor yoq' };
+  }
+  if (!faceModelsLoaded) {
+    return { match: false, skipped: false, reason: 'Yuz modellari yuklanmagan' };
   }
   try {
-    var opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
-    var det  = await faceapi.detectSingleFace(selfieEl, opts).withFaceLandmarks(true).withFaceDescriptor();
-    if (!det) return { match: false, distance: 1, error: 'Yuz topilmadi' };
+    var opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 });
+    // withFaceLandmarks() — parametrsiz (tiny model)
+    var det = await faceapi.detectSingleFace(selfieEl, opts)
+                           .withFaceLandmarks()
+                           .withFaceDescriptor();
+    if (!det) {
+      return { match: false, skipped: false, reason: 'Selfida yuz topilmadi' };
+    }
     var dist = faceapi.euclideanDistance(etalonDescriptor, Array.from(det.descriptor));
-    return { match: dist < 0.5, distance: Math.round(dist * 100) / 100 };
+    console.log('Face distance:', dist);
+    // 0.4 dan kichik — bir xil odam; 0.4-0.6 — shubhali; 0.6+ — boshqa odam
+    return { match: dist < 0.45, distance: Math.round(dist * 100) / 100 };
   } catch(e) {
-    console.log('Face verify error:', e);
-    return { match: true, distance: 0, skipped: true };
+    console.error('Face verify error:', e);
+    return { match: false, skipped: false, reason: e.message };
   }
 }
 
@@ -382,29 +392,59 @@ async function takePhoto() {
   capturedPhoto = canvas.toDataURL('image/jpeg', 0.6);
   closeCam();
 
-  // Face verify
-  var toast = showToast('🔍 Yuz taqqoslanmoqda...');
-  try {
-    // Server dan etalon descriptor olish
-    var fd = await apiFetch('/employee/face-descriptor');
-    hideToast(toast);
-    if (fd.hasPhoto && fd.faceDescriptor && fd.faceDescriptor.length > 0 && faceModelsLoaded) {
-      var img = new Image();
-      img.src = capturedPhoto;
-      await new Promise(function(r){ img.onload = r; });
-      var result = await verifyFace(img, fd.faceDescriptor);
-      if (!result.skipped && !result.match) {
-        var pct = Math.round((1 - result.distance) * 100);
-        if (!confirm("Yuz " + pct + "% mos keldi. Oxshashlik past. Bariban davom etasizmi?")) {
-          return;
-        }
-      }
-    }
-  } catch(e) {
-    hideToast(toast);
-    // Face verify ishlamasa ham checkin ni to'sib qo'ymaymiz
+  // Face verify — qat'iy tekshiruv
+  var fvToast = showToast('🔍 Yuz tekshirilmoqda...');
+  var fd = await apiFetch('/employee/face-descriptor');
+  hideToast(fvToast);
+
+  if (!fd) {
+    showToast('❌ Server bilan aloqa yoq'); return;
   }
 
+  // Agar admin rasm yuklamagan bo'lsa — o'tkazib yuborish
+  if (!fd.hasPhoto || !fd.faceDescriptor || fd.faceDescriptor.length === 0) {
+    await submitCheckin(capturedPhoto);
+    return;
+  }
+
+  // Modellar yuklanmagan bo'lsa — BLOKLASH (o'tkazib yubormaslik)
+  if (!faceModelsLoaded) {
+    showToast('⏳ Yuz modeli yuklanmoqda...');
+    await loadFaceModels();
+    if (!faceModelsLoaded) {
+      showToast('❌ Yuz modeli yuklanmadi. Qayta urinib koring.');
+      return;
+    }
+  }
+
+  // Selfie rasmini Image elementga o'tkazamiz
+  var selfieImg = new Image();
+  selfieImg.src = capturedPhoto;
+  await new Promise(function(r){ selfieImg.onload = r; });
+
+  var result = await verifyFace(selfieImg, fd.faceDescriptor);
+  console.log('Verify result:', result);
+
+  if (result.skipped) {
+    // Descriptor yoq — ruxsat
+    await submitCheckin(capturedPhoto);
+    return;
+  }
+
+  if (!result.match) {
+    var pct = result.distance !== undefined ? Math.round((1 - result.distance) * 100) : 0;
+    var reason = result.reason || ('Oxshashlik: ' + pct + '%');
+    showToast('❌ Yuz tasdiqlanmadi: ' + reason);
+    // Rasmni tozalaymiz, qayta suratga tushishga imkon beramiz
+    capturedPhoto = null;
+    document.getElementById('btnCheckin').style.display = 'block';
+    return;
+  }
+
+  // ✅ Yuz tasdiqlandi
+  var simPct = Math.round((1 - result.distance) * 100);
+  showToast('✅ Yuz tasdiqlandi (' + simPct + '% mos)');
+  await new Promise(function(r){ setTimeout(r, 800); });
   await submitCheckin(capturedPhoto);
 }
 

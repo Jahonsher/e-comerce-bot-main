@@ -801,7 +801,9 @@ async function saveEmp(empId) {
     } catch(e2) { photoData = null; }
   }
 
+  var faceDesc = window._empFaceDescriptor || null;
   var body = { name, phone, position, username, salary, workStart, workEnd, branchId, weeklyOff };
+  if (faceDesc && faceDesc.length > 0) body.faceDescriptor = faceDesc;
   if (password)  body.password = password;
   if (photoData) body.photo    = photoData;
 
@@ -1087,8 +1089,42 @@ function previewEmpPhoto(input) {
     var prv = document.getElementById('empPhotoPreview');
     if (img) img.src = _empPhotoBase64;
     if (prv) prv.style.display = 'block';
+    computeFaceDescriptor(_empPhotoBase64);
   };
   reader.readAsDataURL(input.files[0]);
+}
+
+// Face descriptor hisoblash (admin tomonida, ishchi qo'shganda)
+async function computeFaceDescriptor(imageDataUrl) {
+  window._empFaceDescriptor = null;
+  if (typeof faceapi === 'undefined') { console.log('face-api yuklanmagan'); return; }
+  try {
+    // Modellar yuklanmagan bo'lsa yuklaymiz
+    if (!faceapi.nets.tinyFaceDetector.isLoaded) {
+      var MODELS = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
+      await Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri(MODELS),
+        faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODELS),
+        faceapi.nets.faceRecognitionNet.loadFromUri(MODELS)
+      ]);
+    }
+    var img = new Image();
+    img.src = imageDataUrl;
+    await new Promise(function(r){ img.onload = r; });
+    var opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 });
+    var det = await faceapi.detectSingleFace(img, opts)
+                           .withFaceLandmarks(true)
+                           .withFaceDescriptor();
+    if (det) {
+      window._empFaceDescriptor = Array.from(det.descriptor);
+      console.log('Face descriptor hisoblandi:', window._empFaceDescriptor.length, 'o\'lcham');
+    } else {
+      console.log('Rasmda yuz topilmadi');
+      alert('⚠️ Rasmda yuz aniqlanmadi. Aniq, yuzga yaqin rasm yuklang.');
+    }
+  } catch(e) {
+    console.error('computeFaceDescriptor xato:', e);
+  }
 }
 
 function captureEmpPhoto() {
@@ -1147,6 +1183,9 @@ function snapEmpCam() {
   var prv = document.getElementById('empPhotoPreview');
   if (img) img.src = _empPhotoBase64;
   if (prv) prv.style.display = 'block';
+
+  // Face descriptor hisoblaymiz
+  computeFaceDescriptor(_empPhotoBase64);
 }
 
 function fmtSalary(n) {

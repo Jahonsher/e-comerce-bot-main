@@ -119,7 +119,7 @@ function startApp() {
 
 // ===== LOGOUT =====
 function doLogout() {
-  if (!confirm("Yuz " + pct + "% mos keldi. Oxshashlik past. Bariban davom etasizmi?")) return;
+  if (!confirm('Chiqmoqchimisiz?')) return;
   localStorage.removeItem('empToken');
   localStorage.removeItem('empInfo');
   token   = null;
@@ -150,7 +150,19 @@ async function apiFetch(url, opts) {
     }
   });
   if (r.status === 401) {
-    doLogout();
+    var d = {};
+    try { d = await r.json(); } catch(e) {}
+    // Akkaunt o'chirilgan yoki token yaroqsiz
+    localStorage.removeItem('empToken');
+    localStorage.removeItem('empInfo');
+    token   = null;
+    empInfo = null;
+    document.getElementById('appPage').style.display   = 'none';
+    document.getElementById('loginPage').style.display = 'flex';
+    if (d.deleted) {
+      document.getElementById('loginErr').textContent   = "Sizning akkauntingiz o'chirilgan. Administratorga murojaat qiling.";
+      document.getElementById('loginErr').style.display = 'block';
+    }
     return {};
   }
   return r.json();

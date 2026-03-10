@@ -1300,6 +1300,20 @@ app.get("/admin/attendance/today", authMiddleware, async (req, res) => {
 });
 
 // --- Oylik hisobot (admin) ---
+// ===== HELPER: Oyda ishchi uchun ish kunlari soni =====
+function calcWorkingDays(yearMonth, weeklyOff) {
+  // yearMonth: "2025-04"
+  const [y, m] = yearMonth.split("-").map(Number);
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const dayNames = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+  let workDays = 0;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dow = new Date(y, m - 1, d).getDay();
+    if (dayNames[dow] !== (weeklyOff || "sunday")) workDays++;
+  }
+  return workDays;
+}
+
 app.get("/admin/attendance/report", authMiddleware, async (req, res) => {
   try {
     const rId    = req.admin.restaurantId;
@@ -1309,25 +1323,43 @@ app.get("/admin/attendance/report", authMiddleware, async (req, res) => {
     const filter = { restaurantId: rId, date: { $regex: "^" + prefix } };
     if (employeeId) filter.employeeId = employeeId;
 
-    const records  = await Attendance.find(filter).populate("employeeId", "name position salary").sort({ date: 1 });
+    const records   = await Attendance.find(filter).populate("employeeId", "name position salary").sort({ date: 1 });
     const employees = await Employee.find({ restaurantId: rId, active: true }).select("-password");
 
-    // Har ishchi uchun hisobot
     const report = employees.map(emp => {
       const empRecords = records.filter(r => r.employeeId?._id?.toString() === emp._id.toString());
-      const totalDays    = empRecords.filter(r => r.status === "keldi").length;
+      const totalDays    = empRecords.filter(r => r.status === "keldi" || r.status === "dam").length;
+      const workedDays   = empRecords.filter(r => r.status === "keldi").length;
       const totalMinutes = empRecords.reduce((s, r) => s + (r.totalMinutes || 0), 0);
       const lateCount    = empRecords.filter(r => r.lateMinutes > 0).length;
       const absentCount  = empRecords.filter(r => r.status === "kelmadi").length;
+      const overtimeMin  = empRecords.reduce((s, r) => s + (r.overtimeMinutes || 0), 0);
 
-      // Maosh hisoblash (kunlik)
-      const workingDays  = 26; // oyda o'rtacha ish kunlari
-      const dailySalary  = emp.salary / workingDays;
-      const earnedSalary = Math.round(dailySalary * totalDays);
+      // ===== TO'G'RI MAOSH HISOBLASH =====
+      // 1. Shu oy nechta ish kuni bor (dam kunlari hisobsiz)
+      const workingDaysInMonth = calcWorkingDays(prefix, emp.weeklyOff);
+      // 2. Bir kunlik maosh
+      const dailySalary = emp.salary > 0 ? emp.salary / workingDaysInMonth : 0;
+      // 3. Ishchi kelgan kunlar × kunlik maosh
+      const earnedSalary = Math.round(dailySalary * workedDays);
+      // =====================================
 
       return {
-        employee: { id: emp._id, name: emp.name, position: emp.position, salary: emp.salary },
-        stats: { totalDays, totalMinutes, lateCount, absentCount, earnedSalary },
+        employee: {
+          id: emp._id, name: emp.name, position: emp.position,
+          salary: emp.salary, weeklyOff: emp.weeklyOff
+        },
+        stats: {
+          workingDaysInMonth,  // oy necha ish kuni
+          workedDays,          // ishchi necha kun keldi
+          totalDays,
+          totalMinutes,
+          lateCount,
+          absentCount,
+          overtimeMin,
+          dailySalary: Math.round(dailySalary),
+          earnedSalary
+        },
         records: empRecords
       };
     });

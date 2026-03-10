@@ -1012,60 +1012,163 @@ async function loadReport() {
     return;
   }
 
-  var totalSalary = d.report.reduce(function(s,r){ return s + (r.stats.earnedSalary||0); }, 0);
+  var totalSalary  = d.report.reduce(function(s,r){ return s + (r.stats.earnedSalary||0); }, 0);
+  var totalWorkers = d.report.length;
 
+  // ===== DASHBOARD GRAFIK =====
+  // 1. Bar chart: har ishchi davomat %
+  var chartBars = d.report.map(function(r) {
+    var s = r.stats;
+    var pct = s.workingDaysInMonth > 0 ? Math.round((s.workedDays / s.workingDaysInMonth) * 100) : 0;
+    var color = pct >= 90 ? '#22c55e' : pct >= 70 ? '#f59e0b' : '#ef4444';
+    var shortName = r.employee.name.split(' ')[0];
+    return '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;min-width:40px">' +
+      '<div style="font-size:10px;font-weight:600;color:' + color + '">' + pct + '%</div>' +
+      '<div style="width:28px;background:#0f172a;border-radius:4px;height:80px;display:flex;align-items:flex-end">' +
+        '<div style="width:100%;height:' + pct + '%;background:' + color + ';border-radius:4px;min-height:3px;transition:height 0.5s"></div>' +
+      '</div>' +
+      '<div style="font-size:9px;color:#64748b;text-align:center;max-width:40px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + shortName + '</div>' +
+    '</div>';
+  }).join('');
+
+  // 2. Heatmap: bugungi kun keldi/kelmadi
+  var heatRows = d.report.map(function(r) {
+    var e = r.employee;
+    var recs = r.records || [];
+    // Oxirgi 7 kunni ko'rsat
+    var days = [];
+    for (var i = 6; i >= 0; i--) {
+      var dt = new Date(); dt.setDate(dt.getDate() - i);
+      var ds = dt.toISOString().split('T')[0];
+      var rec = recs.find(function(x){ return x.date && x.date.startsWith(ds); });
+      var color = !rec ? '#1e293b' :
+                  rec.status === 'keldi' ? '#22c55e' :
+                  rec.status === 'dam'   ? '#a78bfa' :
+                  rec.status === 'kasal' ? '#60a5fa' : '#ef4444';
+      var title = !rec ? 'Maʼlumot yoq' :
+                  rec.status === 'keldi' ? (rec.checkIn||'') + (rec.checkOut ? ' → '+rec.checkOut : '') :
+                  rec.status;
+      days.push('<div title="' + ds + ': ' + title + '" style="width:20px;height:20px;border-radius:4px;background:' + color + '"></div>');
+    }
+    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">' +
+      '<div style="font-size:12px;color:#94a3b8;width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + e.name.split(' ')[0] + '</div>' +
+      '<div style="display:flex;gap:3px">' + days.join('') + '</div>' +
+    '</div>';
+  }).join('');
+
+  // ===== ISHCHI KARTOCHKALARI =====
   var cards = d.report.map(function(r) {
     var e = r.employee;
     var s = r.stats;
-    var pct = Math.min(100, Math.round((s.totalDays / 26) * 100));
+    var pct = s.workingDaysInMonth > 0 ? Math.min(100, Math.round((s.workedDays / s.workingDaysInMonth) * 100)) : 0;
+    var pctColor = pct >= 90 ? '#22c55e' : pct >= 70 ? '#f59e0b' : '#ef4444';
 
     return '<div style="background:#1e293b;border:1px solid rgba(99,179,237,0.12);border-radius:12px;padding:16px">' +
-      // Header
-      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">' +
+      // Header: ism + maosh
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">' +
         '<div>' +
           '<div style="font-size:14px;font-weight:700;color:#f1f5f9">' + e.name + '</div>' +
           '<div style="font-size:11px;color:#64748b;margin-top:2px">' + (e.position||'—') + '</div>' +
         '</div>' +
         '<div style="text-align:right">' +
-          '<div style="font-size:13px;font-weight:700;color:#22c55e">' + fmtSalary(s.earnedSalary) + '</div>' +
-          '<div style="font-size:10px;color:#64748b">/ ' + fmtSalary(e.salary) + '</div>' +
+          '<div style="font-size:15px;font-weight:700;color:#22c55e">' + fmtSalary(s.earnedSalary) + '</div>' +
+          '<div style="font-size:10px;color:#64748b">Oylik: ' + fmtSalary(e.salary) + '</div>' +
         '</div>' +
       '</div>' +
 
-      // Stats row
-      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px">' +
-        miniStat('📅', s.totalDays + ' kun', '#3b82f6') +
+      // Maosh hisob: 1 kun = X so'm
+      '<div style="background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.15);border-radius:8px;padding:10px;margin-bottom:12px">' +
+        '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">' +
+          '<span style="color:#64748b">Oy ish kunlari</span>' +
+          '<span style="color:#f1f5f9;font-weight:600">' + s.workingDaysInMonth + ' kun</span>' +
+        '</div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">' +
+          '<span style="color:#64748b">1 kunlik maosh</span>' +
+          '<span style="color:#3b82f6;font-weight:600">' + fmtSalary(s.dailySalary) + '</span>' +
+        '</div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">' +
+          '<span style="color:#64748b">Kelgan kunlar</span>' +
+          '<span style="color:#f1f5f9;font-weight:600">' + s.workedDays + ' / ' + s.workingDaysInMonth + ' kun</span>' +
+        '</div>' +
+        (s.overtimeMin > 0 ? '<div style="display:flex;justify-content:space-between;font-size:12px">' +
+          '<span style="color:#a78bfa">Qo\'shimcha ish</span>' +
+          '<span style="color:#a78bfa;font-weight:600">' + Math.round(s.overtimeMin/60*10)/10 + ' soat</span>' +
+        '</div>' : '') +
+      '</div>' +
+
+      // Stats
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px">' +
         miniStat('⏱', formatMins(s.totalMinutes), '#22c55e') +
         miniStat('⚠️', s.lateCount + ' kech', '#f59e0b') +
-        miniStat('❌', s.absentCount + ' yo\'q', '#ef4444') +
+        miniStat('❌', s.absentCount + ' yoq', '#ef4444') +
       '</div>' +
 
-      // Progress
-      '<div style="margin-bottom:8px">' +
+      // Progress bar
+      '<div>' +
         '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
           '<span style="font-size:11px;color:#64748b">Davomat</span>' +
-          '<span style="font-size:11px;color:#94a3b8">' + s.totalDays + '/26 kun</span>' +
+          '<span style="font-size:11px;font-weight:600;color:' + pctColor + '">' + pct + '%</span>' +
         '</div>' +
         '<div style="background:#0f172a;border-radius:99px;height:6px">' +
-          '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#3b82f6,#22c55e);border-radius:99px"></div>' +
+          '<div style="height:100%;width:' + pct + '%;background:' + pctColor + ';border-radius:99px"></div>' +
         '</div>' +
       '</div>' +
     '</div>';
   }).join('');
 
   content.innerHTML =
-    // Umumiy summary
-    '<div style="background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(34,197,94,0.08));border:1px solid rgba(59,130,246,0.2);border-radius:12px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">' +
-      '<div>' +
-        '<div style="font-size:11px;color:#64748b;margin-bottom:4px">BU OY JAMI MAOSH</div>' +
-        '<div style="font-size:24px;font-weight:700;color:#f1f5f9">' + fmtSalary(totalSalary) + '</div>' +
-      '</div>' +
-      '<div style="text-align:right">' +
-        '<div style="font-size:11px;color:#64748b;margin-bottom:4px">ISHCHILAR</div>' +
-        '<div style="font-size:24px;font-weight:700;color:#3b82f6">' + d.report.length + ' ta</div>' +
+    // ===== SUMMARY CARD =====
+    '<div style="background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(34,197,94,0.08));border:1px solid rgba(59,130,246,0.2);border-radius:12px;padding:16px;margin-bottom:16px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
+        '<div>' +
+          '<div style="font-size:11px;color:#64748b;margin-bottom:4px">JAMI MAOSH</div>' +
+          '<div style="font-size:24px;font-weight:700;color:#f1f5f9">' + fmtSalary(totalSalary) + '</div>' +
+        '</div>' +
+        '<div style="text-align:right">' +
+          '<div style="font-size:11px;color:#64748b;margin-bottom:4px">ISHCHILAR</div>' +
+          '<div style="font-size:24px;font-weight:700;color:#3b82f6">' + totalWorkers + ' ta</div>' +
+        '</div>' +
       '</div>' +
     '</div>' +
 
+    // ===== BAR CHART =====
+    '<div style="background:#1e293b;border:1px solid rgba(99,179,237,0.12);border-radius:12px;padding:16px;margin-bottom:16px">' +
+      '<div style="font-size:12px;font-weight:600;color:#64748b;letter-spacing:1px;margin-bottom:16px">📊 DAVOMAT FOIZI</div>' +
+      '<div style="display:flex;gap:8px;align-items:flex-end;overflow-x:auto;padding-bottom:4px">' +
+        chartBars +
+      '</div>' +
+      '<div style="display:flex;gap:16px;margin-top:12px">' +
+        '<span style="font-size:10px;color:#22c55e">● 90%+ yaxshi</span>' +
+        '<span style="font-size:10px;color:#f59e0b">● 70–90% o\'rtacha</span>' +
+        '<span style="font-size:10px;color:#ef4444">● 70%- past</span>' +
+      '</div>' +
+    '</div>' +
+
+    // ===== HEATMAP =====
+    '<div style="background:#1e293b;border:1px solid rgba(99,179,237,0.12);border-radius:12px;padding:16px;margin-bottom:16px">' +
+      '<div style="font-size:12px;font-weight:600;color:#64748b;letter-spacing:1px;margin-bottom:4px">🗓 OXIRGI 7 KUN</div>' +
+      '<div style="display:flex;gap:3px;margin-bottom:10px;padding-left:98px">' +
+        (function(){
+          var labels = [];
+          for(var i=6;i>=0;i--){
+            var dt=new Date(); dt.setDate(dt.getDate()-i);
+            var days=['Ya','Du','Se','Ch','Pa','Ju','Sh'];
+            labels.push('<div style="width:20px;text-align:center;font-size:9px;color:#475569">' + days[dt.getDay()] + '</div>');
+          }
+          return labels.join('');
+        })() +
+      '</div>' +
+      heatRows +
+      '<div style="display:flex;gap:12px;margin-top:8px">' +
+        '<span style="font-size:10px;color:#22c55e">● Keldi</span>' +
+        '<span style="font-size:10px;color:#ef4444">● Kelmadi</span>' +
+        '<span style="font-size:10px;color:#a78bfa">● Dam kuni</span>' +
+        '<span style="font-size:10px;color:#60a5fa">● Kasal</span>' +
+      '</div>' +
+    '</div>' +
+
+    // ===== ISHCHI KARTOCHKALARI =====
+    '<div style="font-size:12px;font-weight:600;color:#64748b;letter-spacing:1px;margin-bottom:10px">👥 ISHCHILAR HISOBOTI</div>' +
     '<div style="display:flex;flex-direction:column;gap:10px">' + (cards || '<div style="text-align:center;padding:40px;color:#475569">Ma\'lumot yo\'q</div>') + '</div>';
 }
 

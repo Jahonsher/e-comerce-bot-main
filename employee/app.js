@@ -1,52 +1,3 @@
-// ===== FACE-API INIT =====
-var faceModelsLoaded = false;
-var FACE_MODELS_URL  = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
-
-async function loadFaceModels() {
-  if (faceModelsLoaded || typeof faceapi === 'undefined') return;
-  try {
-    await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri(FACE_MODELS_URL),
-      faceapi.nets.faceLandmark68TinyNet.loadFromUri(FACE_MODELS_URL),
-      faceapi.nets.faceRecognitionNet.loadFromUri(FACE_MODELS_URL)
-    ]);
-    faceModelsLoaded = true;
-    console.log('Face models yuklandi');
-  } catch(e) {
-    console.log('Face models yuklanmadi (offline?):', e.message);
-  }
-}
-
-// Selfie + etalon rasmni taqqoslash
-// etalonDescriptor — server dan kelgan 128-element array
-// selfieEl — video yoki canvas element
-// return: { match: true/false, distance: 0.0-1.0 }
-async function verifyFace(selfieEl, etalonDescriptor) {
-  if (!etalonDescriptor || etalonDescriptor.length === 0) {
-    return { match: true, skipped: true, reason: 'descriptor yoq' };
-  }
-  if (!faceModelsLoaded) {
-    return { match: false, skipped: false, reason: 'Yuz modellari yuklanmagan' };
-  }
-  try {
-    var opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 });
-    // withFaceLandmarks() — parametrsiz (tiny model)
-    var det = await faceapi.detectSingleFace(selfieEl, opts)
-                           .withFaceLandmarks()
-                           .withFaceDescriptor();
-    if (!det) {
-      return { match: false, skipped: false, reason: 'Selfida yuz topilmadi' };
-    }
-    var dist = faceapi.euclideanDistance(etalonDescriptor, Array.from(det.descriptor));
-    console.log('Face distance:', dist);
-    // 0.4 dan kichik — bir xil odam; 0.4-0.6 — shubhali; 0.6+ — boshqa odam
-    return { match: dist < 0.45, distance: Math.round(dist * 100) / 100 };
-  } catch(e) {
-    console.error('Face verify error:', e);
-    return { match: false, skipped: false, reason: e.message };
-  }
-}
-
 const API = window.location.hostname === 'localhost'
   ? 'http://localhost:5000'
   : 'https://e-comerce-bot-main-production.up.railway.app';
@@ -123,8 +74,6 @@ function startApp() {
   document.getElementById('headerName').textContent     = empInfo.name || '—';
   document.getElementById('headerPosition').textContent = empInfo.position || 'Ishchi';
   showPage('home', document.querySelector('[data-page="home"]'));
-  // Background da face models yuklash
-  loadFaceModels();
 }
 
 // ===== LOGOUT =====

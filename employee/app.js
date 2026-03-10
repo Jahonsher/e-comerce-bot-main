@@ -158,9 +158,12 @@ async function renderHome() {
 
   // Ishlagan vaqt
   var workedText = '';
-  if (todayAtt?.checkIn) {
-    var mins = todayAtt.totalMinutes || getWorkedMinutes(todayAtt.checkIn);
-    workedText = formatMinutes(mins);
+  if (todayAtt?.checkOut && todayAtt?.totalMinutes) {
+    // Tugagan — aniq vaqt
+    workedText = formatMinutes(todayAtt.totalMinutes);
+  } else if (todayAtt?.checkIn && !todayAtt?.checkOut) {
+    // Hali ishda — hozirgi vaqtgacha
+    workedText = formatMinutes(getWorkedMinutes(todayAtt.checkIn)) + ' (davom etmoqda)';
   }
 
   // Tugma holati
@@ -540,23 +543,48 @@ async function renderHistory() {
   }
 
   var rows = records.slice().reverse().map(rec => {
-    var statusColor = rec.status === 'keldi' ? '#22c55e' : '#ef4444';
-    var statusText  = rec.status === 'keldi' ? 'Keldi' : (rec.status === 'kasal' ? 'Kasal' : (rec.status === 'tatil' ? 'Ta\'til' : 'Kelmadi'));
+    // Status rang va matn
+    var statusColor, statusText;
+    if (rec.status === 'keldi')  { statusColor = '#22c55e'; statusText = 'Keldi'; }
+    else if (rec.status === 'dam')   { statusColor = '#a78bfa'; statusText = 'Dam kuni'; }
+    else if (rec.status === 'kasal') { statusColor = '#60a5fa'; statusText = 'Kasal'; }
+    else if (rec.status === 'tatil') { statusColor = '#f59e0b'; statusText = 'Ta\'til'; }
+    else { statusColor = '#ef4444'; statusText = 'Kelmadi'; }
+
+    // Kechikish badge
     var lateTag = rec.lateMinutes > 0
       ? '<span style="font-size:10px;background:rgba(245,158,11,0.15);color:#f59e0b;padding:2px 7px;border-radius:99px;margin-left:6px">' + rec.lateMinutes + ' min kech</span>'
       : '';
-    var dateObj  = new Date(rec.date);
+
+    // Dam kuni + kelgan bo'lsa — qo'shimcha ish badge
+    var otTag = rec.isWeeklyOff && rec.checkIn
+      ? '<span style="font-size:10px;background:rgba(167,139,250,0.15);color:#a78bfa;padding:2px 7px;border-radius:99px;margin-left:6px">+ish</span>'
+      : '';
+
+    var dateObj  = new Date(rec.date + 'T12:00:00');
     var dateDisp = dateObj.toLocaleDateString('uz-UZ', { day:'numeric', month:'short', weekday:'short' });
 
-    return '<div class="record-row">' +
-      '<div>' +
-        '<div style="font-size:13px;font-weight:600;color:#f1f5f9">' + dateDisp + lateTag + '</div>' +
-        '<div style="font-size:12px;color:#64748b;margin-top:2px">' +
-          (rec.checkIn || '—') + ' → ' + (rec.checkOut || '—') +
-          (rec.totalMinutes ? ' &nbsp;·&nbsp; ' + formatMinutes(rec.totalMinutes) : '') +
+    // Vaqt qatori
+    var timeRow = '';
+    if (rec.checkIn) {
+      timeRow = rec.checkIn + ' → ' + (rec.checkOut || 'davom etmoqda');
+      if (rec.totalMinutes) timeRow += '  <span style="color:#22c55e">(' + formatMinutes(rec.totalMinutes) + ')</span>';
+    }
+
+    // Dam kuni ishlagan bo'lsa — overtime
+    var otRow = rec.isWeeklyOff && rec.overtimeMinutes
+      ? '<div style="font-size:11px;color:#a78bfa;margin-top:2px">Qo\'shimcha ish: ' + formatMinutes(rec.overtimeMinutes) + '</div>'
+      : '';
+
+    return '<div style="background:#1e293b;border:1px solid rgba(99,179,237,0.1);border-radius:10px;padding:12px 14px;margin-bottom:8px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
+        '<div>' +
+          '<div style="font-size:13px;font-weight:600;color:#f1f5f9">' + dateDisp + lateTag + otTag + '</div>' +
+          (timeRow ? '<div style="font-size:12px;color:#64748b;margin-top:4px">' + timeRow + '</div>' : '') +
+          otRow +
         '</div>' +
+        '<span style="font-size:12px;font-weight:600;color:' + statusColor + ';margin-left:8px;white-space:nowrap">' + statusText + '</span>' +
       '</div>' +
-      '<span style="font-size:12px;font-weight:600;color:' + statusColor + '">' + statusText + '</span>' +
     '</div>';
   }).join('');
 
@@ -573,10 +601,11 @@ async function renderHistory() {
 // ===== HELPERS =====================================
 // ===================================================
 function formatMinutes(mins) {
-  if (!mins) return '0 min';
+  if (!mins || mins <= 0) return '—';
   var h = Math.floor(mins / 60);
   var m = mins % 60;
-  if (h > 0) return h + ' soat ' + (m > 0 ? m + ' min' : '');
+  if (h > 0 && m > 0) return h + ' soat ' + m + ' min';
+  if (h > 0) return h + ' soat';
   return m + ' min';
 }
 

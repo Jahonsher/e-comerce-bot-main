@@ -1093,13 +1093,17 @@ app.post("/employee/checkout", empMiddleware, async (req, res) => {
     // Dam kuni bo'lsa — overtime = total
     const overtimeMinutes = att.isWeeklyOff ? total : 0;
 
+    // Status: dam kunida kelsa "dam" qoladi lekin status = "keldi" bo'lsin (ketdi qayd qilindi)
+    const newStatus = att.isWeeklyOff ? 'dam' : 'keldi';
+
     const updated = await Attendance.findByIdAndUpdate(att._id, {
       checkOut:        checkOutStr,
       totalMinutes:    total,
-      overtimeMinutes: overtimeMinutes
+      overtimeMinutes: overtimeMinutes,
+      status:          newStatus
     }, { new: true });
 
-    res.json({ ok: true, attendance: updated, totalMinutes: total });
+    res.json({ ok: true, attendance: updated, totalMinutes: total, checkOut: checkOutStr });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

@@ -294,17 +294,42 @@ async function startCheckin() {
 }
 
 async function doCheckout() {
-  if (!confirm('Ishni tugatmoqchimisiz?')) return;
   var btn = document.querySelector('.checkin-btn');
-  if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
 
-  var d = await apiFetch('/employee/checkout', { method: 'POST', body: JSON.stringify({}) });
+  // Confirm o'rniga tugmani confirm holatiga o'tkazamiz
+  if (btn && btn.dataset.confirm !== 'yes') {
+    btn.dataset.confirm = 'yes';
+    btn.textContent = 'Tasdiqlash uchun qayta bosing';
+    btn.style.background = 'linear-gradient(135deg,#f59e0b,#d97706)';
+    setTimeout(function() {
+      if (btn.dataset.confirm === 'yes') {
+        btn.dataset.confirm = '';
+        btn.textContent = 'KETDI';
+        btn.style.background = '';
+      }
+    }, 3000);
+    return;
+  }
+
+  if (btn) { btn.textContent = '⏳ Saqlanmoqda...'; btn.disabled = true; }
+
+  var now = new Date();
+  var clientTimeMinutes = now.getHours() * 60 + now.getMinutes();
+  var clientDate = now.getFullYear() + '-' +
+    String(now.getMonth()+1).padStart(2,'0') + '-' +
+    String(now.getDate()).padStart(2,'0');
+
+  var d = await apiFetch('/employee/checkout', {
+    method: 'POST',
+    body: JSON.stringify({ clientTimeMinutes, clientDate })
+  });
+
   if (d.ok) {
-    showToast('✅ Ketdi vaqti qayd qilindi!', 'green');
-    setTimeout(renderHome, 1000);
+    showToast('✅ Ketdi vaqti qayd qilindi!', 'green', 4000);
+    setTimeout(renderHome, 1200);
   } else {
-    alert('Xato: ' + (d.error || 'Nomalum xato'));
-    if (btn) { btn.disabled = false; }
+    showToast('❌ ' + (d.error || 'Xato yuz berdi'), 'red');
+    if (btn) { btn.textContent = 'KETDI'; btn.disabled = false; btn.dataset.confirm = ''; }
   }
 }
 
@@ -558,17 +583,61 @@ function getWorkedMinutes(checkIn) {
 }
 
 // Toast xabarlari
-function showToast(msg, type) {
+function showToast(msg, type, duration) {
+  // Avvalgi toastlarni tozalaymiz
+  document.querySelectorAll('.app-toast').forEach(function(t) { t.remove(); });
+
+  var bg = type === 'green'  ? 'rgba(34,197,94,0.18)'   :
+           type === 'yellow' ? 'rgba(245,158,11,0.18)'  :
+           type === 'red'    ? 'rgba(239,68,68,0.18)'   :
+                               'rgba(59,130,246,0.18)';
+  var bc = type === 'green'  ? 'rgba(34,197,94,0.4)'    :
+           type === 'yellow' ? 'rgba(245,158,11,0.4)'   :
+           type === 'red'    ? 'rgba(239,68,68,0.4)'    :
+                               'rgba(59,130,246,0.4)';
+  var tc = type === 'green'  ? '#4ade80' :
+           type === 'yellow' ? '#fbbf24' :
+           type === 'red'    ? '#f87171' :
+                               '#93c5fd';
+
   var el = document.createElement('div');
-  var bg = type === 'green' ? 'rgba(34,197,94,0.15)' : (type === 'yellow' ? 'rgba(245,158,11,0.15)' : 'rgba(59,130,246,0.15)');
-  var bc = type === 'green' ? 'rgba(34,197,94,0.3)'  : (type === 'yellow' ? 'rgba(245,158,11,0.3)'  : 'rgba(59,130,246,0.3)');
-  var tc = type === 'green' ? '#4ade80'               : (type === 'yellow' ? '#fbbf24'               : '#93c5fd');
-  el.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:' + bg + ';border:1px solid ' + bc + ';color:' + tc + ';padding:10px 20px;border-radius:99px;font-size:13px;font-weight:500;z-index:999;white-space:nowrap;font-family:Inter,sans-serif';
+  el.className = 'app-toast';
+  el.style.cssText = [
+    'position:fixed',
+    'bottom:90px',
+    'left:50%',
+    'transform:translateX(-50%)',
+    'background:' + bg,
+    'border:1px solid ' + bc,
+    'color:' + tc,
+    'padding:12px 24px',
+    'border-radius:99px',
+    'font-size:13px',
+    'font-weight:600',
+    'z-index:9999',
+    'white-space:nowrap',
+    'font-family:Inter,sans-serif',
+    'box-shadow:0 4px 20px rgba(0,0,0,0.3)',
+    'transition:opacity 0.3s',
+    'max-width:90vw',
+    'text-align:center'
+  ].join(';');
   el.textContent = msg;
   document.body.appendChild(el);
+
+  // Auto-hide (default 3 soniya, green/yellow 4 soniya)
+  var ms = duration || (type === 'green' || type === 'yellow' ? 4000 : 3000);
+  setTimeout(function() {
+    el.style.opacity = '0';
+    setTimeout(function() { if (el.parentNode) el.remove(); }, 300);
+  }, ms);
+
   return el;
 }
 
 function hideToast(el) {
-  if (el && el.parentNode) el.parentNode.removeChild(el);
+  if (el && el.parentNode) {
+    el.style.opacity = '0';
+    setTimeout(function() { if (el.parentNode) el.remove(); }, 300);
+  }
 }

@@ -104,9 +104,13 @@ async function apiFetch(url, opts) {
 // ===== START =====
 
 function showBlockedScreen(reason) {
-  // Login page ni yashiramiz
-  document.getElementById('loginPage').style.display = 'none';
-  try { document.getElementById('app').classList.add('hidden'); } catch(e) {}
+  // Barcha sahifalarni yashiramiz
+  ['loginPage'].forEach(function(id) {
+    var e = document.getElementById(id);
+    if (e) e.style.display = 'none';
+  });
+  var app = document.getElementById('app');
+  if (app) { app.classList.add('hidden'); app.style.display = 'none'; }
 
   // Agar blocked screen allaqachon bo'lsa o'chiramiz
   var old = document.getElementById('blockedScreen');
@@ -114,15 +118,19 @@ function showBlockedScreen(reason) {
 
   var el = document.createElement('div');
   el.id = 'blockedScreen';
-  el.style.cssText = 'position:fixed;inset:0;background:#0a0f1e;display:flex;align-items:center;justify-content:center;z-index:9999;padding:24px';
+  el.style.cssText = 'position:fixed;inset:0;background:#0a0f1e;display:flex;align-items:center;justify-content:center;z-index:99999;padding:24px';
   el.innerHTML =
-    '<div style="max-width:400px;width:100%;text-align:center">' +
-      '<div style="font-size:64px;margin-bottom:16px">🔒</div>' +
-      '<div style="font-size:22px;font-weight:700;color:#f1f5f9;margin-bottom:12px">Xizmat to\'xtatilgan</div>' +
-      '<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:16px;margin-bottom:24px">' +
-        '<div style="font-size:14px;color:#fca5a5;line-height:1.6">' + (reason || "Restoran vaqtincha bloklangan") + '</div>' +
+    '<div style="max-width:440px;width:100%;text-align:center">' +
+      '<div style="font-size:72px;margin-bottom:20px">🔒</div>' +
+      '<div style="font-size:24px;font-weight:800;color:#f1f5f9;margin-bottom:8px">Xizmat to\'xtatilgan</div>' +
+      '<div style="font-size:14px;color:#64748b;margin-bottom:24px">Ushbu restoran vaqtincha bloklangan</div>' +
+      '<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:14px;padding:20px;margin-bottom:24px">' +
+        '<div style="font-size:13px;color:#fca5a5;line-height:1.8">' + (reason || "Obuna to\'xtatilgan") + '</div>' +
       '</div>' +
-      '<div style="font-size:13px;color:#475569">Muammo yechilishi uchun superadmin bilan bog\'laning</div>' +
+      '<div style="background:#141d2e;border:1px solid rgba(99,179,237,0.15);border-radius:12px;padding:16px">' +
+        '<div style="font-size:12px;color:#64748b;margin-bottom:4px">Xizmatni tiklash uchun:</div>' +
+        '<div style="font-size:13px;color:#93c5fd;font-weight:600">Superadmin bilan bog\'laning</div>' +
+      '</div>' +
     '</div>';
   document.body.appendChild(el);
 }
@@ -145,13 +153,29 @@ function startApp() {
 
 function _startApp() {
   document.getElementById('loginPage').style.display = 'none';
-  document.getElementById('app').classList.remove('hidden');
+  var app = document.getElementById('app');
+  app.classList.remove('hidden');
+  app.style.display = '';
   document.getElementById('sidebarRestName').textContent = adminInfo.restaurantName || 'Restoran';
   document.getElementById('adminUsername').textContent   = '@' + (adminInfo.username || '');
   showPage('dashboard');
 }
 
-if (token) startApp();
+// Token bilan kirsa ham blok tekshiruvi
+if (token) {
+  if (adminInfo && adminInfo.role === 'superadmin') {
+    startApp();
+  } else {
+    var rId0 = (adminInfo && adminInfo.restaurantId) ? adminInfo.restaurantId : 'imperial';
+    fetch(API + '/check-block/' + rId0)
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d.blocked) { showBlockedScreen(d.reason); }
+        else { startApp(); }
+      })
+      .catch(function(){ startApp(); });
+  }
+}
 
 // ===== EVENTS =====
 

@@ -128,6 +128,22 @@ function showBlockedScreen(reason) {
 }
 
 function startApp() {
+  // Avval blok tekshiruv
+  var rId = adminInfo.restaurantId || 'imperial';
+  if (adminInfo.role !== 'superadmin') {
+    fetch(API + '/check-block/' + rId)
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d.blocked) { showBlockedScreen(d.reason); return; }
+        _startApp();
+      })
+      .catch(function(){ _startApp(); });
+  } else {
+    _startApp();
+  }
+}
+
+function _startApp() {
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('app').classList.remove('hidden');
   document.getElementById('sidebarRestName').textContent = adminInfo.restaurantName || 'Restoran';
@@ -138,6 +154,17 @@ function startApp() {
 if (token) startApp();
 
 // ===== EVENTS =====
+
+// Har 5 daqiqada blok tekshiruvi
+setInterval(function() {
+  if (!token || !adminInfo || adminInfo.role === 'superadmin') return;
+  var rId = adminInfo.restaurantId || 'imperial';
+  fetch(API + '/check-block/' + rId)
+    .then(function(r){ return r.json(); })
+    .then(function(d){ if (d.blocked) showBlockedScreen(d.reason); })
+    .catch(function(){});
+}, 5 * 60 * 1000);
+
 document.getElementById('loginBtn').addEventListener('click', doLogin);
 document.getElementById('loginPass').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
 document.getElementById('logoutBtn').addEventListener('click', doLogout);

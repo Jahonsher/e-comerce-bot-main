@@ -69,6 +69,15 @@ function showErr(el, msg) {
 
 // ===== START APP =====
 function startApp() {
+  // Blok tekshiruvi
+  var rId = empInfo && empInfo.restaurantId ? empInfo.restaurantId : 'imperial';
+  fetch(API + '/check-block/' + rId)
+    .then(function(r){ return r.json(); })
+    .then(function(d){ if (d.blocked) { showBlockedScreen(d.reason); return; } _startApp(); })
+    .catch(function(){ _startApp(); });
+}
+
+function _startApp() {
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('appPage').style.display   = 'block';
   document.getElementById('headerName').textContent     = empInfo.name || '—';

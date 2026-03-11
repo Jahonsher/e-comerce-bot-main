@@ -290,6 +290,12 @@ function showNotTelegramWarning() {
   telegramId = null;
 }
 
+// Sahifa ochilganda blok tekshiruvi
+fetch(API + '/check-block/imperial')
+  .then(function(r){ return r.json(); })
+  .then(function(d){ if (d.blocked) showBlockedPage(d.reason); })
+  .catch(function(){});
+
 initTelegramUser();
 
 /* ===== PROFILE ===== */

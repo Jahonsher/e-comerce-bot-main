@@ -631,6 +631,15 @@ app.post("/order", async (req, res) => {
 });
 
 // ===== ADMIN AUTH =====
+
+// ===== BLOK TEKSHIRUVI (public) =====
+app.get("/check-block/:restaurantId", async (req, res) => {
+  try {
+    const check = await isBotBlocked(req.params.restaurantId);
+    res.json(check);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 app.post("/admin/login", async (req, res) => {
   try {
     const { username, password } = req.body;

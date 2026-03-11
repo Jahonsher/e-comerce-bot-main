@@ -637,12 +637,24 @@ function showBlockModal(id, restName) {
 }
 
 async function confirmBlock(id, modal) {
-  var reason = document.getElementById('blockReason').value.trim() || "Xizmat vaqtincha to\'xtatilgan";
+  var reason = document.getElementById('blockReason').value.trim() || "Xizmat vaqtincha to'xtatilgan";
   if (modal) modal.remove();
+  // Avval restaurantId ni topamiz
+  var rests = await api('/superadmin/restaurants');
+  var rest = rests && rests.find(function(r){ return r._id === id; });
+  var rId = rest ? rest.restaurantId : null;
+  // Admin ni yangilaymiz
   await api('/superadmin/restaurants/' + id, {
     method: 'PUT',
     body: JSON.stringify({ active: false, blockReason: reason })
   });
+  // Restaurant kolleksiyasini yangilaymiz
+  if (rId) {
+    await api('/superadmin/block/' + rId, {
+      method: 'POST',
+      body: JSON.stringify({ blocked: true, reason: reason })
+    });
+  }
   loadRestCards();
 }
 
@@ -685,10 +697,22 @@ async function confirmUnblock(id, modal) {
   var endDate = new Date();
   endDate.setDate(endDate.getDate() + days);
   if (modal) modal.remove();
+  // Avval restaurantId ni topamiz
+  var rests = await api('/superadmin/restaurants');
+  var rest = rests && rests.find(function(r){ return r._id === id; });
+  var rId = rest ? rest.restaurantId : null;
+  // Admin ni yangilaymiz
   await api('/superadmin/restaurants/' + id, {
     method: 'PUT',
     body: JSON.stringify({ active: true, blockReason: '', subscriptionEnd: endDate.toISOString() })
   });
+  // Restaurant kolleksiyasini yangilaymiz
+  if (rId) {
+    await api('/superadmin/block/' + rId, {
+      method: 'POST',
+      body: JSON.stringify({ blocked: false, reason: '' })
+    });
+  }
   loadRestCards();
 }
 

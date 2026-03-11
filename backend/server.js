@@ -126,6 +126,16 @@ const Category = mongoose.model("Category", new mongoose.Schema({
   restaurantId: { type: String, default: "imperial" }
 }, { timestamps: true }));
 
+
+// ===== RESTAURANT MODEL =====
+const restaurantSchema = new mongoose.Schema({
+  restaurantId:   { type: String, required: true, unique: true },
+  name:           { type: String },
+  blocked:        { type: Boolean, default: false },
+  blockReason:    { type: String, default: "" },
+}, { timestamps: true });
+const Restaurant = mongoose.model("Restaurant", restaurantSchema);
+
 const Admin = mongoose.model("Admin", new mongoose.Schema({
   username:       { type: String, unique: true },
   password:       String,
@@ -265,14 +275,21 @@ async function send(id, text, extra) {
 
 // ===== HELPER: Bot uchun restoran bloklangan? =====
 async function isBotBlocked(restaurantId) {
-  // Faqat role:"admin" ni tekshiramiz (superadmin emas)
-  const admin = await Admin.findOne({ restaurantId, role: "admin" }).select("active subscriptionEnd blockReason");
-  if (!admin) return { blocked: false }; // admin topilmasa - blok yo'q
-  if (!admin.active) return { blocked: true, reason: admin.blockReason || "Xizmat vaqtincha to'xtatilgan" };
-  if (admin.subscriptionEnd && new Date() > new Date(admin.subscriptionEnd)) {
-    return { blocked: true, reason: "Obuna muddati tugagan. Iltimos xizmatni yangilang." };
+  // Restaurant kolleksiyasidan tekshiramiz
+  const rest = await Restaurant.findOne({ restaurantId });
+  if (rest && rest.blocked) {
+    return { blocked: true, reason: rest.blockReason || "Xizmat vaqtincha to'xtatilgan" };
   }
   return { blocked: false };
+}
+
+// Restaurant kolleksiyasini auto-yaratish
+async function ensureRestaurant(restaurantId, name) {
+  await Restaurant.findOneAndUpdate(
+    { restaurantId },
+    { $setOnInsert: { restaurantId, name: name || restaurantId, blocked: false } },
+    { upsert: true }
+  );
 }
 
 bot.onText(/\/start/, async (msg) => {
@@ -643,6 +660,24 @@ app.get("/check-block/:restaurantId", async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ===== RESTAURANT BLOKLASH (superadmin) =====
+app.post("/superadmin/block/:restaurantId", superMiddleware, async (req, res) => {
+  try {
+    const { blocked, reason } = req.body;
+    await Restaurant.findOneAndUpdate(
+      { restaurantId: req.params.restaurantId },
+      { blocked: !!blocked, blockReason: reason || "" },
+      { upsert: true }
+    );
+    // Admin kolleksiyasini ham yangilaymiz
+    await Admin.findOneAndUpdate(
+      { restaurantId: req.params.restaurantId, role: { $ne: "superadmin" } },
+      { active: !blocked, blockReason: reason || "" }
+    );
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 app.post("/admin/login", async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -893,6 +928,7 @@ app.post("/superadmin/restaurants", superMiddleware, async (req, res) => {
     if (exists) return res.status(400).json({ error: "Bu username yoki ID allaqachon mavjud" });
     const hash  = await bcrypt.hash(password, 10);
     const admin = await Admin.create({ username, password: hash, restaurantName, restaurantId, botToken: botToken||"", chefId: chefId||0, phone: phone||"", address: address||"", webappUrl: webappUrl||"", role: "admin", active: true });
+    await ensureRestaurant(restaurantId, restaurantName);
     await Category.insertMany([
       { name: "Taom", name_ru: "Еда", emoji: "🍽", order: 1, restaurantId },
       { name: "Ichimlik", name_ru: "Напитки", emoji: "🥤", order: 2, restaurantId }
@@ -903,10 +939,29 @@ app.post("/superadmin/restaurants", superMiddleware, async (req, res) => {
 
 app.put("/superadmin/restaurants/:id", superMiddleware, async (req, res) => {
   try {
-    const { password, ...rest } = req.body;
+    const { password, active, blockReason, subscriptionEnd, ...rest } = req.body;
     const update = { ...rest };
     if (password) update.password = await bcrypt.hash(password, 10);
+    if (active !== undefined) update.active = active;
+    if (blockReason !== undefined) update.blockReason = blockReason;
+    if (subscriptionEnd !== undefined) update.subscriptionEnd = subscriptionEnd;
+
     const admin = await Admin.findByIdAndUpdate(req.params.id, update, { new: true }).select("-password");
+    if (!admin) return res.status(404).json({ error: "Topilmadi" });
+
+    // Restaurant kolleksiyasini ham yangilaymiz
+    const isBlocked = active === false;
+    await Restaurant.findOneAndUpdate(
+      { restaurantId: admin.restaurantId },
+      {
+        restaurantId: admin.restaurantId,
+        name: admin.restaurantName,
+        blocked: isBlocked,
+        blockReason: isBlocked ? (blockReason || "Xizmat to'xtatilgan") : ""
+      },
+      { upsert: true }
+    );
+
     res.json({ ok: true, admin });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
@@ -1515,6 +1570,9 @@ process.on("unhandledRejection", e => console.error("unhandled:", e));
 app.listen(PORT, async () => {
   console.log("Server " + PORT + " da ishga tushdi");
   await syncProductsToDB();
+
+  // Imperial restaurant ni ensure qilamiz
+  await ensureRestaurant("imperial", "Imperial Restoran");
 
   // ===== SUPERADMIN AVTOMATIK YARATISH / PAROL YANGILASH =====
   try {

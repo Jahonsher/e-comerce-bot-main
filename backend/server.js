@@ -587,22 +587,6 @@ app.post("/admin/login", async (req, res) => {
 
 
 
-// VAQTINCHA: reset
-app.post("/admin/reset-super", async (req, res) => {
-  try {
-    const { newPassword, secretKey } = req.body;
-    if (secretKey !== "reset-2024-secret") return res.status(403).json({ error: "Ruxsat yoq" });
-    const hash = await bcrypt.hash(newPassword, 10);
-    const admin = await Admin.findOneAndUpdate(
-      { role: "superadmin" },
-      { password: hash, active: true },
-      { new: true }
-    );
-    if (!admin) return res.status(404).json({ error: "Topilmadi" });
-    res.json({ ok: true, username: admin.username });
-  } catch(e) { res.status(500).json({ error: e.message }); }
-});
-
 app.post("/admin/setup", async (req, res) => {
   try {
     const count = await Admin.countDocuments();
@@ -1445,6 +1429,27 @@ process.on("unhandledRejection", e => console.error("unhandled:", e));
 app.listen(PORT, async () => {
   console.log("Server " + PORT + " da ishga tushdi");
   await syncProductsToDB();
+
+  // ===== SUPERADMIN AVTOMATIK YARATISH / PAROL YANGILASH =====
+  try {
+    const superPass = process.env.SUPER_PASSWORD || "Jahonsher3";
+    const superUser = process.env.SUPER_USERNAME || "Jahonsher";
+    const existing  = await Admin.findOne({ role: "superadmin" });
+    const hash      = await bcrypt.hash(superPass, 10);
+    if (!existing) {
+      await Admin.create({
+        username: superUser, password: hash,
+        restaurantName: "Imperial Restoran", restaurantId: "imperial",
+        role: "superadmin", active: true
+      });
+      console.log("✅ Superadmin yaratildi:", superUser);
+    } else {
+      await Admin.findByIdAndUpdate(existing._id, { password: hash, active: true });
+      console.log("✅ Superadmin paroli yangilandi:", existing.username);
+    }
+  } catch(e) { console.error("Superadmin setup xato:", e.message); }
+  // ==========================================================
+
   if (DOMAIN) {
     try { await bot.setWebHook("https://" + DOMAIN + WH); console.log("Webhook urnatildi"); }
     catch(e) { console.error("webhook err:", e.message); }

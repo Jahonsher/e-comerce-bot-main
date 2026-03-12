@@ -103,9 +103,11 @@ async function faceppCompare(photo1, photo2) {
 // ===================================================
 // ===== MONGODB CONNECT =============================
 // ===================================================
-mongoose.connect(MONGO_URI)
-  .then(() => console.log("MongoDB ulandi"))
-  .catch(err => { console.error("Mongo:", err.message); process.exit(1); });
+// MongoDB connect - server start bo'lishidan oldin kutamiz
+async function connectDB() {
+  await mongoose.connect(MONGO_URI);
+  console.log("MongoDB ulandi");
+}
 
 // ===================================================
 // ===== MODELS ======================================
@@ -1156,39 +1158,52 @@ app.get("/employee/stats", empMiddleware, async (req, res) => {
 process.on("uncaughtException",  e => console.error("uncaught:", e.message));
 process.on("unhandledRejection", e => console.error("unhandled:", e));
 
-app.listen(PORT, async () => {
-  console.log("✅ Server " + PORT + " portda ishga tushdi");
-
-  // Barcha admin restoranlarni ensure qilamiz
+async function main() {
   try {
-    const allAdmins = await Admin.find({ role: "admin" }).select("restaurantId restaurantName botToken chefId webappUrl");
-    for (const a of allAdmins) {
-      await ensureRestaurant(a.restaurantId, a.restaurantName);
-      // Botni ishga tushiramiz
-      if (a.botToken) await startBot(a.restaurantId, a.botToken, a.webappUrl, a.chefId);
-    }
-    console.log("✅ Restoranlar sinxronlandi:", allAdmins.length);
-  } catch(e) { console.error("Restoran sync xato:", e.message); }
+    // 1. Avval MongoDB ga ulanamiz
+    await connectDB();
 
-  // Superadmin avtomatik yaratish / parol yangilash
-  try {
-    const superUser = process.env.SUPER_USERNAME || "Jahonsher";
-    const superPass = process.env.SUPER_PASSWORD || "Jahonsher3";
-    const hash      = await bcrypt.hash(superPass, 10);
-    const existing  = await Admin.findOne({ role: "superadmin" });
-    if (!existing) {
-      await Admin.create({ username: superUser, password: hash, restaurantName: "SuperAdmin", restaurantId: "superadmin", role: "superadmin", active: true });
-      console.log("✅ Superadmin yaratildi:", superUser);
+    // 2. Keyin serverni ishga tushiramiz
+    app.listen(PORT, () => {
+      console.log("✅ Server " + PORT + " portda ishga tushdi");
+    });
+
+    // 3. Barcha admin restoranlarni botlarini ishga tushiramiz
+    try {
+      const allAdmins = await Admin.find({ role: "admin" }).select("restaurantId restaurantName botToken chefId webappUrl");
+      for (const a of allAdmins) {
+        await ensureRestaurant(a.restaurantId, a.restaurantName);
+        if (a.botToken) await startBot(a.restaurantId, a.botToken, a.webappUrl, a.chefId);
+      }
+      console.log("✅ Restoranlar sinxronlandi:", allAdmins.length);
+    } catch(e) { console.error("Restoran sync xato:", e.message); }
+
+    // 4. Superadmin avtomatik yaratish / parol yangilash
+    try {
+      const superUser = process.env.SUPER_USERNAME || "Jahonsher";
+      const superPass = process.env.SUPER_PASSWORD || "Jahonsher3";
+      const hash      = await bcrypt.hash(superPass, 10);
+      const existing  = await Admin.findOne({ role: "superadmin" });
+      if (!existing) {
+        await Admin.create({ username: superUser, password: hash, restaurantName: "SuperAdmin", restaurantId: "superadmin", role: "superadmin", active: true });
+        console.log("✅ Superadmin yaratildi:", superUser);
+      } else {
+        await Admin.findByIdAndUpdate(existing._id, { password: hash, username: superUser, active: true });
+        console.log("✅ Superadmin yangilandi:", superUser);
+      }
+    } catch(e) { console.error("Superadmin setup xato:", e.message); }
+
+    // 5. Domain
+    if (DOMAIN) {
+      console.log("✅ Domain:", DOMAIN);
     } else {
-      await Admin.findByIdAndUpdate(existing._id, { password: hash, username: superUser, active: true });
-      console.log("✅ Superadmin yangilandi:", superUser);
+      console.warn("⚠️ RAILWAY_PUBLIC_DOMAIN topilmadi");
     }
-  } catch(e) { console.error("Superadmin setup xato:", e.message); }
 
-  // Webhook
-  if (DOMAIN) {
-    console.log("✅ Domain:", DOMAIN);
-  } else {
-    console.warn("⚠️ RAILWAY_PUBLIC_DOMAIN topilmadi");
+  } catch(err) {
+    console.error("Server start xato:", err.message);
+    process.exit(1);
   }
-});
+}
+
+main();

@@ -1188,7 +1188,7 @@ async function main() {
         await Admin.create({ username: superUser, password: hash, restaurantName: "SuperAdmin", restaurantId: "superadmin", role: "superadmin", active: true });
         console.log("✅ Superadmin yaratildi:", superUser);
       } else {
-        await Admin.findByIdAndUpdate(existing._id, { password: hash, username: superUser, active: true });
+        await Admin.findByIdAndUpdate(existing._id, { password: hash, username: superUser, active: true, restaurantId: "superadmin", botToken: "", chefId: 0, webappUrl: "" });
         console.log("✅ Superadmin yangilandi:", superUser);
       }
     } catch(e) { console.error("Superadmin setup xato:", e.message); }

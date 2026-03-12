@@ -4,7 +4,14 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Admin Panel</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<script>
+  // Vercel environment variable sifatida VITE_API_URL beriladi
+  // Agar yo'q bo'lsa - default Railway URL ishlatiladi
+  window.__CONFIG__ = {
+    API_URL: typeof VITE_API_URL !== 'undefined' ? VITE_API_URL
+           : 'https://e-comerce-bot-main-production.up.railway.app'
+  };
+</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 tailwind.config = {
@@ -12,472 +19,179 @@ tailwind.config = {
   theme: {
     extend: {
       colors: {
-        bg:     '#0b0f1a',
-        bg2:    '#111827',
-        bg3:    '#1a2235',
-        card:   '#131c2e',
-        accent: '#3b82f6',
-        gold:   '#f59e0b',
-        danger: '#ef4444',
-        ok:     '#22c55e',
+        bg:      '#0b0f1a',
+        bg2:     '#111827',
+        bg3:     '#1a2235',
+        card:    '#131c2e',
+        accent:  '#3b82f6',
+        gold:    '#f59e0b',
       },
-      fontFamily: { sans: ['Nunito','sans-serif'] }
+      fontFamily: {
+        sans: ['Manrope', 'sans-serif'],
+        serif: ['Playfair Display', 'serif'],
+      }
     }
   }
 }
 </script>
-<!-- CONFIG: Vercel da shu qiymatlarni o'zgartiring -->
-<script>
-window.__CONFIG__ = {
-  API_URL: "https://e-comerce-bot-main-production.up.railway.app"
-};
-</script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  body{background:#0b0f1a;color:#e5e9f0;font-family:'Nunito',sans-serif}
-  ::-webkit-scrollbar{width:4px;height:4px}
-  ::-webkit-scrollbar-thumb{background:#1e293b;border-radius:4px}
-  .scrollbar-hide::-webkit-scrollbar{display:none}
-  .scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-  @keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
-  @keyframes modalIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
-  .fade-in{animation:fadeIn .2s ease}
-  .slide-in{animation:slideIn .25s cubic-bezier(.16,1,.3,1)}
-  .modal-in{animation:modalIn .2s ease}
-  .nav-item{transition:all .15s}
-  .nav-item.active{background:#1e3a5f;color:#3b82f6}
-  .press:active{transform:scale(.96);transition:transform .1s}
-  /* Blocked screen */
-  #blockedScreen{backdrop-filter:blur(10px)}
-  /* Chart bars */
-  .bar{transition:height .4s ease}
-  /* Table row hover */
-  tr:hover td{background:rgba(59,130,246,.04)}
-  input,select,textarea{background:#1a2235;border:1px solid rgba(255,255,255,.08);color:#e5e9f0;border-radius:.75rem;padding:.625rem .875rem;outline:none;width:100%;font-family:'Nunito',sans-serif;font-size:.875rem;transition:border-color .2s}
-  input:focus,select:focus,textarea:focus{border-color:#3b82f6}
-  input::placeholder,textarea::placeholder{color:#4b5563}
-  select option{background:#1a2235}
+  body { background:#0b0f1a; color:#f1f5f9; font-family:'Manrope',sans-serif; }
+  ::-webkit-scrollbar { width:4px; height:4px; }
+  ::-webkit-scrollbar-thumb { background:#3b82f6; border-radius:2px; }
+  .sidebar-item { display:flex; align-items:center; gap:10px; padding:10px 20px; cursor:pointer; border-left:3px solid transparent; font-size:13px; font-weight:500; color:#64748b; transition:all .2s; }
+  .sidebar-item:hover { background:rgba(59,130,246,0.07); color:#f1f5f9; }
+  .sidebar-item.active { background:rgba(59,130,246,0.1); border-left-color:#3b82f6; color:#60a5fa; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+  .badge-new      { background:rgba(245,158,11,0.15);  color:#f59e0b; }
+  .badge-accepted { background:rgba(16,185,129,0.15);  color:#10b981; }
+  .badge-rejected { background:rgba(239,68,68,0.15);   color:#ef4444; }
+  .badge-ready    { background:rgba(59,130,246,0.15);  color:#60a5fa; }
+  .badge-online   { background:rgba(139,92,246,0.15);  color:#a78bfa; }
+  .badge-dinein   { background:rgba(245,158,11,0.15);  color:#f59e0b; }
+  .cat-row { display:flex; align-items:center; gap:12px; padding:12px 20px; border-bottom:1px solid rgba(99,179,237,0.05); cursor:grab; transition:background .15s; }
+  .cat-row:last-child { border-bottom:none; }
+  .cat-row.drag-over { background:rgba(59,130,246,0.08); }
+  .cat-row.dragging  { opacity:.4; }
+  .inp { width:100%; padding:11px 14px; background:#1a2235; border:1px solid rgba(99,179,237,0.12); border-radius:8px; color:#f1f5f9; font-family:'Manrope',sans-serif; font-size:14px; outline:none; transition:border-color .2s; }
+  .inp:focus { border-color:#3b82f6; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .page { animation:fadeIn .22s ease; }
+  @media(max-width:768px){ .sidebar{ transform:translateX(-100%); } .sidebar.open{ transform:translateX(0); } .main-wrap{ margin-left:0 !important; } }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-6px)}
+    40%{transform:translateX(6px)}
+    60%{transform:translateX(-4px)}
+    80%{transform:translateX(4px)}
+  }
 </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
-<body class="min-h-screen flex">
+<body>
 
-<!-- BLOCKED SCREEN -->
-<div id="blockedScreen" class="hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-6">
-  <div class="text-center max-w-sm">
-    <div class="text-6xl mb-4">🔒</div>
-    <p class="text-2xl font-black text-white mb-2">Bloklangan</p>
-    <p id="blockedReason" class="text-sm text-gray-400 bg-white/5 rounded-2xl p-4 leading-relaxed"></p>
+<!-- LOGIN -->
+<div id="loginPage" class="fixed inset-0 flex items-center justify-center z-50" style="background:#0b0f1a">
+  <div class="w-full max-w-sm mx-4 rounded-2xl p-10 border" style="background:#111827;border-color:rgba(99,179,237,0.12)">
+    <div class="font-serif text-2xl text-center mb-1" style="color:#f59e0b">✦ Imperial</div>
+    <div class="text-center text-xs mb-8 tracking-widest uppercase" style="color:#64748b">Admin Panel</div>
+    <div class="mb-4">
+      <label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Login</label>
+      <input id="loginUser" type="text" class="inp" placeholder="username" autocomplete="username"/>
+    </div>
+    <div class="mb-2">
+      <label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Parol</label>
+      <input id="loginPass" type="password" class="inp" placeholder="••••••••" autocomplete="current-password"/>
+    </div>
+    <button id="loginBtn" class="w-full mt-4 py-3 rounded-xl font-bold text-sm text-white transition-opacity hover:opacity-90" style="background:#3b82f6">Kirish</button>
+    <div id="loginErr" class="text-center text-sm mt-3 rounded-lg px-3 py-2" style="color:#ef4444;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);display:none"></div>
   </div>
 </div>
 
-<!-- LOGIN PAGE -->
-<div id="loginPage" class="fixed inset-0 z-40 flex items-center justify-center p-6 bg-bg">
-  <div class="w-full max-w-sm modal-in">
-    <div class="text-center mb-8">
-      <div class="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">👑</div>
-      <h1 class="text-2xl font-black text-white">Admin Panel</h1>
-      <p class="text-gray-400 text-sm mt-1">Tizimga kiring</p>
-    </div>
-    <div class="space-y-3">
-      <input id="loginUser" type="text" placeholder="Login" class="text-center font-bold"/>
-      <input id="loginPass" type="password" placeholder="Parol" class="text-center font-bold" onkeydown="if(event.key==='Enter')doLogin()"/>
-      <p id="loginErr" class="hidden text-red-400 text-xs text-center font-bold"></p>
-      <button onclick="doLogin()" class="press w-full py-4 bg-accent rounded-2xl text-white font-black text-sm hover:bg-blue-600 transition-colors">
-        Kirish →
-      </button>
-    </div>
-  </div>
-</div>
+<!-- APP -->
+<div id="app" class="hidden min-h-screen">
 
-<!-- MAIN APP -->
-<div id="app" class="hidden flex w-full min-h-screen">
+  <!-- Hamburger -->
+  <button id="hamburger" class="fixed top-4 left-4 z-40 md:hidden flex items-center justify-center w-10 h-10 rounded-xl border text-lg" style="background:#111827;border-color:rgba(99,179,237,0.12)">☰</button>
+  <div id="sidebarOverlay" class="hidden fixed inset-0 z-30 md:hidden" style="background:rgba(0,0,0,0.5)"></div>
 
-  <!-- SIDEBAR (desktop) -->
-  <aside class="hidden lg:flex w-56 bg-bg2 border-r border-white/5 flex-col fixed h-full z-20">
-    <div class="p-4 border-b border-white/5">
-      <div class="flex items-center gap-2">
-        <div class="w-8 h-8 bg-accent rounded-xl flex items-center justify-center text-white font-black text-sm">A</div>
-        <div>
-          <p id="sideRestName" class="font-black text-white text-xs leading-tight">Restoran</p>
-          <p id="sideUsername"  class="text-gray-500 text-xs">Admin</p>
-        </div>
-      </div>
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar fixed left-0 top-0 bottom-0 w-56 z-40 flex flex-col transition-transform duration-300 border-r" style="background:#111827;border-color:rgba(99,179,237,0.12)">
+    <div class="px-5 py-6 border-b" style="border-color:rgba(99,179,237,0.12)">
+      <div class="font-serif text-lg" style="color:#f59e0b">✦ Imperial</div>
+      <div id="sidebarRestName" class="text-xs mt-1" style="color:#64748b">Admin Panel</div>
     </div>
-    <nav class="flex-1 p-3 space-y-1">
-      <button onclick="showSection('dashboard')" class="nav-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-left" data-nav="dashboard">
-        <span>📊</span><span>Dashboard</span>
-      </button>
-      <button onclick="showSection('orders')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-left text-gray-400" data-nav="orders">
-        <span>🧾</span><span>Buyurtmalar</span>
-      </button>
-      <button onclick="showSection('products')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-left text-gray-400" data-nav="products">
-        <span>🍔</span><span>Mahsulotlar</span>
-      </button>
-      <button onclick="showSection('categories')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-left text-gray-400" data-nav="categories">
-        <span>📂</span><span>Kategoriyalar</span>
-      </button>
-      <button onclick="showSection('users')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-left text-gray-400" data-nav="users">
-        <span>👥</span><span>Mijozlar</span>
-      </button>
-      <button onclick="showSection('broadcast')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-left text-gray-400" data-nav="broadcast">
-        <span>📢</span><span>Xabar</span>
-      </button>
-      <button onclick="showSection('branches')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-left text-gray-400" data-nav="branches">
-        <span>🏢</span><span>Filiallar</span>
-      </button>
-      <button onclick="showSection('employees')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-left text-gray-400" data-nav="employees">
-        <span>👷</span><span>Ishchilar</span>
-      </button>
-      <button onclick="showSection('attendance')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-left text-gray-400" data-nav="attendance">
-        <span>📅</span><span>Davomat</span>
-      </button>
+    <nav class="py-3 flex-1">
+      <div class="px-5 py-3 text-xs uppercase tracking-widest opacity-40" style="color:#64748b">Asosiy</div>
+      <div class="sidebar-item active" data-page="dashboard"><span>📊</span> Dashboard</div>
+      <div class="sidebar-item" data-page="orders"><span>📦</span> Buyurtmalar</div>
+      <div class="px-5 py-3 text-xs uppercase tracking-widest opacity-40" style="color:#64748b">Boshqaruv</div>
+      <div class="sidebar-item" data-page="products"><span>🍽</span> Menyu</div>
+      <div class="sidebar-item" data-page="categories"><span>🗂</span> Kategoriyalar</div>
+      <div class="sidebar-item" data-page="ratings"><span>⭐</span> Reytinglar</div>
+      <div class="sidebar-item" data-page="users"><span>👥</span> Foydalanuvchilar</div>
+      <div style="height:1px;background:rgba(99,179,237,0.08);margin:8px 0"></div>
+      <div style="font-size:9px;font-weight:700;color:#334155;letter-spacing:2px;padding:4px 20px">ISHCHILAR</div>
+      <div class="sidebar-item" data-page="branches"><span>🏢</span> Filiallar</div>
+      <div class="sidebar-item" data-page="employees"><span>👷</span> Ishchilar</div>
+      <div class="sidebar-item" data-page="attendance"><span>📋</span> Davomat</div>
+      <div class="sidebar-item" data-page="empReport"><span>💰</span> Hisobot & Maosh</div>
     </nav>
-    <div class="p-3">
-      <button onclick="logout()" class="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors">
-        <span>🚪</span><span>Chiqish</span>
-      </button>
+    <div class="p-4 border-t" style="border-color:rgba(99,179,237,0.12)">
+      <div id="adminUsername" class="text-xs mb-2" style="color:#64748b"></div>
+      <button id="logoutBtn" class="w-full py-2 rounded-lg text-xs font-semibold border transition-all hover:bg-red-900/30" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.2);color:#ef4444">Chiqish</button>
     </div>
   </aside>
 
-  <!-- CONTENT -->
-  <div class="flex-1 flex flex-col lg:ml-56">
+  <!-- Main -->
+  <main id="mainContent" class="main-wrap ml-56 p-7 min-h-screen"></main>
+</div>
 
-    <!-- Mobile topbar -->
-    <header class="lg:hidden sticky top-0 z-20 bg-bg2/95 backdrop-blur border-b border-white/5 px-4 py-3 flex items-center justify-between">
-      <span id="mobileTitle" class="font-black text-white text-sm">Dashboard</span>
-      <div class="flex items-center gap-2">
-        <button id="autoRefreshBtn" onclick="toggleAutoRefresh()" class="w-8 h-8 bg-bg3 rounded-xl flex items-center justify-center text-xs" title="Auto yangilash">🔄</button>
-        <button onclick="logout()" class="w-8 h-8 bg-red-500/20 rounded-xl flex items-center justify-center text-red-400 text-xs font-bold">↩</button>
-      </div>
-    </header>
-
-    <!-- Page header (desktop) -->
-    <div class="hidden lg:flex items-center justify-between px-6 py-4 border-b border-white/5 bg-bg2/50">
-      <h1 id="pageTitle" class="font-black text-lg text-white">Dashboard</h1>
-      <div class="flex items-center gap-2">
-        <button id="autoRefreshBtnD" onclick="toggleAutoRefresh()" class="px-3 py-1.5 bg-bg3 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-colors">🔄 Auto</button>
-        <button onclick="logout()" class="px-3 py-1.5 bg-red-500/10 rounded-xl text-xs font-bold text-red-400 hover:bg-red-500/20 transition-colors">Chiqish</button>
-      </div>
+<!-- PRODUCT MODAL -->
+<div id="productModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,0.75)">
+  <div class="w-full max-w-md mx-4 rounded-2xl p-7 border max-h-screen overflow-y-auto" style="background:#111827;border-color:rgba(99,179,237,0.12)">
+    <h2 id="modalTitle" class="font-serif text-xl mb-5" style="color:#f59e0b">Taom qo'shish</h2>
+    <input type="hidden" id="productEditId"/>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Nomi (UZ)</label><input class="inp" type="text" id="pName" placeholder="Osh"/></div>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Nomi (RU)</label><input class="inp" type="text" id="pNameRu" placeholder="Плов"/></div>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Narxi (so'm)</label><input class="inp" type="number" id="pPrice" placeholder="45000"/></div>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Kategoriya</label><select class="inp" id="pCategory"></select></div>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Rasm URL</label><input class="inp" type="text" id="pImage" placeholder="https://..."/></div>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Holati</label>
+      <select class="inp" id="pActive"><option value="true">Aktiv</option><option value="false">Yashirilgan</option></select>
     </div>
-
-    <!-- Sections -->
-    <div class="flex-1 overflow-y-auto">
-
-      <!-- DASHBOARD -->
-      <section id="sec-dashboard" class="p-4 lg:p-6 space-y-5 fade-in">
-        <!-- Stats cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div class="bg-card rounded-2xl p-4 border border-white/5">
-            <p class="text-xs text-gray-500 font-semibold mb-1">Bugungi buyurtma</p>
-            <p id="stat-todayOrders" class="text-2xl font-black text-white">—</p>
-          </div>
-          <div class="bg-card rounded-2xl p-4 border border-white/5">
-            <p class="text-xs text-gray-500 font-semibold mb-1">Bugungi daromad</p>
-            <p id="stat-todayRev" class="text-2xl font-black text-accent">—</p>
-          </div>
-          <div class="bg-card rounded-2xl p-4 border border-white/5">
-            <p class="text-xs text-gray-500 font-semibold mb-1">Oylik buyurtma</p>
-            <p id="stat-monthOrders" class="text-2xl font-black text-white">—</p>
-          </div>
-          <div class="bg-card rounded-2xl p-4 border border-white/5">
-            <p class="text-xs text-gray-500 font-semibold mb-1">Jami mijoz</p>
-            <p id="stat-users" class="text-2xl font-black text-gold">—</p>
-          </div>
-        </div>
-        <!-- Chart -->
-        <div class="bg-card rounded-2xl p-4 border border-white/5">
-          <p class="font-black text-white text-sm mb-4">Haftalik buyurtmalar</p>
-          <div id="chartWrap" class="flex items-end gap-2 h-32"></div>
-        </div>
-        <!-- Top products + rating -->
-        <div class="grid lg:grid-cols-2 gap-4">
-          <div class="bg-card rounded-2xl p-4 border border-white/5">
-            <p class="font-black text-white text-sm mb-3">🏆 Top mahsulotlar</p>
-            <div id="topProducts" class="space-y-2"></div>
-          </div>
-          <div class="bg-card rounded-2xl p-4 border border-white/5">
-            <p class="font-black text-white text-sm mb-3">⭐ Reyting</p>
-            <div id="ratingBlock"></div>
-          </div>
-        </div>
-        <!-- Recent orders -->
-        <div class="bg-card rounded-2xl p-4 border border-white/5">
-          <p class="font-black text-white text-sm mb-3">Oxirgi buyurtmalar</p>
-          <div id="recentOrders" class="space-y-2"></div>
-        </div>
-      </section>
-
-      <!-- ORDERS -->
-      <section id="sec-orders" class="hidden p-4 lg:p-6 fade-in">
-        <div class="flex flex-wrap items-center gap-2 mb-4">
-          <select id="orderStatusFilter" onchange="loadOrders()" class="w-40 text-sm">
-            <option value="">Barchasi</option>
-            <option value="Yangi">Yangi</option>
-            <option value="Qabul qilindi">Qabul qilindi</option>
-            <option value="Yetkazilmoqda">Yetkazilmoqda</option>
-            <option value="Bajarildi">Bajarildi</option>
-            <option value="Bekor qilindi">Bekor qilindi</option>
-          </select>
-          <select id="orderTypeFilter" onchange="loadOrders()" class="w-40 text-sm">
-            <option value="">Tur: Barchasi</option>
-            <option value="online">Online</option>
-            <option value="dine_in">Stol</option>
-          </select>
-          <button onclick="loadOrders()" class="press px-4 py-2 bg-accent rounded-xl text-white text-xs font-black">🔄 Yangilash</button>
-        </div>
-        <div id="ordersList" class="space-y-2"></div>
-        <div id="ordersMore" class="hidden mt-4 text-center">
-          <button onclick="loadMoreOrders()" class="px-6 py-2.5 bg-bg3 rounded-xl text-sm font-bold text-gray-400 hover:text-white transition-colors">Ko'proq yuklash</button>
-        </div>
-      </section>
-
-      <!-- PRODUCTS -->
-      <section id="sec-products" class="hidden p-4 lg:p-6 fade-in">
-        <div class="flex items-center justify-between mb-4">
-          <p class="font-black text-white">Mahsulotlar</p>
-          <button onclick="openProductModal()" class="press px-4 py-2 bg-accent rounded-xl text-white text-xs font-black">+ Qo'shish</button>
-        </div>
-        <div id="productsList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
-      </section>
-
-      <!-- CATEGORIES -->
-      <section id="sec-categories" class="hidden p-4 lg:p-6 fade-in">
-        <div class="flex items-center justify-between mb-4">
-          <p class="font-black text-white">Kategoriyalar</p>
-          <button onclick="openCatModal()" class="press px-4 py-2 bg-accent rounded-xl text-white text-xs font-black">+ Qo'shish</button>
-        </div>
-        <div id="catsList" class="space-y-2"></div>
-      </section>
-
-      <!-- USERS -->
-      <section id="sec-users" class="hidden p-4 lg:p-6 fade-in">
-        <p class="font-black text-white mb-4">Mijozlar</p>
-        <div id="usersList" class="space-y-2"></div>
-      </section>
-
-      <!-- BROADCAST -->
-      <section id="sec-broadcast" class="hidden p-4 lg:p-6 fade-in">
-        <div class="max-w-lg">
-          <p class="font-black text-white mb-4">📢 Xabar yuborish</p>
-          <div class="bg-card rounded-2xl p-5 border border-white/5 space-y-4">
-            <div>
-              <label class="text-xs font-bold text-gray-400 block mb-1.5">Matn</label>
-              <textarea id="bcText" rows="4" placeholder="Xabar matni..." class="resize-none"></textarea>
-            </div>
-            <div>
-              <label class="text-xs font-bold text-gray-400 block mb-1.5">Rasm (ixtiyoriy)</label>
-              <input type="file" id="bcFile" accept="image/*" onchange="previewBroadcast(this)" class="text-xs"/>
-              <img id="bcPreview" class="hidden mt-2 rounded-xl max-h-32 object-contain border border-white/10"/>
-            </div>
-            <div id="bcResult" class="hidden text-xs font-bold rounded-xl p-3"></div>
-            <button onclick="sendBroadcast(this)" class="press w-full py-3.5 bg-accent rounded-2xl text-white font-black text-sm">📤 Yuborish</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- BRANCHES -->
-      <section id="sec-branches" class="hidden p-4 lg:p-6 fade-in">
-        <div class="flex items-center justify-between mb-4">
-          <p class="font-black text-white">Filiallar</p>
-          <button onclick="openBranchModal()" class="press px-4 py-2 bg-accent rounded-xl text-white text-xs font-black">+ Qo'shish</button>
-        </div>
-        <div id="branchesList" class="space-y-2"></div>
-      </section>
-
-      <!-- EMPLOYEES -->
-      <section id="sec-employees" class="hidden p-4 lg:p-6 fade-in">
-        <div class="flex items-center justify-between mb-4">
-          <p class="font-black text-white">Ishchilar</p>
-          <button onclick="openEmpModal()" class="press px-4 py-2 bg-accent rounded-xl text-white text-xs font-black">+ Qo'shish</button>
-        </div>
-        <div id="empsList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
-      </section>
-
-      <!-- ATTENDANCE -->
-      <section id="sec-attendance" class="hidden p-4 lg:p-6 fade-in">
-        <div class="flex flex-wrap gap-2 mb-4">
-          <input type="date" id="attDate" class="w-40 text-sm" onchange="loadAttendance()"/>
-          <select id="attBranch" onchange="loadAttendance()" class="w-40 text-sm">
-            <option value="">Barcha filiallar</option>
-          </select>
-          <button onclick="loadAttendance()" class="press px-4 py-2 bg-accent rounded-xl text-white text-xs font-black">🔄</button>
-        </div>
-        <!-- Summary -->
-        <div id="attSummary" class="grid grid-cols-3 lg:grid-cols-6 gap-2 mb-4"></div>
-        <!-- Table -->
-        <div class="bg-card rounded-2xl border border-white/5 overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead><tr class="border-b border-white/5">
-                <th class="text-left px-4 py-3 text-xs text-gray-500 font-bold">Ishchi</th>
-                <th class="text-left px-4 py-3 text-xs text-gray-500 font-bold">Keldi</th>
-                <th class="text-left px-4 py-3 text-xs text-gray-500 font-bold">Ketdi</th>
-                <th class="text-left px-4 py-3 text-xs text-gray-500 font-bold">Kechikish</th>
-                <th class="text-left px-4 py-3 text-xs text-gray-500 font-bold">Holat</th>
-                <th class="text-left px-4 py-3 text-xs text-gray-500 font-bold">Amal</th>
-              </tr></thead>
-              <tbody id="attTable"></tbody>
-            </table>
-          </div>
-        </div>
-        <!-- Month report tab -->
-        <div class="mt-5">
-          <div class="flex items-center justify-between mb-3">
-            <p class="font-black text-white text-sm">Oylik hisobot</p>
-            <input type="month" id="attMonth" class="w-36 text-sm" onchange="loadMonthReport()"/>
-          </div>
-          <div id="monthReport" class="space-y-2"></div>
-        </div>
-      </section>
-
-    </div><!-- end content -->
-  </div><!-- end flex-1 -->
-</div><!-- end app -->
-
-<!-- Mobile bottom nav -->
-<nav class="lg:hidden fixed bottom-0 inset-x-0 z-20 bg-bg2/95 backdrop-blur border-t border-white/5 flex items-center justify-around py-2" id="mobileNav">
-  <button onclick="showSection('dashboard')"  class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-gray-500" data-mnav="dashboard"><span class="text-lg">📊</span><span class="text-xs font-bold">Home</span></button>
-  <button onclick="showSection('orders')"     class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-gray-500" data-mnav="orders"><span class="text-lg">🧾</span><span class="text-xs font-bold">Buyurtma</span></button>
-  <button onclick="showSection('products')"   class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-gray-500" data-mnav="products"><span class="text-lg">🍔</span><span class="text-xs font-bold">Menyu</span></button>
-  <button onclick="showSection('employees')"  class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-gray-500" data-mnav="employees"><span class="text-lg">👷</span><span class="text-xs font-bold">Ishchi</span></button>
-  <button onclick="showSection('attendance')" class="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-gray-500" data-mnav="attendance"><span class="text-lg">📅</span><span class="text-xs font-bold">Davomat</span></button>
-</nav>
-
-<!-- MODALS -->
-
-<!-- Product Modal -->
-<div id="productModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-  <div class="modal-in bg-bg2 rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-    <div class="flex items-center justify-between px-5 pt-5 pb-4 border-b border-white/5">
-      <h3 id="productModalTitle" class="font-black text-white">Mahsulot</h3>
-      <button onclick="closeModal('productModal')" class="press w-8 h-8 bg-bg3 rounded-xl flex items-center justify-center text-gray-400 font-bold">✕</button>
-    </div>
-    <div class="p-5 space-y-3">
-      <input id="pName"   type="text"   placeholder="Nomi (uzbekcha)"/>
-      <input id="pNameRu" type="text"   placeholder="Nomi (ruscha) — ixtiyoriy"/>
-      <input id="pPrice"  type="number" placeholder="Narxi (so'm)"/>
-      <select id="pCat"><option value="">Kategoriya tanlang</option></select>
-      <div>
-        <label class="text-xs font-bold text-gray-400 block mb-1.5">Rasm</label>
-        <input type="file" id="pImageFile" accept="image/*" onchange="previewProduct(this)" class="text-xs"/>
-        <img id="pImagePreview" class="hidden mt-2 rounded-xl max-h-28 object-contain border border-white/10"/>
-        <input id="pImage" type="hidden"/>
-      </div>
-      <div class="flex items-center gap-3">
-        <label class="text-xs font-bold text-gray-400">Faol:</label>
-        <input id="pActive" type="checkbox" checked class="w-4 h-4 accent-blue-500"/>
-      </div>
-      <input id="pEditId" type="hidden"/>
-      <button onclick="saveProduct()" class="press w-full py-3.5 bg-accent rounded-2xl text-white font-black text-sm">Saqlash</button>
+    <div class="flex gap-3 mt-6">
+      <button id="productModalCancel" class="px-5 py-2.5 rounded-xl text-sm border transition-colors hover:text-white" style="border-color:rgba(99,179,237,0.12);color:#64748b">Bekor</button>
+      <button id="productModalSave" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style="background:#3b82f6">Saqlash</button>
     </div>
   </div>
 </div>
 
-<!-- Category Modal -->
-<div id="catModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-  <div class="modal-in bg-bg2 rounded-3xl w-full max-w-sm">
-    <div class="flex items-center justify-between px-5 pt-5 pb-4 border-b border-white/5">
-      <h3 id="catModalTitle" class="font-black text-white">Kategoriya</h3>
-      <button onclick="closeModal('catModal')" class="press w-8 h-8 bg-bg3 rounded-xl flex items-center justify-center text-gray-400 font-bold">✕</button>
+<!-- CATEGORY MODAL -->
+<div id="catModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,0.75)">
+  <div class="w-full max-w-sm mx-4 rounded-2xl p-7 border" style="background:#111827;border-color:rgba(99,179,237,0.12)">
+    <h2 id="catModalTitle" class="font-serif text-xl mb-5" style="color:#f59e0b">Kategoriya qo'shish</h2>
+    <input type="hidden" id="catEditId"/>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Nomi (UZ)</label><input class="inp" type="text" id="cName" placeholder="Taom"/></div>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Nomi (RU)</label><input class="inp" type="text" id="cNameRu" placeholder="Еда"/></div>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Emoji</label><input class="inp" type="text" id="cEmoji" placeholder="🍽"/></div>
+    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Holati</label>
+      <select class="inp" id="cActive"><option value="true">Ko'rinadi</option><option value="false">Yashirilgan</option></select>
     </div>
-    <div class="p-5 space-y-3">
-      <input id="cName"   type="text" placeholder="Nomi"/>
-      <input id="cNameRu" type="text" placeholder="Ruscha nomi"/>
-      <input id="cEmoji"  type="text" placeholder="Emoji (🍕)"/>
-      <input id="cEditId" type="hidden"/>
-      <button onclick="saveCat()" class="press w-full py-3.5 bg-accent rounded-2xl text-white font-black text-sm">Saqlash</button>
-    </div>
-  </div>
-</div>
-
-<!-- Branch Modal -->
-<div id="branchModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-  <div class="modal-in bg-bg2 rounded-3xl w-full max-w-sm">
-    <div class="flex items-center justify-between px-5 pt-5 pb-4 border-b border-white/5">
-      <h3 id="branchModalTitle" class="font-black text-white">Filial</h3>
-      <button onclick="closeModal('branchModal')" class="press w-8 h-8 bg-bg3 rounded-xl flex items-center justify-center text-gray-400 font-bold">✕</button>
-    </div>
-    <div class="p-5 space-y-3">
-      <input id="brName"    type="text"   placeholder="Filial nomi"/>
-      <input id="brAddress" type="text"   placeholder="Manzil"/>
-      <input id="brLat"     type="number" placeholder="Kenglik (lat)" step="any"/>
-      <input id="brLng"     type="number" placeholder="Uzunlik (lng)" step="any"/>
-      <input id="brRadius"  type="number" placeholder="Radius (metr, default 100)" value="100"/>
-      <input id="brEditId"  type="hidden"/>
-      <button onclick="saveBranch()" class="press w-full py-3.5 bg-accent rounded-2xl text-white font-black text-sm">Saqlash</button>
+    <div class="flex gap-3 mt-6">
+      <button id="catModalCancel" class="px-5 py-2.5 rounded-xl text-sm border transition-colors hover:text-white" style="border-color:rgba(99,179,237,0.12);color:#64748b">Bekor</button>
+      <button id="catModalSave" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style="background:#3b82f6">Saqlash</button>
     </div>
   </div>
 </div>
-
-<!-- Employee Modal -->
-<div id="empModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-  <div class="modal-in bg-bg2 rounded-3xl w-full max-w-md max-h-[92vh] overflow-y-auto">
-    <div class="flex items-center justify-between px-5 pt-5 pb-4 border-b border-white/5">
-      <h3 id="empModalTitle" class="font-black text-white">Ishchi</h3>
-      <button onclick="closeModal('empModal')" class="press w-8 h-8 bg-bg3 rounded-xl flex items-center justify-center text-gray-400 font-bold">✕</button>
-    </div>
-    <div class="p-5 space-y-3">
-      <input id="eName"      type="text"   placeholder="Ism familiya"/>
-      <input id="ePhone"     type="text"   placeholder="Telefon"/>
-      <input id="ePosition"  type="text"   placeholder="Lavozim"/>
-      <input id="eUsername"  type="text"   placeholder="Login"/>
-      <input id="ePassword"  type="password" placeholder="Parol (o'zgartirmaslik uchun bo'sh)"/>
-      <input id="eSalary"    type="number" placeholder="Oylik maosh (so'm)"/>
-      <div class="grid grid-cols-2 gap-3">
-        <input id="eWorkStart" type="time" value="09:00"/>
-        <input id="eWorkEnd"   type="time" value="18:00"/>
-      </div>
-      <select id="eWeeklyOff">
-        <option value="monday">Dushanba</option>
-        <option value="tuesday">Seshanba</option>
-        <option value="wednesday">Chorshanba</option>
-        <option value="thursday">Payshanba</option>
-        <option value="friday">Juma</option>
-        <option value="saturday">Shanba</option>
-        <option value="sunday" selected>Yakshanba</option>
-      </select>
-      <select id="eBranch"><option value="">Filial tanlang</option></select>
-      <div>
-        <label class="text-xs font-bold text-gray-400 block mb-1.5">Yuz rasmi (Face ID)</label>
-        <input type="file" id="eFaceFile" accept="image/*" onchange="previewFace(this)" class="text-xs"/>
-        <img id="eFacePreview" class="hidden mt-2 w-20 h-20 rounded-2xl object-cover border border-white/10"/>
-        <input id="eFaceData" type="hidden"/>
-      </div>
-      <input id="eEditId" type="hidden"/>
-      <button onclick="saveEmployee()" class="press w-full py-3.5 bg-accent rounded-2xl text-white font-black text-sm">Saqlash</button>
-    </div>
-  </div>
-</div>
-
-<!-- Manual Attendance Modal -->
-<div id="manualAttModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-  <div class="modal-in bg-bg2 rounded-3xl w-full max-w-sm">
-    <div class="flex items-center justify-between px-5 pt-5 pb-4 border-b border-white/5">
-      <h3 class="font-black text-white">Qo'lda davomat</h3>
-      <button onclick="closeModal('manualAttModal')" class="press w-8 h-8 bg-bg3 rounded-xl flex items-center justify-center text-gray-400 font-bold">✕</button>
-    </div>
-    <div class="p-5 space-y-3">
-      <p id="manualEmpName" class="font-bold text-white text-sm"></p>
-      <select id="manualStatus">
-        <option value="keldi">Keldi</option>
-        <option value="kelmadi">Kelmadi</option>
-        <option value="dam">Dam olish kuni</option>
-      </select>
-      <div class="grid grid-cols-2 gap-3">
-        <input id="manualIn"  type="time" placeholder="Kelgan vaqt"/>
-        <input id="manualOut" type="time" placeholder="Ketgan vaqt"/>
-      </div>
-      <textarea id="manualNote" rows="2" placeholder="Izoh..."></textarea>
-      <input id="manualEmpId" type="hidden"/>
-      <button onclick="saveManualAtt()" class="press w-full py-3.5 bg-accent rounded-2xl text-white font-black text-sm">Saqlash</button>
-    </div>
-  </div>
-</div>
-
-<!-- Toast -->
-<div id="adminToasts" class="fixed bottom-20 right-4 z-50 flex flex-col gap-2"></div>
 
 <script src="admin.js"></script>
+
+<!-- ===== ISHCHI MODAL ===== -->
+<div id="empModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.8);align-items:center;justify-content:center;padding:16px">
+  <div style="background:#1e293b;border:1px solid rgba(99,179,237,0.15);border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.5)">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px 0">
+      <h3 id="empModalTitle" style="font-size:17px;font-weight:700;color:#f1f5f9;margin:0">Yangi ishchi</h3>
+      <button onclick="closeEmpModal()" style="background:none;border:none;color:#64748b;font-size:22px;cursor:pointer;line-height:1">×</button>
+    </div>
+    <div id="empModalBody" style="padding:20px 24px 24px">
+      <div style="text-align:center;padding:20px;color:#475569">Yuklanmoqda...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FILIAL MODAL ===== -->
+<div id="branchModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.8);align-items:center;justify-content:center;padding:16px">
+  <div style="background:#1e293b;border:1px solid rgba(99,179,237,0.15);border-radius:16px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px 0">
+      <h3 id="branchModalTitle" style="font-size:17px;font-weight:700;color:#f1f5f9;margin:0">Filial</h3>
+      <button onclick="closeBranchModal()" style="background:none;border:none;color:#64748b;font-size:22px;cursor:pointer;line-height:1">×</button>
+    </div>
+    <div id="branchModalBody" style="padding:20px 24px 24px"></div>
+  </div>
+</div>
+
 </body>
 </html>

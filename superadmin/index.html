@@ -1,187 +1,164 @@
 <!DOCTYPE html>
-<html lang="uz" class="dark">
+<html lang="uz">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>SuperAdmin Panel</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<title>SuperAdmin — Boshqaruv Markazi</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 tailwind.config = {
-  darkMode: 'class',
   theme: {
     extend: {
-      colors: {
-        bg:     '#08090f',
-        bg2:    '#0e1118',
-        bg3:    '#161b27',
-        card:   '#111520',
-        accent: '#6366f1',
-        gold:   '#f59e0b',
-        ok:     '#22c55e',
-        danger: '#ef4444',
-      },
-      fontFamily: { sans: ['Nunito','sans-serif'] }
+      fontFamily: {
+        sans:  ['Manrope', 'sans-serif'],
+        serif: ['Playfair Display', 'serif']
+      }
     }
   }
 }
 </script>
-<script>
-window.__CONFIG__ = {
-  API_URL: "https://e-comerce-bot-main-production.up.railway.app"
-};
-</script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  body{background:#08090f;color:#e2e8f0;font-family:'Nunito',sans-serif}
-  ::-webkit-scrollbar{width:4px}
-  ::-webkit-scrollbar-thumb{background:#1e293b;border-radius:4px}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-  @keyframes modalIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
-  @keyframes toastIn{from{transform:translateX(110%)}to{transform:translateX(0)}}
-  .fade-in{animation:fadeIn .2s ease}
-  .modal-in{animation:modalIn .2s ease}
-  .press:active{transform:scale(.96);transition:transform .1s}
-  .nav-active{background:rgba(99,102,241,.15)!important;color:#818cf8!important}
-  input,select,textarea{background:#161b27;border:1px solid rgba(255,255,255,.07);color:#e2e8f0;border-radius:.75rem;padding:.625rem .875rem;outline:none;width:100%;font-family:'Nunito',sans-serif;font-size:.875rem;transition:border-color .2s}
-  input:focus,select:focus{border-color:#6366f1}
-  input::placeholder{color:#374151}
-  select option{background:#161b27}
+  body { background:#070b14; color:#f1f5f9; font-family:'Manrope',sans-serif; }
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-thumb { background:#8b5cf6; border-radius:2px; }
+
+  .si { display:flex; align-items:center; gap:10px; padding:10px 20px; cursor:pointer; border-left:3px solid transparent; font-size:13px; font-weight:500; color:#64748b; transition:all .2s; }
+  .si:hover { background:rgba(139,92,246,0.07); color:#f1f5f9; }
+  .si.active { background:rgba(139,92,246,0.12); border-left-color:#8b5cf6; color:#a78bfa; }
+
+  .inp { width:100%; padding:11px 14px; background:#141d2e; border:1px solid rgba(139,92,246,0.15); border-radius:8px; color:#f1f5f9; font-family:'Manrope',sans-serif; font-size:14px; outline:none; transition:border .2s; }
+  .inp:focus { border-color:#8b5cf6; }
+
+  .tab-btn { padding:8px 18px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; border:1px solid rgba(139,92,246,0.2); color:#64748b; background:transparent; white-space:nowrap; }
+  .tab-btn.active { background:rgba(139,92,246,0.2); color:#a78bfa; border-color:#8b5cf6; }
+  .tab-btn:hover:not(.active) { background:rgba(139,92,246,0.07); color:#f1f5f9; }
+
+  .pb { padding:5px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; transition:all .2s; border:1px solid rgba(139,92,246,0.15); color:#64748b; background:transparent; }
+  .pb.active { background:#8b5cf6; color:#fff; border-color:#8b5cf6; }
+  .pb:hover:not(.active) { color:#f1f5f9; }
+
+  .rank-row { display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:12px; border:1px solid rgba(139,92,246,0.1); background:#0f1828; margin-bottom:8px; transition:all .2s; }
+  .rank-row:hover { border-color:rgba(139,92,246,0.3); transform:translateY(-1px); }
+  .m1 { background:linear-gradient(135deg,#f59e0b,#d97706); }
+  .m2 { background:linear-gradient(135deg,#94a3b8,#64748b); }
+  .m3 { background:linear-gradient(135deg,#cd7f32,#a0522d); }
+  .mo { background:#1a2235; }
+
+  .smc { background:#0f1828; border:1px solid rgba(139,92,246,0.1); border-radius:10px; padding:14px 16px; }
+
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .page { animation:fadeIn .22s ease; }
+
+  @media(max-width:768px) {
+    .sidebar { transform:translateX(-100%); }
+    .sidebar.open { transform:translateX(0); }
+    .mw { margin-left:0 !important; }
+  }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-6px)}
+    40%{transform:translateX(6px)}
+    60%{transform:translateX(-4px)}
+    80%{transform:translateX(4px)}
+  }
 </style>
 </head>
-<body class="min-h-screen">
+<body>
 
 <!-- LOGIN -->
-<div id="loginPage" class="fixed inset-0 z-40 bg-bg flex items-center justify-center p-6">
-  <div class="w-full max-w-sm modal-in">
-    <div class="text-center mb-8">
-      <div class="w-16 h-16 bg-gradient-to-br from-accent to-purple-700 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">👑</div>
-      <h1 class="text-2xl font-black text-white">SuperAdmin</h1>
-      <p class="text-gray-500 text-sm mt-1">Bosh boshqaruv paneli</p>
+<div id="loginPage" class="fixed inset-0 flex items-center justify-center z-50" style="background:#070b14">
+  <div class="w-full max-w-sm mx-4 rounded-2xl p-10 border" style="background:#0d1220;border-color:rgba(139,92,246,0.2)">
+    <div class="text-4xl text-center mb-3">👑</div>
+    <div class="font-serif text-2xl text-center mb-1" style="color:#a78bfa">SuperAdmin</div>
+    <div class="text-center text-xs mb-8 tracking-widest uppercase" style="color:#64748b">Boshqaruv Markazi</div>
+    <div class="mb-4">
+      <label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Login</label>
+      <input id="loginUser" type="text" class="inp" placeholder="username" autocomplete="username"/>
     </div>
-    <div class="space-y-3">
-      <input id="sUsername" type="text" placeholder="Login" class="text-center font-bold"/>
-      <input id="sPassword" type="password" placeholder="Parol" class="text-center font-bold" onkeydown="if(event.key==='Enter')doLogin()"/>
-      <p id="sErr" class="hidden text-red-400 text-xs text-center font-bold"></p>
-      <button onclick="doLogin()" class="press w-full py-4 bg-accent rounded-2xl text-white font-black text-sm hover:bg-indigo-600 transition-colors">Kirish →</button>
+    <div class="mb-2">
+      <label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Parol</label>
+      <input id="loginPass" type="password" class="inp" placeholder="••••••••" autocomplete="current-password"/>
     </div>
+    <button id="loginBtn" class="w-full mt-5 py-3 rounded-xl font-bold text-sm text-white transition-opacity hover:opacity-90" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">Kirish</button>
+    <div id="loginErr" class="text-center text-sm mt-3 rounded-lg px-3 py-2" style="color:#ef4444;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);display:none"></div>
   </div>
 </div>
 
 <!-- APP -->
-<div id="app" class="hidden flex w-full min-h-screen">
+<div id="app" class="hidden min-h-screen">
 
-  <!-- Sidebar -->
-  <aside class="hidden lg:flex w-52 bg-bg2 border-r border-white/5 flex-col fixed h-full z-20">
-    <div class="p-4 border-b border-white/5 flex items-center gap-2">
-      <div class="w-8 h-8 bg-accent rounded-xl flex items-center justify-center text-white font-black text-sm">S</div>
-      <div>
-        <p class="font-black text-white text-xs">SuperAdmin</p>
-        <p id="saUsername" class="text-gray-500 text-xs"></p>
-      </div>
+  <button id="hamburger" class="fixed top-4 left-4 z-40 md:hidden flex items-center justify-center w-10 h-10 rounded-xl border text-lg" style="background:#0d1220;border-color:rgba(139,92,246,0.2)">☰</button>
+  <div id="sidebarOverlay" class="hidden fixed inset-0 z-30 md:hidden" style="background:rgba(0,0,0,0.6)"></div>
+
+  <aside id="sidebar" class="sidebar fixed left-0 top-0 bottom-0 w-56 z-40 flex flex-col transition-transform duration-300 border-r" style="background:#0d1220;border-color:rgba(139,92,246,0.12)">
+    <div class="px-5 py-6 border-b" style="border-color:rgba(139,92,246,0.12)">
+      <div class="text-xs font-bold tracking-widest uppercase px-2 py-0.5 rounded inline-block mb-2" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff">SUPERADMIN</div>
+      <div class="font-serif text-lg" style="color:#a78bfa">✦ Boshqaruv</div>
+      <div id="saUsername" class="text-xs mt-1" style="color:#64748b"></div>
     </div>
-    <nav class="flex-1 p-3 space-y-1">
-      <button onclick="showTab('stats')"       class="nav-btn nav-active w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-left text-gray-400" data-tab="stats"><span>📊</span><span>Statistika</span></button>
-      <button onclick="showTab('restaurants')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-left text-gray-400" data-tab="restaurants"><span>🍽</span><span>Restoranlar</span></button>
+    <nav class="py-3 flex-1">
+      <div class="si active" data-page="dashboard"><span>📊</span> Dashboard</div>
+      <div class="si" data-page="restaurants"><span>🏪</span> Restoranlar</div>
     </nav>
-    <div class="p-3">
-      <button onclick="logout()" class="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors">
-        <span>🚪</span><span>Chiqish</span>
-      </button>
+    <div class="p-4 border-t" style="border-color:rgba(139,92,246,0.12)">
+      <button id="logoutBtn" class="w-full py-2 rounded-lg text-xs font-semibold border transition-all" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.2);color:#ef4444">Chiqish</button>
     </div>
   </aside>
 
-  <div class="flex-1 flex flex-col lg:ml-52">
-
-    <!-- Mobile header -->
-    <header class="lg:hidden sticky top-0 z-20 bg-bg2/95 backdrop-blur border-b border-white/5 px-4 py-3 flex items-center justify-between">
-      <span id="mobileTitle" class="font-black text-white text-sm">Statistika</span>
-      <button onclick="logout()" class="w-8 h-8 bg-red-500/20 rounded-xl flex items-center justify-center text-red-400 text-xs font-bold">↩</button>
-    </header>
-
-    <div class="hidden lg:flex items-center justify-between px-6 py-4 border-b border-white/5">
-      <h1 id="pageTitle" class="font-black text-lg text-white">Statistika</h1>
-      <button onclick="logout()" class="px-3 py-1.5 bg-red-500/10 rounded-xl text-xs font-bold text-red-400">Chiqish</button>
-    </div>
-
-    <div class="flex-1 overflow-y-auto">
-
-      <!-- STATS TAB -->
-      <section id="tab-stats" class="p-4 lg:p-6 space-y-5 fade-in">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div class="bg-card rounded-2xl p-4 border border-white/5"><p class="text-xs text-gray-500 mb-1">Restoranlar</p><p id="st-rests" class="text-2xl font-black text-white">—</p></div>
-          <div class="bg-card rounded-2xl p-4 border border-white/5"><p class="text-xs text-gray-500 mb-1">Bugungi buyurtma</p><p id="st-todayOrders" class="text-2xl font-black text-accent">—</p></div>
-          <div class="bg-card rounded-2xl p-4 border border-white/5"><p class="text-xs text-gray-500 mb-1">Oylik daromad</p><p id="st-monthRev" class="text-2xl font-black text-gold">—</p></div>
-          <div class="bg-card rounded-2xl p-4 border border-white/5"><p class="text-xs text-gray-500 mb-1">Jami mijoz</p><p id="st-users" class="text-2xl font-black text-ok">—</p></div>
-        </div>
-        <!-- Per restaurant -->
-        <div class="bg-card rounded-2xl p-4 border border-white/5">
-          <p class="font-black text-white text-sm mb-4">Restoranlar buyurtmalari</p>
-          <div id="perRestChart" class="space-y-3"></div>
-        </div>
-      </section>
-
-      <!-- RESTAURANTS TAB -->
-      <section id="tab-restaurants" class="hidden p-4 lg:p-6 fade-in">
-        <div class="flex items-center justify-between mb-4">
-          <p class="font-black text-white">Restoranlar</p>
-          <button onclick="openRestModal()" class="press px-4 py-2 bg-accent rounded-xl text-white text-xs font-black">+ Qo'shish</button>
-        </div>
-        <div id="restList" class="space-y-3"></div>
-      </section>
-
-    </div>
-  </div>
+  <main id="mainContent" class="mw ml-56 p-7 min-h-screen"></main>
 </div>
-
-<!-- Mobile bottom nav -->
-<nav class="lg:hidden fixed bottom-0 inset-x-0 z-20 bg-bg2/95 backdrop-blur border-t border-white/5 flex items-center justify-around py-2">
-  <button onclick="showTab('stats')" class="flex flex-col items-center gap-0.5 px-6 py-1 text-accent"><span class="text-xl">📊</span><span class="text-xs font-bold">Stats</span></button>
-  <button onclick="showTab('restaurants')" class="flex flex-col items-center gap-0.5 px-6 py-1 text-gray-500"><span class="text-xl">🍽</span><span class="text-xs font-bold">Restoranlar</span></button>
-</nav>
 
 <!-- RESTAURANT MODAL -->
-<div id="restModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-  <div class="modal-in bg-bg2 rounded-3xl w-full max-w-md max-h-[92vh] overflow-y-auto">
-    <div class="flex items-center justify-between px-5 pt-5 pb-4 border-b border-white/5">
-      <h3 id="restModalTitle" class="font-black text-white">Restoran</h3>
-      <button onclick="closeRestModal()" class="press w-8 h-8 bg-bg3 rounded-xl flex items-center justify-center text-gray-400 font-bold">✕</button>
+<div id="restModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,0.8)">
+  <div class="w-full max-w-lg mx-4 rounded-2xl p-7 border overflow-y-auto" style="background:#0d1220;border-color:rgba(139,92,246,0.2);max-height:90vh">
+    <h2 id="restModalTitle" class="font-serif text-xl mb-5" style="color:#a78bfa">Yangi restoran</h2>
+    <input type="hidden" id="restEditId"/>
+    <div class="grid grid-cols-2 gap-3">
+      <div class="col-span-2">
+        <label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Restoran nomi *</label>
+        <input class="inp" type="text" id="rName" placeholder="Samarqand Oshi"/>
+      </div>
+      <div>
+        <label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Restoran ID *</label>
+        <input class="inp" type="text" id="rId" placeholder="samarqand"/>
+      </div>
+      <div>
+        <label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Admin login *</label>
+        <input class="inp" type="text" id="rUsername" placeholder="samarqand_admin"/>
+      </div>
+      <div>
+        <label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Parol *</label>
+        <input class="inp" type="password" id="rPassword" placeholder="••••••••"/>
+      </div>
+      <div>
+        <label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Telefon</label>
+        <input class="inp" type="text" id="rPhone" placeholder="+998 90 000 00 00"/>
+      </div>
+      <div class="col-span-2">
+        <label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Manzil</label>
+        <input class="inp" type="text" id="rAddress" placeholder="Toshkent, Chilonzor..."/>
+      </div>
+      <div class="col-span-2">
+        <label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Bot Token</label>
+        <input class="inp" type="text" id="rBotToken" placeholder="1234567890:AAF..."/>
+      </div>
+      <div>
+        <label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Chef Telegram ID</label>
+        <input class="inp" type="text" id="rChefId" placeholder="123456789"/>
+      </div>
+      <div>
+        <label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Webapp URL</label>
+        <input class="inp" type="text" id="rWebapp" placeholder="https://..."/>
+      </div>
     </div>
-    <div class="p-5 space-y-3">
-      <input id="rRestName"    type="text" placeholder="Restoran nomi (masalan: Imperial Restoran)"/>
-      <input id="rRestId"      type="text" placeholder="RestaurantID (masalan: imperial) — kichik harflar"/>
-      <input id="rUsername"    type="text" placeholder="Admin login"/>
-      <input id="rPassword"    type="password" placeholder="Admin parol"/>
-      <input id="rBotToken"    type="text" placeholder="Bot token (Telegram)"/>
-      <input id="rChefId"      type="number" placeholder="Chef Telegram ID"/>
-      <input id="rPhone"       type="text" placeholder="Telefon"/>
-      <input id="rAddress"     type="text" placeholder="Manzil"/>
-      <input id="rWebappUrl"   type="text" placeholder="WebApp URL (https://...)"/>
-      <p id="rErr" class="hidden text-red-400 text-xs font-bold"></p>
-      <input id="rEditId"   type="hidden"/>
-      <button onclick="saveRestaurant()" class="press w-full py-3.5 bg-accent rounded-2xl text-white font-black text-sm">Saqlash</button>
+    <div class="flex gap-3 mt-6">
+      <button id="restModalCancel" class="px-5 py-2.5 rounded-xl text-sm border transition-colors" style="border-color:rgba(139,92,246,0.2);color:#64748b">Bekor</button>
+      <button id="restModalSave" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">Saqlash</button>
     </div>
   </div>
 </div>
-
-<!-- BLOCK MODAL -->
-<div id="blockModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-  <div class="modal-in bg-bg2 rounded-3xl w-full max-w-sm">
-    <div class="flex items-center justify-between px-5 pt-5 pb-4 border-b border-white/5">
-      <h3 id="blockModalTitle" class="font-black text-white">Bloklash</h3>
-      <button onclick="closeBlockModal()" class="press w-8 h-8 bg-bg3 rounded-xl flex items-center justify-center text-gray-400 font-bold">✕</button>
-    </div>
-    <div class="p-5 space-y-3">
-      <textarea id="blockReason" rows="3" placeholder="Bloklash sababi..."></textarea>
-      <input id="blockRestId" type="hidden"/>
-      <input id="blockAdminId" type="hidden"/>
-      <button onclick="confirmBlock()" class="press w-full py-3.5 bg-red-500 rounded-2xl text-white font-black text-sm">🔒 Bloklash</button>
-    </div>
-  </div>
-</div>
-
-<!-- Toast -->
-<div id="saToasts" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
 
 <script src="superadmin.js"></script>
 </body>

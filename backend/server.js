@@ -733,9 +733,16 @@ app.post("/admin/products", authMiddleware, async (req, res) => {
   try {
     const rId = req.admin.restaurantId;
     const last = await Product.findOne({ restaurantId: rId }).sort({ id: -1 });
-    const product = await Product.create({ ...req.body, id: last ? last.id + 1 : 1, restaurantId: rId });
+    let newId = last ? (Number(last.id) || 0) + 1 : 1;
+    while (await Product.findOne({ id: newId, restaurantId: rId })) { newId++; }
+    const bodyData = { ...req.body };
+    delete bodyData._id; delete bodyData.__v; delete bodyData.id;
+    const product = await Product.create({ ...bodyData, id: newId, restaurantId: rId });
     res.json({ ok: true, product });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) {
+    console.error("POST /admin/products xato:", e.message);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.put("/admin/products/:id", authMiddleware, async (req, res) => {

@@ -699,6 +699,26 @@ app.delete("/superadmin/restaurants/:id", superMiddleware, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// Bloklash/faollashtirish — superadmin.js tomonidan chaqiriladi
+app.post("/superadmin/block/:restaurantId", superMiddleware, async (req, res) => {
+  try {
+    const { blocked, reason } = req.body;
+    await Restaurant.findOneAndUpdate(
+      { restaurantId: req.params.restaurantId },
+      { blocked: !!blocked, blockReason: reason || "" },
+      { upsert: true }
+    );
+    // Agar faollashtirilsa — boti ham qayta ishga tushsin
+    if (!blocked) {
+      const admin = await Admin.findOne({ restaurantId: req.params.restaurantId, role: "admin" });
+      if (admin && admin.botToken) {
+        await startBot(admin.restaurantId, admin.botToken, admin.webappUrl, admin.chefId);
+      }
+    }
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get("/superadmin/stats", superMiddleware, async (req, res) => {
   try {
     const now = new Date();

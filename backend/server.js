@@ -115,18 +115,18 @@ async function connectDB() {
   await mongoose.connect(MONGO_URI);
   console.log("MongoDB ulandi");
 
-  // Eski noto'g'ri telegramId_1 unique indexni o'chirish
-  // (multi-restoran tizimida telegramId yakka unique bo'lmasligi kerak)
+  // Eski noto'g'ri unique indexlarni o'chirish
+  // (multi-restoran tizimida telegramId va product id yakka unique bo'lmasligi kerak)
   try {
     const db = mongoose.connection.db;
     const collections = await db.listCollections().toArray();
-    const usersCol = collections.find(c => c.name === "users");
-    if (usersCol) {
+    const colNames = collections.map(c => c.name);
+
+    // USERS: telegramId_1 indexni o'chirish
+    if (colNames.includes("users")) {
       const col = db.collection("users");
       const indexes = await col.indexes();
       console.log("Users indexlari:", indexes.map(i => i.name + (i.unique ? " (unique)" : "")).join(", "));
-      
-      // telegramId_1 unique indexni topib o'chiramiz
       for (const idx of indexes) {
         if (idx.name === "telegramId_1") {
           await col.dropIndex("telegramId_1");
@@ -135,6 +135,28 @@ async function connectDB() {
         }
       }
     }
+
+    // PRODUCTS: id_1 indexni o'chirish
+    if (colNames.includes("products")) {
+      const col = db.collection("products");
+      const indexes = await col.indexes();
+      console.log("Products indexlari:", indexes.map(i => i.name + (i.unique ? " (unique)" : "")).join(", "));
+      for (const idx of indexes) {
+        if (idx.name === "id_1") {
+          await col.dropIndex("id_1");
+          console.log("✅ Eski id_1 index o'chirildi!");
+          break;
+        }
+      }
+    }
+
+    // ADMINS: username_1 duplicate muammosini tekshirish
+    if (colNames.includes("admins")) {
+      const col = db.collection("admins");
+      const indexes = await col.indexes();
+      console.log("Admins indexlari:", indexes.map(i => i.name + (i.unique ? " (unique)" : "")).join(", "));
+    }
+
   } catch(e) {
     console.warn("Index tekshirish:", e.message);
   }
@@ -162,13 +184,15 @@ const Order = mongoose.model("Order", new mongoose.Schema({
   restaurantId:  { type: String, required: true }
 }, { timestamps: true }));
 
-const Product = mongoose.model("Product", new mongoose.Schema({
+const productSchema = new mongoose.Schema({
   id:           Number,
   name:         String, name_ru: String,
   price:        Number, category: String, image: String,
   active:       { type: Boolean, default: true },
   restaurantId: { type: String, required: true }
-}, { timestamps: true }));
+}, { timestamps: true });
+productSchema.index({ id: 1, restaurantId: 1 }, { unique: true });
+const Product = mongoose.model("Product", productSchema);
 
 const Category = mongoose.model("Category", new mongoose.Schema({
   name:         { type: String, required: true },

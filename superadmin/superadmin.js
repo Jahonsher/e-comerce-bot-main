@@ -143,7 +143,7 @@ function showPage(page) {
 
 // ===== HELPERS =====
 function border12(extra) {
-  return 'border-radius:12px;border:1px solid rgba(139,92,246,0.12);background:#0f1828;' + (extra || '');
+  return 'border-radius:12px;border:1px solid rgba(6,182,212,0.12);background:#0f1828;' + (extra || '');
 }
 
 function sc(icon, label, value, sub) {
@@ -172,7 +172,7 @@ function buildRank(list, valFn, numFn, color) {
             '<span style="font-size:12px;font-weight:700;color:' + color + '">' + valFn(r) + '</span>' +
           '</div>' +
           '<div style="height:5px;background:#1a2235;border-radius:3px;overflow:hidden">' +
-            '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#8b5cf6,' + color + ');border-radius:3px"></div>' +
+            '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#06b6d4,' + color + ');border-radius:3px"></div>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -339,14 +339,14 @@ function renderTab(rId, period) {
       var pct = Math.round(p.quantity / maxQ * 100);
       topItems +=
         '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
-          '<div style="width:22px;height:22px;border-radius:50%;background:#8b5cf6;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">' + (i + 1) + '</div>' +
+          '<div style="width:22px;height:22px;border-radius:50%;background:#06b6d4;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">' + (i + 1) + '</div>' +
           '<div style="flex:1">' +
             '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
               '<span style="font-size:13px;font-weight:600">' + p._id + '</span>' +
               '<span style="font-size:12px;color:#f59e0b">' + p.quantity + ' ta</span>' +
             '</div>' +
             '<div style="height:5px;background:#1a2235;border-radius:3px;overflow:hidden">' +
-              '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#8b5cf6,#f59e0b);border-radius:3px"></div>' +
+              '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#06b6d4,#f59e0b);border-radius:3px"></div>' +
             '</div>' +
           '</div>' +
         '</div>';
@@ -366,7 +366,7 @@ function renderTab(rId, period) {
 
       // Mini stats
       '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:20px">' +
-        smc(lbl + ' buyurtmalar', pd.orders, '#a78bfa') +
+        smc(lbl + ' buyurtmalar', pd.orders, '#22d3ee') +
         smc(lbl + ' daromad', Number(pd.revenue).toLocaleString() + " so'm", '#f59e0b') +
         smc('Online / Zal', stats ? (stats.today.online + ' / ' + stats.today.dineIn) : '—', null) +
         smc('Reyting', stats && stats.rating && stats.rating.avg ? stats.rating.avg + ' ⭐' : '—', '#f59e0b') +
@@ -398,8 +398,8 @@ function renderTab(rId, period) {
         {
           label: 'Buyurtmalar',
           data:  stats.weekly.map(function(d) { return d.orders; }),
-          backgroundColor: 'rgba(139,92,246,0.6)',
-          borderColor: '#8b5cf6',
+          backgroundColor: 'rgba(6,182,212,0.6)',
+          borderColor: '#06b6d4',
           borderRadius: 5,
           borderWidth: 1,
           yAxisID: 'y'
@@ -428,8 +428,8 @@ function renderTab(rId, period) {
         }
       },
       scales: {
-        x:  { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: 'rgba(139,92,246,0.06)' } },
-        y:  { ticks: { color: '#a78bfa', font: { size: 11 } }, grid: { color: 'rgba(139,92,246,0.06)' }, position: 'left' },
+        x:  { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: 'rgba(6,182,212,0.06)' } },
+        y:  { ticks: { color: '#22d3ee', font: { size: 11 } }, grid: { color: 'rgba(6,182,212,0.06)' }, position: 'left' },
         y1: { ticks: { color: '#f59e0b', font: { size: 10 } }, grid: { display: false }, position: 'right' }
       }
     }
@@ -445,7 +445,7 @@ async function renderRestaurants(main) {
         '<p style="font-size:13px;margin-top:4px;color:#64748b">Barcha ulangan restoranlar</p>' +
       '</div>' +
       '<div style="display:flex;justify-content:flex-end;margin-bottom:16px">' +
-        '<button id="addRestBtn" style="padding:10px 20px;border-radius:12px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;font-family:Manrope,sans-serif;font-size:13px;font-weight:700;border:none;cursor:pointer">+ Yangi restoran</button>' +
+        '<button id="addRestBtn" style="padding:10px 20px;border-radius:12px;background:linear-gradient(135deg,#06b6d4,#8b5cf6);color:#fff;font-family:Manrope,sans-serif;font-size:13px;font-weight:700;border:none;cursor:pointer">+ Yangi restoran</button>' +
       '</div>' +
       '<div id="restCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">' +
         '<div style="color:#64748b">Yuklanmoqda...</div>' +
@@ -477,7 +477,7 @@ async function loadRestCards() {
     var isActive = r.active !== false;
     div.innerHTML =
       '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">' +
-        '<div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🏪</div>' +
+        '<div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#06b6d4,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🏪</div>' +
         '<div style="flex:1">' +
           '<div style="font-weight:700;font-size:14px">' + r.restaurantName + '</div>' +
           '<div style="font-size:12px;color:#64748b;margin-top:2px">ID: ' + r.restaurantId + ' · @' + r.username + '</div>' +
@@ -488,7 +488,7 @@ async function loadRestCards() {
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">' +
         '<div style="background:#141d2e;border-radius:10px;padding:12px">' +
           '<div style="font-size:11px;color:#64748b;margin-bottom:4px">Bugun</div>' +
-          '<div style="font-size:22px;font-weight:700;color:#a78bfa">' + r.todayOrders + '</div>' +
+          '<div style="font-size:22px;font-weight:700;color:#22d3ee">' + r.todayOrders + '</div>' +
         '</div>' +
         '<div style="background:#141d2e;border-radius:10px;padding:12px">' +
           '<div style="font-size:11px;color:#64748b;margin-bottom:4px">Jami</div>' +
@@ -520,7 +520,7 @@ async function loadRestCards() {
       })() +
 
       '<div style="display:flex;gap:8px">' +
-        '<button class="edit-btn" style="flex:1;padding:8px;border-radius:8px;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);color:#a78bfa;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;cursor:pointer">✏️ Tahrirlash</button>' +
+        '<button class="edit-btn" style="flex:1;padding:8px;border-radius:8px;background:rgba(6,182,212,0.12);border:1px solid rgba(6,182,212,0.3);color:#22d3ee;font-family:Manrope,sans-serif;font-size:12px;font-weight:600;cursor:pointer">✏️ Tahrirlash</button>' +
         '<button class="tog-btn" style="padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid;' + (isActive ? 'background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.3);color:#ef4444' : 'background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.3);color:#22c55e') + '">' + (isActive ? '🔒 Bloklash' : '✅ Faollashtirish') + '</button>' +
         '<button class="del-btn" style="padding:8px 12px;border-radius:8px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#ef4444;font-size:13px;cursor:pointer">🗑</button>' +
       '</div>';

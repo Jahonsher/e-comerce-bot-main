@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Admin Panel</title>
+<title>ServiX — Admin Panel</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%2306b6d4'/%3E%3Cstop offset='100%25' stop-color='%238b5cf6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cpath d='M8 14l5 5 11-11' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Cpath d='M8 20l5 5 11-11' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' fill='none' opacity='.5'/%3E%3C/svg%3E"/>
 <script>
-  // Vercel environment variable sifatida VITE_API_URL beriladi
-  // Agar yo'q bo'lsa - default Railway URL ishlatiladi
   window.__CONFIG__ = {
     API_URL: typeof VITE_API_URL !== 'undefined' ? VITE_API_URL
            : 'https://e-comerce-bot-main-production.up.railway.app'
@@ -18,54 +17,44 @@ tailwind.config = {
   darkMode: 'class',
   theme: {
     extend: {
-      colors: {
-        bg:      '#0b0f1a',
-        bg2:     '#111827',
-        bg3:     '#1a2235',
-        card:    '#131c2e',
-        accent:  '#3b82f6',
-        gold:    '#f59e0b',
-      },
-      fontFamily: {
-        sans: ['Manrope', 'sans-serif'],
-        serif: ['Playfair Display', 'serif'],
-      }
+      colors: { bg:'#0b0f1a', bg2:'#111827', bg3:'#1a2235', card:'#131c2e', accent:'#06b6d4', gold:'#f59e0b' },
+      fontFamily: { sans:['Manrope','sans-serif'], serif:['Playfair Display','serif'] }
     }
   }
 }
 </script>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
+  :root { --sx-cyan:#06b6d4; --sx-purple:#8b5cf6; --sx-grad:linear-gradient(135deg,#06b6d4,#8b5cf6); }
   body { background:#0b0f1a; color:#f1f5f9; font-family:'Manrope',sans-serif; }
   ::-webkit-scrollbar { width:4px; height:4px; }
-  ::-webkit-scrollbar-thumb { background:#3b82f6; border-radius:2px; }
+  ::-webkit-scrollbar-thumb { background:var(--sx-cyan); border-radius:2px; }
   .sidebar-item { display:flex; align-items:center; gap:10px; padding:10px 20px; cursor:pointer; border-left:3px solid transparent; font-size:13px; font-weight:500; color:#64748b; transition:all .2s; }
-  .sidebar-item:hover { background:rgba(59,130,246,0.07); color:#f1f5f9; }
-  .sidebar-item.active { background:rgba(59,130,246,0.1); border-left-color:#3b82f6; color:#60a5fa; }
+  .sidebar-item:hover { background:rgba(6,182,212,0.07); color:#f1f5f9; }
+  .sidebar-item.active { background:rgba(6,182,212,0.1); border-left-color:var(--sx-cyan); color:#22d3ee; }
   .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
   .badge-new      { background:rgba(245,158,11,0.15);  color:#f59e0b; }
   .badge-accepted { background:rgba(16,185,129,0.15);  color:#10b981; }
   .badge-rejected { background:rgba(239,68,68,0.15);   color:#ef4444; }
-  .badge-ready    { background:rgba(59,130,246,0.15);  color:#60a5fa; }
+  .badge-ready    { background:rgba(6,182,212,0.15);   color:#22d3ee; }
   .badge-online   { background:rgba(139,92,246,0.15);  color:#a78bfa; }
   .badge-dinein   { background:rgba(245,158,11,0.15);  color:#f59e0b; }
-  .cat-row { display:flex; align-items:center; gap:12px; padding:12px 20px; border-bottom:1px solid rgba(99,179,237,0.05); cursor:grab; transition:background .15s; }
+  .cat-row { display:flex; align-items:center; gap:12px; padding:12px 20px; border-bottom:1px solid rgba(6,182,212,0.05); cursor:grab; transition:background .15s; }
   .cat-row:last-child { border-bottom:none; }
-  .cat-row.drag-over { background:rgba(59,130,246,0.08); }
+  .cat-row.drag-over { background:rgba(6,182,212,0.08); }
   .cat-row.dragging  { opacity:.4; }
-  .inp { width:100%; padding:11px 14px; background:#1a2235; border:1px solid rgba(99,179,237,0.12); border-radius:8px; color:#f1f5f9; font-family:'Manrope',sans-serif; font-size:14px; outline:none; transition:border-color .2s; }
-  .inp:focus { border-color:#3b82f6; }
+  .inp { width:100%; padding:11px 14px; background:#1a2235; border:1px solid rgba(6,182,212,0.12); border-radius:8px; color:#f1f5f9; font-family:'Manrope',sans-serif; font-size:14px; outline:none; transition:border-color .2s; }
+  .inp:focus { border-color:var(--sx-cyan); }
+  .sx-logo { display:inline-flex; align-items:center; gap:10px; }
+  .sx-icon { width:32px; height:32px; border-radius:9px; background:var(--sx-grad); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .sx-icon svg { width:18px; height:18px; }
+  .sx-name { font-size:16px; font-weight:800; color:#f1f5f9; letter-spacing:-0.5px; }
+  .sx-name b { background:var(--sx-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
   @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
   .page { animation:fadeIn .22s ease; }
-  @media(max-width:768px){ .sidebar{ transform:translateX(-100%); } .sidebar.open{ transform:translateX(0); } .main-wrap{ margin-left:0 !important; } }
-  @keyframes shake {
-    0%,100%{transform:translateX(0)}
-    20%{transform:translateX(-6px)}
-    40%{transform:translateX(6px)}
-    60%{transform:translateX(-4px)}
-    80%{transform:translateX(4px)}
-  }
+  @media(max-width:768px){ .sidebar{transform:translateX(-100%)} .sidebar.open{transform:translateX(0)} .main-wrap{margin-left:0!important} }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
 </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -74,8 +63,13 @@ tailwind.config = {
 
 <!-- LOGIN -->
 <div id="loginPage" class="fixed inset-0 flex items-center justify-center z-50" style="background:#0b0f1a">
-  <div class="w-full max-w-sm mx-4 rounded-2xl p-10 border" style="background:#111827;border-color:rgba(99,179,237,0.12)">
-    <div class="font-serif text-2xl text-center mb-1" style="color:#f59e0b">✦ Imperial</div>
+  <div class="w-full max-w-sm mx-4 rounded-2xl p-10 border" style="background:#111827;border-color:rgba(6,182,212,0.12)">
+    <div class="flex justify-center mb-4">
+      <div class="sx-icon" style="width:48px;height:48px;border-radius:12px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><path d="M5 10l4 4 10-10"/><path d="M5 16l4 4 10-10" opacity=".5"/></svg>
+      </div>
+    </div>
+    <div class="text-center mb-1 sx-name" style="font-size:22px">Servi<b>X</b></div>
     <div class="text-center text-xs mb-8 tracking-widest uppercase" style="color:#64748b">Admin Panel</div>
     <div class="mb-4">
       <label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Login</label>
@@ -85,23 +79,22 @@ tailwind.config = {
       <label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Parol</label>
       <input id="loginPass" type="password" class="inp" placeholder="••••••••" autocomplete="current-password"/>
     </div>
-    <button id="loginBtn" class="w-full mt-4 py-3 rounded-xl font-bold text-sm text-white transition-opacity hover:opacity-90" style="background:#3b82f6">Kirish</button>
+    <button id="loginBtn" class="w-full mt-4 py-3 rounded-xl font-bold text-sm text-white transition-opacity hover:opacity-90" style="background:var(--sx-grad)">Kirish</button>
     <div id="loginErr" class="text-center text-sm mt-3 rounded-lg px-3 py-2" style="color:#ef4444;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);display:none"></div>
   </div>
 </div>
 
 <!-- APP -->
 <div id="app" class="hidden min-h-screen">
-
-  <!-- Hamburger -->
-  <button id="hamburger" class="fixed top-4 left-4 z-40 md:hidden flex items-center justify-center w-10 h-10 rounded-xl border text-lg" style="background:#111827;border-color:rgba(99,179,237,0.12)">☰</button>
+  <button id="hamburger" class="fixed top-4 left-4 z-40 md:hidden flex items-center justify-center w-10 h-10 rounded-xl border text-lg" style="background:#111827;border-color:rgba(6,182,212,0.12)">☰</button>
   <div id="sidebarOverlay" class="hidden fixed inset-0 z-30 md:hidden" style="background:rgba(0,0,0,0.5)"></div>
-
-  <!-- Sidebar -->
-  <aside id="sidebar" class="sidebar fixed left-0 top-0 bottom-0 w-56 z-40 flex flex-col transition-transform duration-300 border-r" style="background:#111827;border-color:rgba(99,179,237,0.12)">
-    <div class="px-5 py-6 border-b" style="border-color:rgba(99,179,237,0.12)">
-      <div class="font-serif text-lg" style="color:#f59e0b">✦ Imperial</div>
-      <div id="sidebarRestName" class="text-xs mt-1" style="color:#64748b">Admin Panel</div>
+  <aside id="sidebar" class="sidebar fixed left-0 top-0 bottom-0 w-56 z-40 flex flex-col transition-transform duration-300 border-r" style="background:#111827;border-color:rgba(6,182,212,0.12)">
+    <div class="px-5 py-6 border-b" style="border-color:rgba(6,182,212,0.12)">
+      <div class="sx-logo">
+        <div class="sx-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10l4 4 10-10"/><path d="M5 16l4 4 10-10" opacity=".5"/></svg></div>
+        <div class="sx-name">Servi<b>X</b></div>
+      </div>
+      <div id="sidebarRestName" class="text-xs mt-2" style="color:#64748b">Admin Panel</div>
     </div>
     <nav class="py-3 flex-1">
       <div class="px-5 py-3 text-xs uppercase tracking-widest opacity-40" style="color:#64748b">Asosiy</div>
@@ -112,27 +105,25 @@ tailwind.config = {
       <div class="sidebar-item" data-page="categories"><span>🗂</span> Kategoriyalar</div>
       <div class="sidebar-item" data-page="ratings"><span>⭐</span> Reytinglar</div>
       <div class="sidebar-item" data-page="users"><span>👥</span> Foydalanuvchilar</div>
-      <div style="height:1px;background:rgba(99,179,237,0.08);margin:8px 0"></div>
+      <div style="height:1px;background:rgba(6,182,212,0.08);margin:8px 0"></div>
       <div style="font-size:9px;font-weight:700;color:#334155;letter-spacing:2px;padding:4px 20px">ISHCHILAR</div>
       <div class="sidebar-item" data-page="branches"><span>🏢</span> Filiallar</div>
       <div class="sidebar-item" data-page="employees"><span>👷</span> Ishchilar</div>
       <div class="sidebar-item" data-page="attendance"><span>📋</span> Davomat</div>
       <div class="sidebar-item" data-page="empReport"><span>💰</span> Hisobot & Maosh</div>
     </nav>
-    <div class="p-4 border-t" style="border-color:rgba(99,179,237,0.12)">
+    <div class="p-4 border-t" style="border-color:rgba(6,182,212,0.12)">
       <div id="adminUsername" class="text-xs mb-2" style="color:#64748b"></div>
       <button id="logoutBtn" class="w-full py-2 rounded-lg text-xs font-semibold border transition-all hover:bg-red-900/30" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.2);color:#ef4444">Chiqish</button>
     </div>
   </aside>
-
-  <!-- Main -->
   <main id="mainContent" class="main-wrap ml-56 p-7 min-h-screen"></main>
 </div>
 
 <!-- PRODUCT MODAL -->
 <div id="productModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,0.75)">
-  <div class="w-full max-w-md mx-4 rounded-2xl p-7 border max-h-screen overflow-y-auto" style="background:#111827;border-color:rgba(99,179,237,0.12)">
-    <h2 id="modalTitle" class="font-serif text-xl mb-5" style="color:#f59e0b">Taom qo'shish</h2>
+  <div class="w-full max-w-md mx-4 rounded-2xl p-7 border max-h-screen overflow-y-auto" style="background:#111827;border-color:rgba(6,182,212,0.12)">
+    <h2 id="modalTitle" class="text-xl font-bold mb-5" style="color:#22d3ee">Taom qo'shish</h2>
     <input type="hidden" id="productEditId"/>
     <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Nomi (UZ)</label><input class="inp" type="text" id="pName" placeholder="Osh"/></div>
     <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Nomi (RU)</label><input class="inp" type="text" id="pNameRu" placeholder="Плов"/></div>
@@ -143,16 +134,16 @@ tailwind.config = {
       <select class="inp" id="pActive"><option value="true">Aktiv</option><option value="false">Yashirilgan</option></select>
     </div>
     <div class="flex gap-3 mt-6">
-      <button id="productModalCancel" class="px-5 py-2.5 rounded-xl text-sm border transition-colors hover:text-white" style="border-color:rgba(99,179,237,0.12);color:#64748b">Bekor</button>
-      <button id="productModalSave" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style="background:#3b82f6">Saqlash</button>
+      <button id="productModalCancel" class="px-5 py-2.5 rounded-xl text-sm border transition-colors hover:text-white" style="border-color:rgba(6,182,212,0.12);color:#64748b">Bekor</button>
+      <button id="productModalSave" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style="background:var(--sx-grad)">Saqlash</button>
     </div>
   </div>
 </div>
 
 <!-- CATEGORY MODAL -->
 <div id="catModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,0.75)">
-  <div class="w-full max-w-sm mx-4 rounded-2xl p-7 border" style="background:#111827;border-color:rgba(99,179,237,0.12)">
-    <h2 id="catModalTitle" class="font-serif text-xl mb-5" style="color:#f59e0b">Kategoriya qo'shish</h2>
+  <div class="w-full max-w-sm mx-4 rounded-2xl p-7 border" style="background:#111827;border-color:rgba(6,182,212,0.12)">
+    <h2 id="catModalTitle" class="text-xl font-bold mb-5" style="color:#22d3ee">Kategoriya qo'shish</h2>
     <input type="hidden" id="catEditId"/>
     <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Nomi (UZ)</label><input class="inp" type="text" id="cName" placeholder="Taom"/></div>
     <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Nomi (RU)</label><input class="inp" type="text" id="cNameRu" placeholder="Еда"/></div>
@@ -161,17 +152,17 @@ tailwind.config = {
       <select class="inp" id="cActive"><option value="true">Ko'rinadi</option><option value="false">Yashirilgan</option></select>
     </div>
     <div class="flex gap-3 mt-6">
-      <button id="catModalCancel" class="px-5 py-2.5 rounded-xl text-sm border transition-colors hover:text-white" style="border-color:rgba(99,179,237,0.12);color:#64748b">Bekor</button>
-      <button id="catModalSave" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style="background:#3b82f6">Saqlash</button>
+      <button id="catModalCancel" class="px-5 py-2.5 rounded-xl text-sm border transition-colors hover:text-white" style="border-color:rgba(6,182,212,0.12);color:#64748b">Bekor</button>
+      <button id="catModalSave" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style="background:var(--sx-grad)">Saqlash</button>
     </div>
   </div>
 </div>
 
 <script src="admin.js"></script>
 
-<!-- ===== ISHCHI MODAL ===== -->
+<!-- ISHCHI MODAL -->
 <div id="empModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.8);align-items:center;justify-content:center;padding:16px">
-  <div style="background:#1e293b;border:1px solid rgba(99,179,237,0.15);border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.5)">
+  <div style="background:#1e293b;border:1px solid rgba(6,182,212,0.15);border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.5)">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px 0">
       <h3 id="empModalTitle" style="font-size:17px;font-weight:700;color:#f1f5f9;margin:0">Yangi ishchi</h3>
       <button onclick="closeEmpModal()" style="background:none;border:none;color:#64748b;font-size:22px;cursor:pointer;line-height:1">×</button>
@@ -182,9 +173,9 @@ tailwind.config = {
   </div>
 </div>
 
-<!-- ===== FILIAL MODAL ===== -->
+<!-- FILIAL MODAL -->
 <div id="branchModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.8);align-items:center;justify-content:center;padding:16px">
-  <div style="background:#1e293b;border:1px solid rgba(99,179,237,0.15);border-radius:16px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto">
+  <div style="background:#1e293b;border:1px solid rgba(6,182,212,0.15);border-radius:16px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px 0">
       <h3 id="branchModalTitle" style="font-size:17px;font-weight:700;color:#f1f5f9;margin:0">Filial</h3>
       <button onclick="closeBranchModal()" style="background:none;border:none;color:#64748b;font-size:22px;cursor:pointer;line-height:1">×</button>

@@ -123,7 +123,7 @@ function showBlockedScreen(reason) {
       '<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:14px;padding:20px;margin-bottom:24px">' +
         '<div style="font-size:13px;color:#fca5a5;line-height:1.8">' + (reason || "Obuna to\'xtatilgan") + '</div>' +
       '</div>' +
-      '<div style="background:#141d2e;border:1px solid rgba(99,179,237,0.15);border-radius:12px;padding:16px">' +
+      '<div style="background:#141d2e;border:1px solid rgba(6,182,212,0.15);border-radius:12px;padding:16px">' +
         '<div style="font-size:12px;color:#64748b;margin-bottom:4px">Xizmatni tiklash uchun:</div>' +
         '<div style="font-size:13px;color:#93c5fd;font-weight:600">Superadmin bilan bog\'laning</div>' +
       '</div>' +
@@ -247,7 +247,7 @@ function fmtDate(d) {
 }
 
 function card(content) {
-  return '<div class="rounded-xl border p-5 mb-5" style="background:#131c2e;border-color:rgba(99,179,237,0.12)">' + content + '</div>';
+  return '<div class="rounded-xl border p-5 mb-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)">' + content + '</div>';
 }
 
 function pageHeader(title, sub) {
@@ -255,7 +255,7 @@ function pageHeader(title, sub) {
 }
 
 function statCard(icon, label, value, sub) {
-  return '<div class="rounded-xl border p-5" style="background:#131c2e;border-color:rgba(99,179,237,0.12)">' +
+  return '<div class="rounded-xl border p-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)">' +
     '<div class="text-3xl mb-2">' + icon + '</div>' +
     '<div class="text-xs uppercase tracking-widest mb-2" style="color:#64748b">' + label + '</div>' +
     '<div class="text-3xl font-bold">' + value + '</div>' +
@@ -264,16 +264,16 @@ function statCard(icon, label, value, sub) {
 }
 
 function tableWrap(headerHtml, bodyHtml) {
-  return '<div class="rounded-xl border overflow-hidden mb-5" style="background:#131c2e;border-color:rgba(99,179,237,0.12)">' +
-    '<div class="flex justify-between items-center flex-wrap gap-2 px-5 py-4 border-b" style="border-color:rgba(99,179,237,0.12)">' + headerHtml + '</div>' +
+  return '<div class="rounded-xl border overflow-hidden mb-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)">' +
+    '<div class="flex justify-between items-center flex-wrap gap-2 px-5 py-4 border-b" style="border-color:rgba(6,182,212,0.12)">' + headerHtml + '</div>' +
     '<div class="overflow-x-auto">' +
       '<table class="w-full border-collapse">' + bodyHtml + '</table>' +
     '</div>' +
   '</div>';
 }
 
-var thStyle = 'padding:10px 16px;text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#64748b;background:#1a2235;border-bottom:1px solid rgba(99,179,237,0.12)';
-var tdStyle = 'padding:12px 16px;font-size:13px;border-bottom:1px solid rgba(99,179,237,0.05)';
+var thStyle = 'padding:10px 16px;text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#64748b;background:#1a2235;border-bottom:1px solid rgba(6,182,212,0.12)';
+var tdStyle = 'padding:12px 16px;font-size:13px;border-bottom:1px solid rgba(6,182,212,0.05)';
 
 // ===== FORMAT HELPERS =====
 function formatMins(mins) {
@@ -296,11 +296,11 @@ async function renderDashboard(main) {
     pageHeader('Dashboard', 'Bugungi holat va statistika') +
     '<div id="statsGrid" class="grid gap-4 mb-6" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))"><div style="color:#64748b">Yuklanmoqda...</div></div>' +
     '<div class="grid gap-4 mb-5" style="grid-template-columns:2fr 1fr">' +
-      '<div class="rounded-xl border p-5" style="background:#131c2e;border-color:rgba(99,179,237,0.12)"><div class="text-sm font-semibold mb-4">📈 Haftalik buyurtmalar</div><div style="position:relative;height:220px"><canvas id="weeklyChart"></canvas></div></div>' +
-      '<div class="rounded-xl border p-5" style="background:#131c2e;border-color:rgba(99,179,237,0.12)"><div class="text-sm font-semibold mb-4">🔵 Buyurtma turi</div><div style="position:relative;height:220px"><canvas id="typeChart"></canvas></div></div>' +
+      '<div class="rounded-xl border p-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)"><div class="text-sm font-semibold mb-4">📈 Haftalik buyurtmalar</div><div style="position:relative;height:220px"><canvas id="weeklyChart"></canvas></div></div>' +
+      '<div class="rounded-xl border p-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)"><div class="text-sm font-semibold mb-4">🔵 Buyurtma turi</div><div style="position:relative;height:220px"><canvas id="typeChart"></canvas></div></div>' +
     '</div>' +
-    '<div class="rounded-xl border p-5 mb-5" style="background:#131c2e;border-color:rgba(99,179,237,0.12)"><div class="text-sm font-semibold mb-4">🏆 Ko\'p sotilgan (TOP 5)</div><div id="topChart"></div></div>' +
-    '<div class="rounded-xl border overflow-hidden mb-5" style="background:#131c2e;border-color:rgba(99,179,237,0.12)"><div class="px-5 py-4 border-b" style="border-color:rgba(99,179,237,0.12)"><span class="text-sm font-semibold">Oxirgi buyurtmalar</span></div><div id="recentOrders" class="overflow-x-auto"><div class="p-5" style="color:#64748b">Yuklanmoqda...</div></div></div>' +
+    '<div class="rounded-xl border p-5 mb-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)"><div class="text-sm font-semibold mb-4">🏆 Ko\'p sotilgan (TOP 5)</div><div id="topChart"></div></div>' +
+    '<div class="rounded-xl border overflow-hidden mb-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)"><div class="px-5 py-4 border-b" style="border-color:rgba(6,182,212,0.12)"><span class="text-sm font-semibold">Oxirgi buyurtmalar</span></div><div id="recentOrders" class="overflow-x-auto"><div class="p-5" style="color:#64748b">Yuklanmoqda...</div></div></div>' +
   '</div>';
 
   var stats = await apiFetch('/admin/stats');
@@ -317,8 +317,8 @@ async function renderDashboard(main) {
   var wc = document.getElementById('weeklyChart');
   if (wc) weeklyChart = new Chart(wc.getContext('2d'), {
     type: 'bar',
-    data: { labels: stats.weekly.map(function(d){return d.date;}), datasets: [{ label:'Buyurtmalar', data: stats.weekly.map(function(d){return d.orders;}), backgroundColor:'rgba(59,130,246,0.6)', borderColor:'#3b82f6', borderRadius:6, borderWidth:1 }] },
-    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#64748b'},grid:{color:'rgba(99,179,237,0.06)'}}, y:{ticks:{color:'#64748b'},grid:{color:'rgba(99,179,237,0.06)'}} } }
+    data: { labels: stats.weekly.map(function(d){return d.date;}), datasets: [{ label:'Buyurtmalar', data: stats.weekly.map(function(d){return d.orders;}), backgroundColor:'rgba(6,182,212,0.6)', borderColor:'var(--sx-cyan, #06b6d4)', borderRadius:6, borderWidth:1 }] },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#64748b'},grid:{color:'rgba(6,182,212,0.06)'}}, y:{ticks:{color:'#64748b'},grid:{color:'rgba(6,182,212,0.06)'}} } }
   });
 
   if (typeChart) typeChart.destroy();
@@ -335,14 +335,14 @@ async function renderDashboard(main) {
     stats.topProducts.forEach(function(p, i) {
       var pct = Math.round(p.quantity / maxQ * 100);
       html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">' +
-        '<div style="width:24px;height:24px;border-radius:50%;background:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">' + (i+1) + '</div>' +
+        '<div style="width:24px;height:24px;border-radius:50%;background:var(--sx-cyan, #06b6d4);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">' + (i+1) + '</div>' +
         '<div style="flex:1">' +
           '<div style="display:flex;justify-content:space-between;margin-bottom:5px">' +
             '<span style="font-size:13px;font-weight:600">' + p._id + '</span>' +
-            '<span style="font-size:12px;color:#f59e0b">' + p.quantity + ' ta &middot; ' + Number(p.total).toLocaleString() + " so'm</span>" +
+            '<span style="font-size:12px;color:#22d3ee">' + p.quantity + ' ta &middot; ' + Number(p.total).toLocaleString() + " so'm</span>" +
           '</div>' +
           '<div style="height:6px;background:#1a2235;border-radius:3px;overflow:hidden">' +
-            '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#3b82f6,#f59e0b);border-radius:3px"></div>' +
+            '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,var(--sx-cyan, #06b6d4),#f59e0b);border-radius:3px"></div>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -359,7 +359,7 @@ async function renderDashboard(main) {
       rows += '<tr>' +
         '<td style="' + tdStyle + '">' + name.trim() + '<br><small style="color:#64748b">' + phone + '</small></td>' +
         '<td style="' + tdStyle + ';max-width:160px;font-size:12px">' + o.items.map(function(i){return i.name+'x'+i.quantity;}).join(', ') + '</td>' +
-        '<td style="' + tdStyle + ';color:#f59e0b">' + Number(o.total).toLocaleString() + '</td>' +
+        '<td style="' + tdStyle + ';color:#22d3ee">' + Number(o.total).toLocaleString() + '</td>' +
         '<td style="' + tdStyle + '"><span class="badge ' + (o.orderType==='online'?'badge-online':'badge-dinein') + '">' + (o.orderType==='online'?'Online':'Restoran') + '</span></td>' +
         '<td style="' + tdStyle + '">' + statusBadge(o.status) + '</td>' +
         '<td style="' + tdStyle + ';color:#64748b;font-size:12px">' + fmtDate(o.createdAt) + '</td>' +
@@ -384,12 +384,12 @@ async function renderOrders(main, filter) {
 
   main.innerHTML = '<div class="page">' +
     pageHeader('Buyurtmalar', 'Barcha buyurtmalar') +
-    '<div class="rounded-xl border overflow-hidden" style="background:#131c2e;border-color:rgba(99,179,237,0.12)">' +
-      '<div class="flex justify-between items-center flex-wrap gap-2 px-5 py-4 border-b" style="border-color:rgba(99,179,237,0.12)">' +
+    '<div class="rounded-xl border overflow-hidden" style="background:#131c2e;border-color:rgba(6,182,212,0.12)">' +
+      '<div class="flex justify-between items-center flex-wrap gap-2 px-5 py-4 border-b" style="border-color:rgba(6,182,212,0.12)">' +
         '<span class="text-sm font-semibold">Royxat</span>' +
         '<div id="orderFilters" class="flex gap-2 flex-wrap">' +
           ['all','Yangi','Qabul qilindi','Bekor qilindi'].map(function(f) {
-            return '<button class="filter-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ' + (filter===f?'active':'') + '" data-filter="' + f + '" style="border-color:rgba(99,179,237,0.12);color:#64748b">' + (f==='all'?'Barchasi':f) + '</button>';
+            return '<button class="filter-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ' + (filter===f?'active':'') + '" data-filter="' + f + '" style="border-color:rgba(6,182,212,0.12);color:#64748b">' + (f==='all'?'Barchasi':f) + '</button>';
           }).join('') +
         '</div>' +
       '</div>' +
@@ -414,13 +414,13 @@ async function renderOrders(main, filter) {
       '<td style="' + tdStyle + ';color:#64748b">' + (i+1) + '</td>' +
       '<td style="' + tdStyle + '">' + name.trim() + '<br><small style="color:#64748b">' + phone + '</small></td>' +
       '<td style="' + tdStyle + ';font-size:12px;max-width:160px">' + o.items.map(function(x){return x.name+'x'+x.quantity;}).join(', ') + '</td>' +
-      '<td style="' + tdStyle + ';color:#f59e0b;font-weight:600">' + Number(o.total).toLocaleString() + '</td>' +
+      '<td style="' + tdStyle + ';color:#22d3ee;font-weight:600">' + Number(o.total).toLocaleString() + '</td>' +
       '<td style="' + tdStyle + ';color:#64748b">' + (o.tableNumber||'—') + '</td>' +
       '<td style="' + tdStyle + '"><span class="badge ' + (o.orderType==='online'?'badge-online':'badge-dinein') + '">' + (o.orderType==='online'?'Online':'Restoran') + '</span></td>' +
       '<td style="' + tdStyle + '">' + statusBadge(o.status) + '</td>' +
       '<td style="' + tdStyle + ';color:#64748b;font-size:12px">' + fmtDate(o.createdAt) + '</td>' +
       '<td style="' + tdStyle + '">' +
-        '<select data-id="' + o._id + '" class="order-status-sel" style="background:#1a2235;border:1px solid rgba(99,179,237,0.12);color:#f1f5f9;padding:4px 8px;border-radius:6px;font-size:12px;cursor:pointer">' +
+        '<select data-id="' + o._id + '" class="order-status-sel" style="background:#1a2235;border:1px solid rgba(6,182,212,0.12);color:#f1f5f9;padding:4px 8px;border-radius:6px;font-size:12px;cursor:pointer">' +
           '<option value="">O\'zgartir</option>' +
           ['Yangi','Qabul qilindi','Tayyorlanmoqda','Tayyor','Bekor qilindi'].map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join('') +
         '</select>' +
@@ -449,7 +449,7 @@ async function renderOrders(main, filter) {
 async function renderProducts(main) {
   main.innerHTML = '<div class="page">' +
     pageHeader('Menyu boshqaruvi', "Taomlarni qo'shish, tahrirlash, o'chirish") +
-    '<div class="flex justify-end mb-4"><button id="addProductBtn" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white" style="background:#3b82f6">+ Taom qo\'shish</button></div>' +
+    '<div class="flex justify-end mb-4"><button id="addProductBtn" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white" style="background:var(--sx-cyan, #06b6d4)">+ Taom qo\'shish</button></div>' +
     '<div id="productsGrid" class="grid gap-4" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))"><div style="color:#64748b">Yuklanmoqda...</div></div>' +
   '</div>';
   document.getElementById('addProductBtn').addEventListener('click', function() { openProductModal(null); });
@@ -465,7 +465,7 @@ async function loadProductsGrid() {
   products.forEach(function(p) {
     var div = document.createElement('div');
     div.className = 'rounded-xl border overflow-hidden transition-transform hover:-translate-y-0.5' + (p.active===false?' opacity-50':'');
-    div.style.cssText = 'background:#131c2e;border-color:rgba(99,179,237,0.12)';
+    div.style.cssText = 'background:#131c2e;border-color:rgba(6,182,212,0.12)';
     div.innerHTML =
       (p.image
         ? '<img src="'+p.image+'" alt="'+p.name+'" class="w-full object-cover" style="height:140px" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
@@ -475,10 +475,10 @@ async function loadProductsGrid() {
       '<div class="p-4">' +
         '<div class="font-semibold text-base">' + p.name + '</div>' +
         (p.name_ru ? '<div class="text-xs mt-0.5" style="color:#64748b">'+p.name_ru+'</div>' : '') +
-        '<div class="font-medium mt-1" style="color:#f59e0b">' + Number(p.price).toLocaleString() + " so'm</div>" +
+        '<div class="font-medium mt-1" style="color:#22d3ee">' + Number(p.price).toLocaleString() + " so'm</div>" +
         '<div class="text-xs uppercase tracking-wide mt-1 mb-3" style="color:#64748b">' + p.category + (p.active===false?' · Yashirilgan':'') + '</div>' +
         '<div class="flex gap-2">' +
-          '<button class="edit-btn flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all" style="background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.3);color:#60a5fa">✏️ Tahrirlash</button>' +
+          '<button class="edit-btn flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all" style="background:rgba(6,182,212,0.12);border-color:rgba(6,182,212,0.3);color:#22d3ee">✏️ Tahrirlash</button>' +
           '<button class="del-btn py-1.5 px-2.5 rounded-lg text-xs border transition-all" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.2);color:#ef4444">🗑</button>' +
         '</div>' +
       '</div>';
@@ -554,9 +554,9 @@ async function deleteProduct(id) {
 async function renderCategories(main) {
   main.innerHTML = '<div class="page">' +
     pageHeader('Kategoriyalar', 'Menyu filtr tugmalarini boshqaring') +
-    '<div class="flex justify-end mb-4"><button id="addCatBtn" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white" style="background:#3b82f6">+ Kategoriya qo\'shish</button></div>' +
-    '<div class="rounded-xl border overflow-hidden" style="background:#131c2e;border-color:rgba(99,179,237,0.12)">' +
-      '<div class="px-5 py-4 border-b" style="border-color:rgba(99,179,237,0.12)">' +
+    '<div class="flex justify-end mb-4"><button id="addCatBtn" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white" style="background:var(--sx-cyan, #06b6d4)">+ Kategoriya qo\'shish</button></div>' +
+    '<div class="rounded-xl border overflow-hidden" style="background:#131c2e;border-color:rgba(6,182,212,0.12)">' +
+      '<div class="px-5 py-4 border-b" style="border-color:rgba(6,182,212,0.12)">' +
         '<span class="text-sm font-semibold">Royxat</span> ' +
         '<span class="text-xs" style="color:#64748b">— tartibini ozgartirish uchun sudrang</span>' +
       '</div>' +
@@ -587,7 +587,7 @@ async function loadCatList() {
         '<div class="text-xs mt-0.5" style="color:#64748b">Tartib: ' + cat.order + '</div>' +
       '</div>' +
       '<span class="badge ' + (cat.active!==false?'badge-accepted':'badge-rejected') + '">' + (cat.active!==false?"Ko'rinadi":'Yashirilgan') + '</span>' +
-      '<button class="edit-cat py-1.5 px-3 rounded-lg text-xs border transition-all" style="background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.3);color:#60a5fa">✏️</button>' +
+      '<button class="edit-cat py-1.5 px-3 rounded-lg text-xs border transition-all" style="background:rgba(6,182,212,0.12);border-color:rgba(6,182,212,0.3);color:#22d3ee">✏️</button>' +
       '<button class="del-cat py-1.5 px-2.5 rounded-lg text-xs border ml-1" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.2);color:#ef4444">🗑</button>';
     row.querySelector('.edit-cat').addEventListener('click', function() { openCatModal(cat); });
     row.querySelector('.del-cat').addEventListener('click', function() { deleteCat(cat._id); });
@@ -680,14 +680,14 @@ async function renderRatings(main) {
   });
 
   document.getElementById('ratingsContent').innerHTML =
-    '<div class="flex items-center gap-6 rounded-xl border p-5 mb-5 flex-wrap" style="background:#131c2e;border-color:rgba(99,179,237,0.12)">' +
-      '<div><div style="font-size:52px;font-weight:700;color:#f59e0b;line-height:1">'+(avg||'—')+'</div>' +
+    '<div class="flex items-center gap-6 rounded-xl border p-5 mb-5 flex-wrap" style="background:#131c2e;border-color:rgba(6,182,212,0.12)">' +
+      '<div><div style="font-size:52px;font-weight:700;color:#22d3ee;line-height:1">'+(avg||'—')+'</div>' +
       '<div style="font-size:22px;margin-bottom:4px">'+(avg?'⭐'.repeat(Math.round(avg)):'—')+'</div>' +
       '<div style="font-size:13px;color:#64748b">'+rated.length+' ta baho</div></div>' +
       '<div style="flex:1;min-width:200px">'+barsHtml+'</div>' +
     '</div>' +
-    '<div class="rounded-xl border overflow-hidden" style="background:#131c2e;border-color:rgba(99,179,237,0.12)">' +
-      '<div class="px-5 py-4 border-b" style="border-color:rgba(99,179,237,0.12)"><span class="text-sm font-semibold">Baholangan buyurtmalar</span></div>' +
+    '<div class="rounded-xl border overflow-hidden" style="background:#131c2e;border-color:rgba(6,182,212,0.12)">' +
+      '<div class="px-5 py-4 border-b" style="border-color:rgba(6,182,212,0.12)"><span class="text-sm font-semibold">Baholangan buyurtmalar</span></div>' +
       '<div class="overflow-x-auto"><table class="w-full border-collapse"><thead><tr>'+
         ['Mijoz','Mahsulotlar','Baho','Vaqt'].map(function(h){return '<th style="'+thStyle+'">'+h+'</th>';}).join('')+
       '</tr></thead><tbody>'+ratedRows+'</tbody></table></div>' +
@@ -697,7 +697,7 @@ async function renderRatings(main) {
 // ===== USERS =====
 async function renderUsers(main) {
   main.innerHTML = '<div class="page">' + pageHeader("Foydalanuvchilar", "Ro'yxatdan o'tgan mijozlar") +
-    '<div class="rounded-xl border overflow-hidden" style="background:#131c2e;border-color:rgba(99,179,237,0.12)">' +
+    '<div class="rounded-xl border overflow-hidden" style="background:#131c2e;border-color:rgba(6,182,212,0.12)">' +
       '<div id="usersTable" class="overflow-x-auto"><div class="p-5" style="color:#64748b">Yuklanmoqda...</div></div>' +
     '</div></div>';
 
@@ -708,7 +708,7 @@ async function renderUsers(main) {
     rows += '<tr>' +
       '<td style="'+tdStyle+';color:#64748b">'+(i+1)+'</td>' +
       '<td style="'+tdStyle+'">'+(u.first_name||'')+' '+(u.last_name||'')+'</td>' +
-      '<td style="'+tdStyle+';color:#60a5fa">'+(u.username?'@'+u.username:'—')+'</td>' +
+      '<td style="'+tdStyle+';color:#22d3ee">'+(u.username?'@'+u.username:'—')+'</td>' +
       '<td style="'+tdStyle+'">'+(u.phone||'—')+'</td>' +
       '<td style="'+tdStyle+';color:#64748b;font-size:12px">'+u.telegramId+'</td>' +
       '<td style="'+tdStyle+';color:#64748b;font-size:12px">'+new Date(u.createdAt).toLocaleDateString('uz-UZ')+'</td>' +
@@ -728,15 +728,15 @@ async function renderEmployees(main) {
   var emps = await apiFetch('/admin/employees');
 
   var rows = (emps || []).map(function(e) {
-    return '<tr style="border-bottom:1px solid rgba(99,179,237,0.08)">' +
+    return '<tr style="border-bottom:1px solid rgba(6,182,212,0.08)">' +
       '<td style="padding:12px 8px"><div style="font-size:14px;font-weight:600;color:#f1f5f9">' + e.name + '</div><div style="font-size:11px;color:#64748b">' + (e.position||'—') + '</div></td>' +
       '<td style="padding:12px 8px;font-size:13px;color:#94a3b8">' + (e.phone||'—') + '</td>' +
-      '<td style="padding:12px 8px;font-size:13px;color:#60a5fa">' + (e.username||'—') + '</td>' +
-      '<td style="padding:12px 8px;font-size:13px;color:#f59e0b">' + fmtSalary(e.salary) + '</td>' +
+      '<td style="padding:12px 8px;font-size:13px;color:#22d3ee">' + (e.username||'—') + '</td>' +
+      '<td style="padding:12px 8px;font-size:13px;color:#22d3ee">' + fmtSalary(e.salary) + '</td>' +
       '<td style="padding:12px 8px;font-size:12px;color:#94a3b8">' + (e.workStart||'09:00') + ' – ' + (e.workEnd||'18:00') + '</td>' +
       '<td style="padding:12px 8px"><span style="font-size:11px;padding:3px 8px;border-radius:99px;background:' + (e.active?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.15)') + ';color:' + (e.active?'#4ade80':'#f87171') + '">' + (e.active?'Faol':'Faol emas') + '</span></td>' +
       '<td style="padding:12px 8px"><div style="display:flex;gap:6px">' +
-        '<button onclick="openEmpModal(' + JSON.stringify(JSON.stringify(e)) + ')" style="padding:5px 10px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:#60a5fa;border-radius:6px;font-size:11px;cursor:pointer">✏️ Tahrir</button>' +
+        '<button onclick="openEmpModal(' + JSON.stringify(JSON.stringify(e)) + ')" style="padding:5px 10px;background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee;border-radius:6px;font-size:11px;cursor:pointer">✏️ Tahrir</button>' +
         '<button onclick="deleteEmp(\'' + e._id + '\')" style="padding:5px 10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;border-radius:6px;font-size:11px;cursor:pointer">🗑</button>' +
       '</div></td>' +
     '</tr>';
@@ -746,11 +746,11 @@ async function renderEmployees(main) {
     '<div class="fade-up">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">' +
         '<div style="font-size:18px;font-weight:700;color:#f1f5f9">👷 Ishchilar <span style="font-size:13px;color:#64748b;font-weight:400">(' + (emps||[]).length + ' ta)</span></div>' +
-        '<button onclick="openEmpModal(null)" style="padding:9px 18px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);border:none;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Qo\'shish</button>' +
+        '<button onclick="openEmpModal(null)" style="padding:9px 18px;background:linear-gradient(135deg,var(--sx-cyan, #06b6d4),#1d4ed8);border:none;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Qo\'shish</button>' +
       '</div>' +
-      '<div style="background:#1e293b;border:1px solid rgba(99,179,237,0.12);border-radius:12px;overflow:hidden">' +
+      '<div style="background:#1e293b;border:1px solid rgba(6,182,212,0.12);border-radius:12px;overflow:hidden">' +
         '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">' +
-          '<thead><tr style="background:rgba(99,179,237,0.05)">' +
+          '<thead><tr style="background:rgba(6,182,212,0.05)">' +
             '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">ISM</th>' +
             '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">TELEFON</th>' +
             '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">LOGIN</th>' +
@@ -800,27 +800,27 @@ async function openEmpModal(empJson) {
       '</div>' +
       '<div>' +
         '<label style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:1px;display:block;margin-bottom:5px">FILIAL <span style="color:#ef4444">*</span></label>' +
-        '<select id="empBranchId" style="width:100%;padding:10px 12px;background:#0f172a;border:1px solid rgba(99,179,237,0.15);border-radius:8px;color:#f1f5f9;font-size:13px">' + branchOptions + '</select>' +
-        (branches.length === 0 ? '<div style="font-size:11px;color:#f59e0b;margin-top:4px">⚠️ Avval Filiallar bo\'limidan filial qo\'shing</div>' : '') +
+        '<select id="empBranchId" style="width:100%;padding:10px 12px;background:#0f172a;border:1px solid rgba(6,182,212,0.15);border-radius:8px;color:#f1f5f9;font-size:13px">' + branchOptions + '</select>' +
+        (branches.length === 0 ? '<div style="font-size:11px;color:#22d3ee;margin-top:4px">⚠️ Avval Filiallar bo\'limidan filial qo\'shing</div>' : '') +
       '</div>' +
       '<div>' +
         '<label style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:1px;display:block;margin-bottom:5px">DAM OLISH KUNI</label>' +
-        '<select id="empWeeklyOff" style="width:100%;padding:10px 12px;background:#0f172a;border:1px solid rgba(99,179,237,0.15);border-radius:8px;color:#f1f5f9;font-size:13px">' + weekOpts + '</select>' +
+        '<select id="empWeeklyOff" style="width:100%;padding:10px 12px;background:#0f172a;border:1px solid rgba(6,182,212,0.15);border-radius:8px;color:#f1f5f9;font-size:13px">' + weekOpts + '</select>' +
       '</div>' +
       '<div>' +
         '<label style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:1px;display:block;margin-bottom:5px">ISHCHI RASMI (Yuz ID uchun)</label>' +
         '<div id="empPhotoPreview" style="' + (emp && emp.photo ? '' : 'display:none;') + 'margin-bottom:8px;text-align:center">' +
-          '<img id="empPhotoImg" src="' + (emp && emp.photo ? emp.photo : '') + '" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid #3b82f6">' +
+          '<img id="empPhotoImg" src="' + (emp && emp.photo ? emp.photo : '') + '" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid var(--sx-cyan, #06b6d4)">' +
           '<div style="font-size:11px;margin-top:4px;color:#22c55e">' + (emp && emp.photo ? 'Rasm yuklangan' : '') + '</div>' +
         '</div>' +
         '<div style="display:flex;gap:8px">' +
-          '<label for="empPhotoInput" style="flex:1;padding:9px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);color:#60a5fa;border-radius:8px;font-size:12px;cursor:pointer;text-align:center">📁 Rasm yuklash</label>' +
+          '<label for="empPhotoInput" style="flex:1;padding:9px;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);color:#22d3ee;border-radius:8px;font-size:12px;cursor:pointer;text-align:center">📁 Rasm yuklash</label>' +
           '<input id="empPhotoInput" type="file" accept="image/*" style="display:none" onchange="previewEmpPhoto(this)">' +
           '<button onclick="captureEmpPhoto()" style="flex:1;padding:9px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);color:#4ade80;border-radius:8px;font-size:12px;cursor:pointer">📸 Kamera</button>' +
         '</div>' +
       '</div>' +
       '<div id="empErr" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;padding:10px;border-radius:8px;font-size:13px"></div>' +
-      '<button id="empSaveBtn" onclick="saveEmp(\'' + (emp ? emp._id : '') + '\')" style="width:100%;padding:12px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);border:none;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">' +
+      '<button id="empSaveBtn" onclick="saveEmp(\'' + (emp ? emp._id : '') + '\')" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--sx-cyan, #06b6d4),#1d4ed8);border:none;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">' +
         (emp ? '💾 Saqlash' : '+ Qo\'shish') +
       '</button>' +
     '</div>';
@@ -829,7 +829,7 @@ async function openEmpModal(empJson) {
 function empInp(id, label, type, val) {
   return '<div>' +
     '<label style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:1px;display:block;margin-bottom:5px">' + label + '</label>' +
-    '<input id="' + id + '" type="' + type + '" value="' + (val||'') + '" style="width:100%;padding:10px 12px;background:#0f172a;border:1px solid rgba(99,179,237,0.15);border-radius:8px;color:#f1f5f9;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit">' +
+    '<input id="' + id + '" type="' + type + '" value="' + (val||'') + '" style="width:100%;padding:10px 12px;background:#0f172a;border:1px solid rgba(6,182,212,0.15);border-radius:8px;color:#f1f5f9;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit">' +
   '</div>';
 }
 
@@ -920,26 +920,26 @@ async function renderAttendance(main, selectedBranch) {
 
   var branchBtns =
     '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">' +
-      '<button onclick="renderAttendance(document.getElementById(\'mainContent\'),\'\')" style="padding:6px 16px;border-radius:8px;border:1px solid ' + (!selectedBranch ? '#3b82f6' : 'rgba(99,179,237,0.2)') + ';background:' + (!selectedBranch ? 'rgba(59,130,246,0.15)' : 'transparent') + ';color:' + (!selectedBranch ? '#60a5fa' : '#64748b') + ';font-size:12px;cursor:pointer;font-family:inherit">🏢 Barchasi</button>' +
+      '<button onclick="renderAttendance(document.getElementById(\'mainContent\'),\'\')" style="padding:6px 16px;border-radius:8px;border:1px solid ' + (!selectedBranch ? 'var(--sx-cyan, #06b6d4)' : 'rgba(6,182,212,0.2)') + ';background:' + (!selectedBranch ? 'rgba(6,182,212,0.15)' : 'transparent') + ';color:' + (!selectedBranch ? '#22d3ee' : '#64748b') + ';font-size:12px;cursor:pointer;font-family:inherit">🏢 Barchasi</button>' +
       branches.map(function(b) {
         var act = selectedBranch === b._id;
-        return '<button onclick="renderAttendance(document.getElementById(\'mainContent\'),\'' + b._id + '\')" style="padding:6px 16px;border-radius:8px;border:1px solid ' + (act ? '#3b82f6' : 'rgba(99,179,237,0.2)') + ';background:' + (act ? 'rgba(59,130,246,0.15)' : 'transparent') + ';color:' + (act ? '#60a5fa' : '#64748b') + ';font-size:12px;cursor:pointer;font-family:inherit">' + b.name + '</button>';
+        return '<button onclick="renderAttendance(document.getElementById(\'mainContent\'),\'' + b._id + '\')" style="padding:6px 16px;border-radius:8px;border:1px solid ' + (act ? 'var(--sx-cyan, #06b6d4)' : 'rgba(6,182,212,0.2)') + ';background:' + (act ? 'rgba(6,182,212,0.15)' : 'transparent') + ';color:' + (act ? '#22d3ee' : '#64748b') + ';font-size:12px;cursor:pointer;font-family:inherit">' + b.name + '</button>';
       }).join('') +
     '</div>';
 
   var rows = emps.map(function(r) {
     var statusColor = r.status === 'keldi' ? '#22c55e' : '#ef4444';
     var lateTag = r.lateMinutes > 0
-      ? '<span style="font-size:10px;background:rgba(245,158,11,0.15);color:#f59e0b;padding:2px 6px;border-radius:99px;margin-left:6px">+' + formatMins(r.lateMinutes) + '</span>'
+      ? '<span style="font-size:10px;background:rgba(245,158,11,0.15);color:#22d3ee;padding:2px 6px;border-radius:99px;margin-left:6px">+' + formatMins(r.lateMinutes) + '</span>'
       : '';
-    var workedStr = r.totalMinutes ? formatMins(r.totalMinutes) : (r.checkIn && !r.checkOut ? '<span style="color:#3b82f6">Ishlayapti</span>' : '—');
-    return '<tr style="border-bottom:1px solid rgba(99,179,237,0.07)">' +
+    var workedStr = r.totalMinutes ? formatMins(r.totalMinutes) : (r.checkIn && !r.checkOut ? '<span style="color:var(--sx-cyan, #06b6d4)">Ishlayapti</span>' : '—');
+    return '<tr style="border-bottom:1px solid rgba(6,182,212,0.07)">' +
       '<td style="padding:12px 10px"><div style="font-size:13px;font-weight:600;color:#f1f5f9">' + r.employee.name + lateTag + '</div><div style="font-size:11px;color:#64748b">' + (r.employee.position||'—') + '</div></td>' +
       '<td style="padding:12px 10px"><span style="font-size:11px;padding:3px 9px;border-radius:99px;background:' + (r.status==='keldi'?'rgba(34,197,94,0.12)':r.status==='dam'?'rgba(167,139,250,0.12)':'rgba(239,68,68,0.12)') + ';color:' + (r.status==='keldi'?'#22c55e':r.status==='dam'?'#a78bfa':'#ef4444') + ';font-weight:600">' + (r.status==='keldi'?'✅ Keldi':r.status==='dam'?'🌴 Dam':'❌ Kelmadi') + '</span></td>' +
       '<td style="padding:12px 10px;font-size:13px;color:#94a3b8">' + (r.checkIn||'—') + '</td>' +
       '<td style="padding:12px 10px;font-size:13px;color:#94a3b8">' + (r.checkOut||'—') + '</td>' +
       '<td style="padding:12px 10px;font-size:13px;color:#22c55e">' + workedStr + '</td>' +
-      '<td style="padding:12px 10px"><button onclick="openManualModal(\'' + r.employee._id + '\',\'' + r.employee.name + '\')" style="padding:4px 10px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);color:#60a5fa;border-radius:6px;font-size:11px;cursor:pointer">✏️</button></td>' +
+      '<td style="padding:12px 10px"><button onclick="openManualModal(\'' + r.employee._id + '\',\'' + r.employee.name + '\')" style="padding:4px 10px;background:rgba(6,182,212,0.12);border:1px solid rgba(6,182,212,0.25);color:#22d3ee;border-radius:6px;font-size:11px;cursor:pointer">✏️</button></td>' +
     '</tr>';
   }).join('');
 
@@ -949,14 +949,14 @@ async function renderAttendance(main, selectedBranch) {
       '<div style="font-size:18px;font-weight:700;color:#f1f5f9;margin-bottom:12px">📋 Bugungi davomat</div>' +
       branchBtns +
       '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px">' +
-        attSumBox('👥', 'Jami', sum.total, '#3b82f6') +
+        attSumBox('👥', 'Jami', sum.total, 'var(--sx-cyan, #06b6d4)') +
         attSumBox('✅', 'Keldi', sum.came, '#22c55e') +
         attSumBox('⚠️', 'Kechikdi', sum.late, '#f59e0b') +
         attSumBox('❌', 'Kelmadi', sum.absent, '#ef4444') +
       '</div>' +
-      '<div style="background:#1e293b;border:1px solid rgba(99,179,237,0.12);border-radius:12px;overflow:hidden">' +
+      '<div style="background:#1e293b;border:1px solid rgba(6,182,212,0.12);border-radius:12px;overflow:hidden">' +
         '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">' +
-          '<thead><tr style="background:rgba(99,179,237,0.05)">' +
+          '<thead><tr style="background:rgba(6,182,212,0.05)">' +
             '<th style="padding:10px;text-align:left;font-size:11px;color:#64748b;font-weight:600">ISHCHI</th>' +
             '<th style="padding:10px;text-align:left;font-size:11px;color:#64748b;font-weight:600">HOLAT</th>' +
             '<th style="padding:10px;text-align:left;font-size:11px;color:#64748b;font-weight:600">KELDI</th>' +
@@ -968,7 +968,7 @@ async function renderAttendance(main, selectedBranch) {
         '</table></div>' +
       '</div>' +
       '<div id="manualModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center;padding:16px">' +
-        '<div style="background:#1e293b;border:1px solid rgba(99,179,237,0.15);border-radius:16px;padding:24px;width:100%;max-width:380px">' +
+        '<div style="background:#1e293b;border:1px solid rgba(6,182,212,0.15);border-radius:16px;padding:24px;width:100%;max-width:380px">' +
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">' +
             '<div id="manualTitle" style="font-size:15px;font-weight:700;color:#f1f5f9">Qo\'lda kiritish</div>' +
             '<button onclick="closeManualModal()" style="background:none;border:none;color:#64748b;font-size:20px;cursor:pointer">✕</button>' +
@@ -980,7 +980,7 @@ async function renderAttendance(main, selectedBranch) {
 }
 
 function attSumBox(icon, label, val, color) {
-  return '<div style="background:#1e293b;border:1px solid rgba(99,179,237,0.12);border-radius:10px;padding:12px;text-align:center">' +
+  return '<div style="background:#1e293b;border:1px solid rgba(6,182,212,0.12);border-radius:10px;padding:12px;text-align:center">' +
     '<div style="font-size:20px">' + icon + '</div>' +
     '<div style="font-size:22px;font-weight:700;color:' + color + '">' + val + '</div>' +
     '<div style="font-size:10px;color:#64748b;margin-top:2px">' + label + '</div>' +
@@ -993,13 +993,13 @@ function openManualModal(empId, empName) {
   document.getElementById('manualBody').innerHTML =
     '<div style="display:flex;flex-direction:column;gap:12px">' +
       '<div><label style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:1px;display:block;margin-bottom:5px">HOLAT</label>' +
-        '<select id="manualStatus" style="width:100%;padding:10px;background:#0f172a;border:1px solid rgba(99,179,237,0.15);border-radius:8px;color:#f1f5f9;font-size:13px">' +
+        '<select id="manualStatus" style="width:100%;padding:10px;background:#0f172a;border:1px solid rgba(6,182,212,0.15);border-radius:8px;color:#f1f5f9;font-size:13px">' +
           '<option value="keldi">✅ Keldi</option><option value="kelmadi">❌ Kelmadi</option><option value="kasal">🤒 Kasal</option><option value="tatil">🏖 Ta\'til</option>' +
         '</select></div>' +
       empInp('manualCheckIn',  'KELGAN VAQT', 'time', '') +
       empInp('manualCheckOut', 'KETGAN VAQT', 'time', '') +
       empInp('manualNote',     'IZOH',        'text', '') +
-      '<button onclick="saveManual(\'' + empId + '\',\'' + today + '\')" style="width:100%;padding:12px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);border:none;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">💾 Saqlash</button>' +
+      '<button onclick="saveManual(\'' + empId + '\',\'' + today + '\')" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--sx-cyan, #06b6d4),#1d4ed8);border:none;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">💾 Saqlash</button>' +
     '</div>';
   document.getElementById('manualModal').style.display = 'flex';
 }
@@ -1041,8 +1041,8 @@ async function renderEmpReport(main) {
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">' +
         '<div style="font-size:18px;font-weight:700;color:#f1f5f9">💰 Hisobot & Maosh</div>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
-          '<select id="reportBranch" onchange="loadReport()" style="padding:8px 12px;background:#1e293b;border:1px solid rgba(99,179,237,0.2);border-radius:8px;color:#f1f5f9;font-size:13px;font-family:inherit">' + branchOptions + '</select>' +
-          '<input type="month" id="reportMonth" value="' + month + '" onchange="loadReport()" style="padding:8px 12px;background:#1e293b;border:1px solid rgba(99,179,237,0.2);border-radius:8px;color:#f1f5f9;font-size:13px">' +
+          '<select id="reportBranch" onchange="loadReport()" style="padding:8px 12px;background:#1e293b;border:1px solid rgba(6,182,212,0.2);border-radius:8px;color:#f1f5f9;font-size:13px;font-family:inherit">' + branchOptions + '</select>' +
+          '<input type="month" id="reportMonth" value="' + month + '" onchange="loadReport()" style="padding:8px 12px;background:#1e293b;border:1px solid rgba(6,182,212,0.2);border-radius:8px;color:#f1f5f9;font-size:13px">' +
         '</div>' +
       '</div>' +
       '<div id="reportContent"><div style="text-align:center;padding:40px;color:#475569">Yuklanmoqda...</div></div>' +
@@ -1089,7 +1089,7 @@ async function loadReport() {
       var dt = new Date(); dt.setDate(dt.getDate()-i);
       var ds = dt.toISOString().split('T')[0];
       var rec = recs.find(function(x){ return x.date && x.date.startsWith(ds); });
-      var color = !rec ? '#1e293b' : rec.status==='keldi' ? '#22c55e' : rec.status==='dam' ? '#a78bfa' : rec.status==='kasal' ? '#60a5fa' : '#ef4444';
+      var color = !rec ? '#1e293b' : rec.status==='keldi' ? '#22c55e' : rec.status==='dam' ? '#a78bfa' : rec.status==='kasal' ? '#22d3ee' : '#ef4444';
       var title = !rec ? 'Ma\'lumot yo\'q' : rec.status==='keldi' ? (rec.checkIn||'')+(rec.checkOut?' → '+rec.checkOut:'') : rec.status;
       days.push('<div title="' + ds + ': ' + title + '" style="width:20px;height:20px;border-radius:4px;background:' + color + '"></div>');
     }
@@ -1103,14 +1103,14 @@ async function loadReport() {
     var e = r.employee, s = r.stats;
     var pct = s.workingDaysInMonth > 0 ? Math.min(100, Math.round((s.workedDays/s.workingDaysInMonth)*100)) : 0;
     var pctColor = pct >= 90 ? '#22c55e' : pct >= 70 ? '#f59e0b' : '#ef4444';
-    return '<div style="background:#1e293b;border:1px solid rgba(99,179,237,0.12);border-radius:12px;padding:16px">' +
+    return '<div style="background:#1e293b;border:1px solid rgba(6,182,212,0.12);border-radius:12px;padding:16px">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">' +
         '<div><div style="font-size:14px;font-weight:700;color:#f1f5f9">' + e.name + '</div><div style="font-size:11px;color:#64748b;margin-top:2px">' + (e.position||'—') + '</div></div>' +
         '<div style="text-align:right"><div style="font-size:15px;font-weight:700;color:#22c55e">' + fmtSalary(s.earnedSalary) + '</div><div style="font-size:10px;color:#64748b">Oylik: ' + fmtSalary(e.salary) + '</div></div>' +
       '</div>' +
-      '<div style="background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.15);border-radius:8px;padding:10px;margin-bottom:12px">' +
+      '<div style="background:rgba(6,182,212,0.07);border:1px solid rgba(6,182,212,0.15);border-radius:8px;padding:10px;margin-bottom:12px">' +
         '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:#64748b">Oy ish kunlari</span><span style="color:#f1f5f9;font-weight:600">' + s.workingDaysInMonth + ' kun</span></div>' +
-        '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:#64748b">1 kunlik maosh</span><span style="color:#3b82f6;font-weight:600">' + fmtSalary(s.dailySalary) + '</span></div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:#64748b">1 kunlik maosh</span><span style="color:var(--sx-cyan, #06b6d4);font-weight:600">' + fmtSalary(s.dailySalary) + '</span></div>' +
         '<div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:#64748b">Kelgan kunlar</span><span style="color:#f1f5f9;font-weight:600">' + s.workedDays + ' / ' + s.workingDaysInMonth + ' kun</span></div>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px">' +
@@ -1125,22 +1125,22 @@ async function loadReport() {
   }).join('');
 
   content.innerHTML =
-    '<div style="background:linear-gradient(135deg,rgba(59,130,246,0.1),rgba(34,197,94,0.08));border:1px solid rgba(59,130,246,0.2);border-radius:12px;padding:16px;margin-bottom:16px">' +
+    '<div style="background:linear-gradient(135deg,rgba(6,182,212,0.1),rgba(34,197,94,0.08));border:1px solid rgba(6,182,212,0.2);border-radius:12px;padding:16px;margin-bottom:16px">' +
       '<div style="display:flex;justify-content:space-between;align-items:center">' +
         '<div><div style="font-size:11px;color:#64748b;margin-bottom:4px">JAMI MAOSH</div><div style="font-size:24px;font-weight:700;color:#f1f5f9">' + fmtSalary(totalSalary) + '</div></div>' +
-        '<div style="text-align:right"><div style="font-size:11px;color:#64748b;margin-bottom:4px">ISHCHILAR</div><div style="font-size:24px;font-weight:700;color:#3b82f6">' + totalWorkers + ' ta</div></div>' +
+        '<div style="text-align:right"><div style="font-size:11px;color:#64748b;margin-bottom:4px">ISHCHILAR</div><div style="font-size:24px;font-weight:700;color:var(--sx-cyan, #06b6d4)">' + totalWorkers + ' ta</div></div>' +
       '</div>' +
     '</div>' +
-    '<div style="background:#1e293b;border:1px solid rgba(99,179,237,0.12);border-radius:12px;padding:16px;margin-bottom:16px">' +
+    '<div style="background:#1e293b;border:1px solid rgba(6,182,212,0.12);border-radius:12px;padding:16px;margin-bottom:16px">' +
       '<div style="font-size:12px;font-weight:600;color:#64748b;letter-spacing:1px;margin-bottom:16px">📊 DAVOMAT FOIZI</div>' +
       '<div style="display:flex;gap:8px;align-items:flex-end;overflow-x:auto;padding-bottom:4px">' + chartBars + '</div>' +
       '<div style="display:flex;gap:16px;margin-top:12px">' +
         '<span style="font-size:10px;color:#22c55e">● 90%+ yaxshi</span>' +
-        '<span style="font-size:10px;color:#f59e0b">● 70–90% o\'rtacha</span>' +
+        '<span style="font-size:10px;color:#22d3ee">● 70–90% o\'rtacha</span>' +
         '<span style="font-size:10px;color:#ef4444">● 70%- past</span>' +
       '</div>' +
     '</div>' +
-    '<div style="background:#1e293b;border:1px solid rgba(99,179,237,0.12);border-radius:12px;padding:16px;margin-bottom:16px">' +
+    '<div style="background:#1e293b;border:1px solid rgba(6,182,212,0.12);border-radius:12px;padding:16px;margin-bottom:16px">' +
       '<div style="font-size:12px;font-weight:600;color:#64748b;letter-spacing:1px;margin-bottom:4px">🗓 OXIRGI 7 KUN</div>' +
       '<div style="display:flex;gap:3px;margin-bottom:10px;padding-left:98px">' +
         (function(){ var l=[]; for(var i=6;i>=0;i--){ var dt=new Date(); dt.setDate(dt.getDate()-i); var days=['Ya','Du','Se','Ch','Pa','Ju','Sh']; l.push('<div style="width:20px;text-align:center;font-size:9px;color:#475569">'+days[dt.getDay()]+'</div>'); } return l.join(''); })() +
@@ -1150,7 +1150,7 @@ async function loadReport() {
         '<span style="font-size:10px;color:#22c55e">● Keldi</span>' +
         '<span style="font-size:10px;color:#ef4444">● Kelmadi</span>' +
         '<span style="font-size:10px;color:#a78bfa">● Dam kuni</span>' +
-        '<span style="font-size:10px;color:#60a5fa">● Kasal</span>' +
+        '<span style="font-size:10px;color:#22d3ee">● Kasal</span>' +
       '</div>' +
     '</div>' +
     '<div style="font-size:12px;font-weight:600;color:#64748b;letter-spacing:1px;margin-bottom:10px">👥 ISHCHILAR HISOBOTI</div>' +
@@ -1191,11 +1191,11 @@ function captureEmpPhoto() {
   wrap.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px';
   wrap.innerHTML =
     '<div style="color:#f1f5f9;font-size:15px;font-weight:600;margin-bottom:14px">📸 Ishchi rasmi</div>' +
-    '<video id="empCamVideo" autoplay playsinline style="width:100%;max-width:340px;border-radius:12px;border:2px solid #3b82f6;background:#000;display:block"></video>' +
+    '<video id="empCamVideo" autoplay playsinline style="width:100%;max-width:340px;border-radius:12px;border:2px solid var(--sx-cyan, #06b6d4);background:#000;display:block"></video>' +
     '<canvas id="empCamCanvas" style="display:none"></canvas>' +
     '<div style="display:flex;gap:12px;margin-top:16px">' +
       '<button onclick="closeEmpCam()" style="padding:11px 24px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit">Bekor</button>' +
-      '<button onclick="snapEmpCam()" style="padding:11px 24px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);border:none;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">📸 Olish</button>' +
+      '<button onclick="snapEmpCam()" style="padding:11px 24px;background:linear-gradient(135deg,var(--sx-cyan, #06b6d4),#1d4ed8);border:none;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">📸 Olish</button>' +
     '</div>';
   document.body.appendChild(wrap);
   navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 }, audio: false })
@@ -1240,14 +1240,14 @@ async function renderBranches(main) {
   var branches = (d && d.branches) ? d.branches : [];
 
   var cards = branches.map(function(b) {
-    return '<div style="background:#0f172a;border:1px solid rgba(99,179,237,0.1);border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:10px">' +
+    return '<div style="background:#0f172a;border:1px solid rgba(6,182,212,0.1);border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:10px">' +
       '<div>' +
         '<div style="font-size:14px;font-weight:600;color:#f1f5f9">' + b.name + '</div>' +
         '<div style="font-size:11px;color:#64748b;margin-top:3px">' + (b.address||'Manzil kiritilmagan') + '</div>' +
-        (b.lat ? '<div style="font-size:11px;color:#3b82f6;margin-top:2px">📍 ' + b.lat.toFixed(5) + ', ' + b.lng.toFixed(5) + ' · ' + (b.radius||100) + 'm</div>' : '<div style="font-size:11px;color:#f59e0b;margin-top:2px">⚠️ Lokatsiya belgilanmagan</div>') +
+        (b.lat ? '<div style="font-size:11px;color:var(--sx-cyan, #06b6d4);margin-top:2px">📍 ' + b.lat.toFixed(5) + ', ' + b.lng.toFixed(5) + ' · ' + (b.radius||100) + 'm</div>' : '<div style="font-size:11px;color:#22d3ee;margin-top:2px">⚠️ Lokatsiya belgilanmagan</div>') +
       '</div>' +
       '<div style="display:flex;gap:6px;flex-shrink:0">' +
-        '<button onclick="openBranchModal(' + JSON.stringify(JSON.stringify(b)) + ')" style="padding:6px 12px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:#60a5fa;border-radius:7px;font-size:12px;cursor:pointer">✏️</button>' +
+        '<button onclick="openBranchModal(' + JSON.stringify(JSON.stringify(b)) + ')" style="padding:6px 12px;background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee;border-radius:7px;font-size:12px;cursor:pointer">✏️</button>' +
         '<button onclick="deleteBranch(\'' + b._id + '\')" style="padding:6px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;border-radius:7px;font-size:12px;cursor:pointer">🗑</button>' +
       '</div>' +
     '</div>';
@@ -1257,13 +1257,13 @@ async function renderBranches(main) {
     '<div class="fade-up">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">' +
         '<div style="font-size:18px;font-weight:700;color:#f1f5f9">🏢 Filiallar <span style="font-size:13px;color:#64748b;font-weight:400">(' + branches.length + ' ta)</span></div>' +
-        '<button onclick="openBranchModal(null)" style="padding:9px 18px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);border:none;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Filial qo\'shish</button>' +
+        '<button onclick="openBranchModal(null)" style="padding:9px 18px;background:linear-gradient(135deg,var(--sx-cyan, #06b6d4),#1d4ed8);border:none;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Filial qo\'shish</button>' +
       '</div>' +
       (branches.length ? '<div style="display:flex;flex-direction:column;gap:10px">' + cards + '</div>' :
         '<div style="text-align:center;padding:60px;color:#475569">' +
           '<div style="font-size:40px;margin-bottom:12px">🏢</div>' +
           '<div style="margin-bottom:16px">Hali filial qo\'shilmagan</div>' +
-          '<button onclick="openBranchModal(null)" style="padding:10px 24px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);border:none;color:#fff;border-radius:8px;cursor:pointer;font-size:14px">+ Birinchi filial qo\'shish</button>' +
+          '<button onclick="openBranchModal(null)" style="padding:10px 24px;background:linear-gradient(135deg,var(--sx-cyan, #06b6d4),#1d4ed8);border:none;color:#fff;border-radius:8px;cursor:pointer;font-size:14px">+ Birinchi filial qo\'shish</button>' +
         '</div>') +
     '</div>';
 }
@@ -1278,17 +1278,17 @@ function openBranchModal(branchJson) {
       empInp('bRadius',  'RADIUS (metr)',  'number', b ? (b.radius||100) : 100) +
       '<div>' +
         '<div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:1px;margin-bottom:8px">LOKATSIYA (kartadan tanlang)</div>' +
-        '<div id="branchMapEl" style="height:280px;border-radius:10px;border:1px solid rgba(99,179,237,0.2);overflow:hidden;background:#0f172a"></div>' +
+        '<div id="branchMapEl" style="height:280px;border-radius:10px;border:1px solid rgba(6,182,212,0.2);overflow:hidden;background:#0f172a"></div>' +
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">' +
           '<div><label style="font-size:10px;color:#64748b;letter-spacing:1px;display:block;margin-bottom:4px">KENGLIK (LAT)</label>' +
-            '<input id="bLat" type="number" step="0.000001" value="' + (b && b.lat ? b.lat : '') + '" style="width:100%;padding:8px;background:#0f172a;border:1px solid rgba(99,179,237,0.15);border-radius:7px;color:#f1f5f9;font-size:12px;box-sizing:border-box" oninput="updateMarkerFromInputs()"></div>' +
+            '<input id="bLat" type="number" step="0.000001" value="' + (b && b.lat ? b.lat : '') + '" style="width:100%;padding:8px;background:#0f172a;border:1px solid rgba(6,182,212,0.15);border-radius:7px;color:#f1f5f9;font-size:12px;box-sizing:border-box" oninput="updateMarkerFromInputs()"></div>' +
           '<div><label style="font-size:10px;color:#64748b;letter-spacing:1px;display:block;margin-bottom:4px">UZUNLIK (LNG)</label>' +
-            '<input id="bLng" type="number" step="0.000001" value="' + (b && b.lng ? b.lng : '') + '" style="width:100%;padding:8px;background:#0f172a;border:1px solid rgba(99,179,237,0.15);border-radius:7px;color:#f1f5f9;font-size:12px;box-sizing:border-box" oninput="updateMarkerFromInputs()"></div>' +
+            '<input id="bLng" type="number" step="0.000001" value="' + (b && b.lng ? b.lng : '') + '" style="width:100%;padding:8px;background:#0f172a;border:1px solid rgba(6,182,212,0.15);border-radius:7px;color:#f1f5f9;font-size:12px;box-sizing:border-box" oninput="updateMarkerFromInputs()"></div>' +
         '</div>' +
         '<button onclick="useMyLocation()" style="margin-top:8px;width:100%;padding:9px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);color:#4ade80;border-radius:8px;font-size:13px;cursor:pointer">📍 Mening joylashuvimni ishlatish</button>' +
       '</div>' +
       '<div id="bErr" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;padding:10px;border-radius:8px;font-size:13px"></div>' +
-      '<button onclick="saveBranch(\'' + (b ? b._id : '') + '\')" style="width:100%;padding:12px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);border:none;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">' + (b ? '💾 Saqlash' : '+ Qo\'shish') + '</button>' +
+      '<button onclick="saveBranch(\'' + (b ? b._id : '') + '\')" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--sx-cyan, #06b6d4),#1d4ed8);border:none;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">' + (b ? '💾 Saqlash' : '+ Qo\'shish') + '</button>' +
     '</div>';
 
   document.getElementById('branchModal').style.display = 'flex';

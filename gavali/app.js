@@ -227,7 +227,7 @@ function setLang(lang) {
   updateCart();
   updateProductButtons();
   renderProfile();
-  document.querySelectorAll(".lang-btn").forEach(btn => {
+  document.querySelectorAll(".lang-b").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.lang === lang);
   });
 }
@@ -629,7 +629,7 @@ function bookEvent() {
 
 document.addEventListener("DOMContentLoaded", () => {
   applyTranslations();
-  document.querySelectorAll(".lang-btn").forEach(btn => {
+  document.querySelectorAll(".lang-b").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.lang === currentLang);
   });
 

@@ -333,14 +333,18 @@ function registerBotHandlers(bot, restaurantId, webappUrl, chefId) {
   bot.onText(/\/start/, async (msg) => {
     try {
       if (await checkBlocked(msg.chat.id)) return;
+      const tgId = Number(msg.from.id);
       const u = await User.findOneAndUpdate(
-        { telegramId: msg.from.id, restaurantId },
-        { telegramId: msg.from.id, restaurantId, first_name: msg.from.first_name || "", last_name: msg.from.last_name || "", username: msg.from.username || "" },
+        { telegramId: tgId, restaurantId },
+        { telegramId: tgId, restaurantId,
+          first_name: msg.from.first_name || "",
+          last_name:  msg.from.last_name  || "",
+          username:   msg.from.username   || "" },
         { upsert: true, new: true }
       );
       if (!u.phone) {
-        await send(msg.chat.id, "Salom! Telefon raqamingizni yuboring:", {
-          reply_markup: { keyboard: [[{ text: "Telefon yuborish", request_contact: true }]], resize_keyboard: true, one_time_keyboard: true }
+        await send(msg.chat.id, "Salom " + (msg.from.first_name || "") + "! Telefon raqamingizni yuboring:", {
+          reply_markup: { keyboard: [[{ text: "📱 Telefon yuborish", request_contact: true }]], resize_keyboard: true, one_time_keyboard: true }
         });
       } else {
         await send(msg.chat.id, "Xush kelibsiz " + (msg.from.first_name || "") + "! Bo'lim tanlang:", { reply_markup: menu });
@@ -350,9 +354,16 @@ function registerBotHandlers(bot, restaurantId, webappUrl, chefId) {
 
   bot.on("contact", async (msg) => {
     try {
-      await User.findOneAndUpdate({ telegramId: msg.from.id, restaurantId }, { phone: msg.contact.phone_number });
-      await send(msg.chat.id, "Saqlandi! Bo'lim tanlang:", { reply_markup: menu });
-    } catch(e) {}
+      const tgId = Number(msg.from.id);
+      // Telefon raqamini saqlash
+      const phone = msg.contact.phone_number;
+      await User.findOneAndUpdate(
+        { telegramId: tgId, restaurantId },
+        { phone: phone },
+        { upsert: true }
+      );
+      await send(msg.chat.id, "✅ Telefon saqlandi! Bo'lim tanlang:", { reply_markup: menu });
+    } catch(e) { console.error("contact:", e.message); }
   });
 
   bot.onText(/Buyurtmalarim/, async (msg) => {

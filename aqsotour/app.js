@@ -267,6 +267,9 @@ function setLang(lang) {
       '</div>';
     }).join('');
   }
+
+  // Lucide ikonlarni qayta ishga tushirish
+  if (window.lucide) lucide.createIcons();
 }
 
 function applyTranslations() {
@@ -410,17 +413,19 @@ function renderProducts(list) {
   if (!container) return;
   container.innerHTML = "";
   if (!list || !list.length) {
-    container.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="icon">🍽</div><p>' + t("product.notfound") + '</p></div>';
+    container.innerHTML = '<div class="col-span-2 text-center py-12 text-gray-500"><span class="text-3xl block mb-3 opacity-50">✈️</span><span class="text-sm">' + t("product.notfound") + '</span></div>';
     return;
   }
   list.forEach((p, i) => {
     const card = document.createElement("div");
-    card.className = "product-card";
+    card.className = "product-card fade-up";
     card.style.animationDelay = (i * 60) + "ms";
     const displayName = (currentLang === "ru" && p.name_ru) ? p.name_ru : p.name;
     card.innerHTML =
-      '<img src="' + p.image + '" alt="' + displayName + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
-      '<div class="img-placeholder" style="display:none">🍽</div>' +
+      '<div class="product-img-wrap">' +
+        '<img src="' + p.image + '" alt="' + displayName + '" onerror="this.style.display=\'none\';this.parentElement.nextElementSibling.style.display=\'flex\'">' +
+      '</div>' +
+      '<div class="img-placeholder" style="display:none">✈️</div>' +
       '<div class="product-info">' +
         '<h3>' + displayName + '</h3>' +
         '<div class="cat">' + p.category + '</div>' +

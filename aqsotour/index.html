@@ -67,6 +67,7 @@
   }
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
     body { background:#0a0e27; }
@@ -106,7 +107,6 @@
 <header id="hero" class="pt-24 pb-8 px-6 text-left">
   <h1 class="text-[clamp(30px,8vw,44px)] font-extrabold leading-tight text-white mb-2" data-i18n="hero.subtitle">Biz bilan sayohatingizni mukammal rejalashtiring!</h1>
   <span class="text-[clamp(34px,10vw,52px)] font-extrabold text-ared block mb-5">AqsoTour</span>
-  <p class="text-sm text-gray-400 leading-relaxed mb-8"  data-i18n-html="true">Unutilmas sarguzashtlarga boradigan joyingiz - AqsoTourga xush kelibsiz! Turli yo'nalishlarni o'rganing, muammosiz rejalashtiring va umr bo'yi sayohatga chiqing.</p>
   <div class="flex justify-center mt-4">
     <img src="https://start-up-blond.vercel.app/Aqso.png" alt="AqsoTour Logo" class="w-52 h-52 object-contain"/>
   </div>
@@ -141,7 +141,6 @@
     <h2 class="text-[clamp(22px,6vw,32px)] font-extrabold text-ared leading-tight" data-i18n="gallery.title">Bizning Galleriyamiz</h2>
     <div class="w-12 h-[3px] bg-ared rounded mt-3"></div>
   </div>
-  <p class="text-sm text-gray-400 text-center px-5 pb-4 leading-relaxed">"Galereyamizda sayohat mo'jizalarini oching, Aqso Tour sarguzashtlaridan lavha."</p>
   <div class="grid grid-cols-2 gap-2 px-4 pb-12" id="galleryGrid"></div>
 </section>
 
@@ -161,9 +160,18 @@
     <div class="w-12 h-[3px] bg-ared rounded mt-3"></div>
   </div>
   <div class="mx-4 mb-12 rounded-2xl border border-white/10 bg-navy2 p-6">
-    <div class="flex items-start gap-3 py-3 border-b border-white/5"><span class="text-base mt-0.5">📍</span><div><div class="text-[10px] tracking-widest uppercase text-ared font-semibold mb-1">Manzil</div><div class="text-sm text-gray-200" data-i18n="location.addr.val"></div></div></div>
-    <div class="flex items-start gap-3 py-3 border-b border-white/5"><span class="text-base mt-0.5">📞</span><div><div class="text-[10px] tracking-widest uppercase text-ared font-semibold mb-1">Telefon</div><div class="text-sm text-gray-200" id="phoneLink"></div></div></div>
-    <div class="flex items-start gap-3 py-3"><span class="text-base mt-0.5">✉️</span><div><div class="text-[10px] tracking-widest uppercase text-ared font-semibold mb-1">Email</div><div class="text-sm text-gray-200" id="emailLink"></div></div></div>
+    <div class="flex items-center gap-3 py-3 border-b border-white/5">
+      <i data-lucide="map-pin" class="w-[18px] h-[18px] text-ared shrink-0"></i>
+      <a href="http://aqso-tour-visitka.vercel.app" target="_blank" class="text-sm text-gray-200 no-underline hover:text-ared2 transition-colors">Andijon, O'zbekiston</a>
+    </div>
+    <div class="flex items-center gap-3 py-3 border-b border-white/5">
+      <i data-lucide="phone" class="w-[18px] h-[18px] text-ared shrink-0"></i>
+      <a href="tel:+998770074909" class="text-sm text-gray-200 no-underline hover:text-ared2 transition-colors">+998 (77) 007-49-09</a>
+    </div>
+    <div class="flex items-center gap-3 py-3">
+      <i data-lucide="mail" class="w-[18px] h-[18px] text-ared shrink-0"></i>
+      <a href="mailto:aqsotourtraveling@gmail.com" class="text-sm text-gray-200 no-underline hover:text-ared2 transition-colors">aqsotourtraveling@gmail.com</a>
+    </div>
   </div>
 </section>
 
@@ -173,10 +181,15 @@
     <img src="https://start-up-blond.vercel.app/AqsoLogo.png" alt="AqsoTour" class="h-10 object-contain"/>
   </div>
   <p class="text-sm text-gray-400 leading-relaxed mb-5">Aqso Tour – sizning orzudagi sayohatlaringizni amalga oshirish uchun ishonchli hamkoringiz. Eng yaxshi yo'nalishlar, qulay narxlar va unutilmas tajribalar sizni kutmoqda!</p>
-  <div class="flex gap-2.5 mb-7" id="footerSocial"></div>
+  
+  <div class="flex gap-3 mb-7">
+    <a href="https://instagram.com/" target="_blank" class="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-gray-400 no-underline transition-all hover:border-ared hover:text-ared"><i data-lucide="instagram" class="w-4 h-4"></i></a>
+    <a href="https://youtube.com/" target="_blank" class="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-gray-400 no-underline transition-all hover:border-ared hover:text-ared"><i data-lucide="youtube" class="w-4 h-4"></i></a>
+    <a href="https://t.me/AqsoTour" target="_blank" class="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-gray-400 no-underline transition-all hover:border-ared hover:text-ared"><i data-lucide="send" class="w-4 h-4"></i></a>
+  </div>
 
   <div class="text-sm font-bold text-white mb-3">Tezkor havola</div>
-  <ul class="mb-7 space-y-2.5">
+  <ul class="mb-7 space-y-2.5 list-none p-0">
     <li><button onclick="scrollToSec('hero')" class="text-sm text-gray-400 hover:text-ared2 transition-colors bg-transparent border-none cursor-pointer font-sans">Bosh sahifa</button></li>
     <li><button onclick="scrollToSec('menu')" class="text-sm text-gray-400 hover:text-ared2 transition-colors bg-transparent border-none cursor-pointer font-sans">Xizmatlar</button></li>
     <li><button onclick="scrollToSec('faq')" class="text-sm text-gray-400 hover:text-ared2 transition-colors bg-transparent border-none cursor-pointer font-sans">FAQ</button></li>
@@ -184,9 +197,11 @@
   </ul>
 
   <div class="text-sm font-bold text-white mb-3">Biz bilan bog'laning</div>
-  <div class="flex items-center gap-2.5 mb-2.5 text-sm text-gray-400"><span>📍</span> Andijon, O'zbekiston</div>
-  <div class="flex items-center gap-2.5 mb-2.5 text-sm text-gray-400"><span>📞</span> <a href="tel:+998770074909" class="text-gray-400 no-underline hover:text-ared2">+998 (77) 007-49-09</a></div>
-  <div class="flex items-center gap-2.5 mb-2.5 text-sm text-gray-400"><span>✉️</span> aqsotourtraveling@gmail.com</div>
+  <ul class="space-y-2.5 list-none p-0 mb-6">
+    <li class="flex items-center gap-2.5 text-sm text-gray-400"><i data-lucide="map-pin" class="w-4 h-4 shrink-0"></i> <a href="http://aqso-tour-visitka.vercel.app" target="_blank" class="text-gray-400 no-underline hover:text-ared2 transition-colors">Andijon, O'zbekiston</a></li>
+    <li class="flex items-center gap-2.5 text-sm text-gray-400"><i data-lucide="phone" class="w-4 h-4 shrink-0"></i> <a href="tel:+998770074909" class="text-gray-400 no-underline hover:text-ared2 transition-colors">+998 (77) 007-49-09</a></li>
+    <li class="flex items-center gap-2.5 text-sm text-gray-400"><i data-lucide="mail" class="w-4 h-4 shrink-0"></i> <a href="mailto:aqsotourtraveling@gmail.com" class="text-gray-400 no-underline hover:text-ared2 transition-colors">aqsotourtraveling@gmail.com</a></li>
+  </ul>
 
   <div class="text-center text-[11px] text-gray-500 border-t border-white/5 pt-5 mt-5">
     © 2026 Aqso Tour. Barcha huquqlar himoyalangan.
@@ -307,14 +322,14 @@
   if (fs) {
     var socClass = 'w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-gray-400 no-underline text-sm transition-all hover:border-ared hover:text-ared';
     fs.innerHTML =
-      '<a href="https://instagram.com/aqsotour" className="hover:text-purple-400 transition" target="_blank" class="' + socClass + '">Instagram size={25} /></a>' +
-      '<a href="https://youtube.com/@aqsotourtraveling?si=DhMofHV2bvC6nL6K" className="hover:text-red-500 transition" target="_blank" class="' + socClass + '"><Youtube size={25} /></a>' +
-      '<a href="https://t.me/@tourism_admin1' + (cfg.ADMIN_TG||'') + '" className="hover:text-sky-400 transition" target="_blank" class="' + socClass + '"><Send size={25} /></a>';
+      '<a href="https://instagram.com/" target="_blank" class="' + socClass + '">📷</a>' +
+      '<a href="https://youtube.com/" target="_blank" class="' + socClass + '">▶️</a>' +
+      '<a href="https://t.me/' + (cfg.ADMIN_TG||'') + '" target="_blank" class="' + socClass + '">✈️</a>';
   }
 
   // TG
   var tb = document.getElementById('tgBotLink');
-  if (tb) tb.href = 'https://t.me/@tourism_admin1' + (cfg.BOT_USERNAME || '');
+  if (tb) tb.href = 'https://t.me/' + (cfg.BOT_USERNAME || '');
 
   // Set active lang button
   document.querySelectorAll('.lang-b').forEach(function(btn) {
@@ -364,7 +379,15 @@ document.getElementById('lightbox').addEventListener('click', function(e) {
   if (e.target === this) closeLightbox();
 });
 </script>
-<script src="https://unpkg.com/lucide@latest"></script>
+
 <script src="app.js"></script>
+<script>
+  // Lucide ikonlarni ishga tushirish
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.lucide) lucide.createIcons();
+  });
+  // app.js yuklangandan keyin ham qayta ishga tushirish
+  setTimeout(function() { if (window.lucide) lucide.createIcons(); }, 500);
+</script>
 </body>
 </html>

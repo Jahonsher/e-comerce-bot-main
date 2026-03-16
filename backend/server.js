@@ -1237,7 +1237,19 @@ app.get("/employee/stats", empMiddleware, async (req, res) => {
 // ===================================================
 // ===== SERVER START ================================
 // ===================================================
-process.on("SIGTERM", () => console.log("SIGTERM - server ishlashda davom etadi"));
+// Railway SIGTERM yuboradi — graceful shutdown qilamiz
+process.on("SIGTERM", () => {
+  console.log("SIGTERM qabul qilindi — server to'xtamoqda...");
+  // Barcha botlarning webhooklarini tozalab, keyin chiqamiz
+  Promise.all(Object.keys(bots).map(async (rId) => {
+    try { await bots[rId].deleteWebHook(); } catch(e) {}
+  })).then(() => {
+    console.log("✅ Webhooklar tozalandi. Server to'xtadi.");
+    process.exit(0);
+  }).catch(() => process.exit(0));
+  // 5 sekunddan keyin majburan chiqish
+  setTimeout(() => process.exit(0), 5000);
+});
 process.on("SIGINT",  () => process.exit(0));
 process.on("uncaughtException",  e => console.error("uncaught:", e.message));
 process.on("unhandledRejection", e => console.error("unhandled:", e));

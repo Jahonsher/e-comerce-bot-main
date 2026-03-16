@@ -227,9 +227,46 @@ function setLang(lang) {
   updateCart();
   updateProductButtons();
   renderProfile();
+
+  // Til tugmalarini yangilash (Tailwind class bilan)
   document.querySelectorAll(".lang-b").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.lang === lang);
+    const isActive = btn.dataset.lang === lang;
+    btn.classList.toggle("active", isActive);
+    btn.classList.toggle("!bg-ared", isActive);
+    btn.classList.toggle("!text-white", isActive);
+    if (!isActive) {
+      btn.classList.remove("!bg-ared", "!text-white");
+    }
   });
+
+  // Services cardlarni qayta render qilish
+  var cfg = window.__CONFIG__ || {};
+  var sg = document.getElementById('servicesGrid');
+  if (sg && cfg.SERVICES) {
+    sg.innerHTML = cfg.SERVICES.map(function(s) {
+      return '<div class="bg-white rounded-2xl p-6 mb-3.5 transition-transform hover:-translate-y-1">' +
+        '<div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4 text-2xl">' + s.icon + '</div>' +
+        '<div class="text-base font-bold text-gray-900 mb-2">' + (lang==='ru' ? s.title_ru : s.title_uz) + '</div>' +
+        '<div class="text-sm text-gray-500 leading-relaxed">' + (lang==='ru' ? s.desc_ru : s.desc_uz) + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  // FAQ qayta render qilish
+  var fl = document.getElementById('faqList');
+  if (fl && cfg.FAQ) {
+    fl.innerHTML = cfg.FAQ.map(function(f, i) {
+      return '<div class="faq-item bg-white rounded-xl mb-2.5 overflow-hidden" id="faq-'+i+'">' +
+        '<div class="faq-q flex items-center justify-between px-5 py-4 cursor-pointer" onclick="toggleFaq('+i+')">' +
+          '<span class="text-sm font-medium text-gray-900">' + (lang==='ru' ? f.q_ru : f.q_uz) + '</span>' +
+          '<span class="faq-plus text-xl text-gray-400 transition-transform ml-3 shrink-0 font-light">+</span>' +
+        '</div>' +
+        '<div class="faq-a">' +
+          '<div class="text-sm text-gray-500 leading-relaxed px-5 pb-4 border-t border-gray-100 pt-3">' + (lang==='ru' ? f.a_ru : f.a_uz) + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
 }
 
 function applyTranslations() {

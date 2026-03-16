@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AqsoTour — Sayohatingizni rejalashtiring</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a0e27'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='18' fill='%23e53935'%3E✈%3C/text%3E%3C/svg%3E"/>
+
+<script>
+  window.__CONFIG__ = {
+    API_URL:       "https://e-comerce-bot-main-production.up.railway.app",
+    RESTAURANT_ID: "aqsotour",
+    BOT_USERNAME:  "AqsoTour_bot",
+    ADMIN_TG:      "AqsoTour",
+    PHONE:         "+998 (77) 007-49-09",
+    EMAIL:         "aqsotourtraveling@gmail.com",
+    ADDRESS_UZ:    "Andijon, O'zbekiston",
+    ADDRESS_RU:    "Андижан, Узбекистан",
+    WORK_HOURS_UZ: "Du–Ju: 09:00–18:00  |  Sh: 09:00–15:00",
+    WORK_HOURS_RU: "Пн–Пт: 09:00–18:00  |  Сб: 09:00–15:00",
+    REST_NAME_UZ:  "AqsoTour",
+    REST_NAME_RU:  "AqsoTour",
+    HERO_BADGE_UZ: "Sayohat Agentligi",
+    HERO_BADGE_RU: "Туристическое Агентство",
+    SUBTITLE_UZ:   "Biz bilan sayohatingizni mukammal rejalashtiring!",
+    SUBTITLE_RU:   "Планируйте идеальное путешествие с нами!",
+    WORK_START:    9,
+    WORK_END:      18,
+    GALLERY: [
+      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=85",
+      "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=85",
+      "https://images.unsplash.com/photo-1530789253388-582c481c54b0?w=800&q=85",
+      "https://images.unsplash.com/photo-1528164344705-47542687000d?w=800&q=85",
+      "https://images.unsplash.com/photo-1548013146-72479768bada?w=800&q=85",
+      "https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?w=800&q=85"
+    ],
+    SERVICES: [
+      { icon: "🚌", title_uz: "Sarguzashtli sayohatlar", title_ru: "Приключенческие туры", desc_uz: "Bizning sarguzashtli sayohatlarimiz bilan hayajonli joylarni o'rganing.", desc_ru: "Исследуйте захватывающие места с нашими приключенческими турами." },
+      { icon: "✈️", title_uz: "Sayohatni rejalashtirish", title_ru: "Планирование поездок", desc_uz: "Keling, tafsilotlarni hal qilaylik! Biz rejalashtiramiz, siz orzu qilgan dam olishni yoqtirasiz.", desc_ru: "Давайте уладим детали! Мы планируем, вы наслаждаетесь отдыхом мечты." },
+      { icon: "🏨", title_uz: "Yuqori sifatli turar joy", title_ru: "Качественное проживание", desc_uz: "Bizning sinchkovlik bilan tanlangan turar joyimiz bilan qulaylik va hashamatni his eting.", desc_ru: "Ощутите комфорт и роскошь с нашим тщательно подобранным проживанием." },
+      { icon: "📋", title_uz: "Visa xizmatlari", title_ru: "Визовые услуги", desc_uz: "Visa olishda to'liq yordam beramiz — tez va ishonchli.", desc_ru: "Полная помощь в получении визы — быстро и надёжно." }
+    ],
+    FAQ: [
+      {
+        q_uz: "AqsoTour bilan sayohatni qanday bron qilishim mumkin?",
+        q_ru: "Как забронировать путешествие с AqsoTour?",
+        a_uz: "AqsoTour bilan orzuingizdagi sayohatni bron qilish oson! Shunchaki bizning veb-saytimizga tashrif buyuring, qiziqarli yo'nalishlarimizni ko'rib chiqing, o'zingiz yoqtirgan paketni tanlang va joyingizni himoya qilish uchun oson qadamlarni bajaring.",
+        a_ru: "Забронировать путешествие с AqsoTour легко! Посетите наш сайт, выберите пакет и следуйте простым шагам."
+      },
+      {
+        q_uz: "AqsoTour qanday sayohat tajribasini taklif qiladi?",
+        q_ru: "Какой опыт путешествий предлагает AqsoTour?",
+        a_uz: "AqsoTour sayohat imtiyozlarining keng doirasini taqdim etadi. Siz sarguzashtli dam olishni, madaniy dam olishni yoki dam olishni xohlaysizmi, bizda har qanday didga mos keladigan turli xil paketlar mavjud.",
+        a_ru: "AqsoTour предлагает широкий спектр путешествий — приключения, культурный отдых, релаксация."
+      },
+      {
+        q_uz: "AqsoTour turlari yakka sayohatchilar uchun mos keladimi?",
+        q_ru: "Подходят ли туры для одиноких путешественников?",
+        a_uz: "Mutlaqo! Ko'pgina turlarimiz yolg'iz sayohatchilarni qabul qilish uchun mo'ljallangan. Hamfikr tadqiqotchilar guruhiga qo'shiling, yangi do'stlar orttiring va birgalikda unutilmas sayohatlarga chiqing.",
+        a_ru: "Абсолютно! Многие наши туры предназначены для индивидуальных путешественников."
+      },
+      {
+        q_uz: "AqsoTour bilan sayohat marshrutimni qanday sozlashim mumkin?",
+        q_ru: "Как настроить маршрут путешествия?",
+        a_uz: "AqsoTourda biz har bir sayohatchi noyob ekanligini tushunamiz. Marshrutingizni moslashtirish uchun shaxsiylashtirish guruhimizga murojaat qiling.",
+        a_ru: "Мы понимаем, что каждый путешественник уникален. Свяжитесь с нами для персонализации маршрута."
+      },
+      {
+        q_uz: "AqsoTour qanday xavfsizlik choralarini ko'radi?",
+        q_ru: "Какие меры безопасности принимает AqsoTour?",
+        a_uz: "Sizning xavfsizligingiz bizning ustuvor vazifamizdir. AqsoTour qat'iy xavfsizlik standartlariga amal qiladi va ishonchli hamkorlar bilan hamkorlik qiladi.",
+        a_ru: "Ваша безопасность — наш приоритет. AqsoTour соблюдает строгие стандарты безопасности."
+      }
+    ]
+  };
+</script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --navy:    #0a0e27;
+      --navy2:   #101538;
+      --navy3:   #181d45;
+      --card:    #101538;
+      --red:     #e53935;
+      --red2:    #ff5252;
+      --gold:    #c8a84e;
+      --white:   #ffffff;
+      --cream:   #f0ece4;
+      --border:  rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.05);
+      --text:    #e8e4dc;
+      --muted:   #8a8ea0;
+      --tg-bg:   #0a0e27;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body {
+      background:var(--navy);
+      color:var(--text);
+      font-family:'Inter', sans-serif;
+      font-weight:400;
+      overflow-x:hidden;
+    }
+
+    ::-webkit-scrollbar { width:3px; }
+    ::-webkit-scrollbar-track { background:var(--navy); }
+    ::-webkit-scrollbar-thumb { background:var(--red); border-radius:2px; }
+
+    /* ===== TOPBAR ===== */
+    #topbar {
+      position:fixed; top:0; left:0; right:0; z-index:40;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 16px;
+      background:var(--navy);
+      border-bottom:1px solid var(--border2);
+      transition:all .3s;
+    }
+    #topbar.scrolled {
+      background:rgba(10,14,39,0.95);
+      backdrop-filter:blur(20px);
+      box-shadow:0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .logo { display:flex; align-items:center; gap:4px; }
+    .logo-text {
+      font-size:20px; font-weight:700; color:var(--white);
+    }
+    .logo-text b { color:var(--red); }
+    .logo-plane { font-size:20px; margin-left:2px; }
+
+    .nav-actions { display:flex; gap:6px; align-items:center; }
+    .lang-sw {
+      display:flex; gap:1px;
+      background:rgba(255,255,255,0.05);
+      border:1px solid var(--border);
+      border-radius:6px; padding:2px;
+    }
+    .lang-b {
+      font-family:'Inter', sans-serif;
+      font-size:10px; font-weight:600;
+      letter-spacing:1px; text-transform:uppercase;
+      padding:5px 10px; border-radius:4px;
+      border:none; cursor:pointer;
+      transition:all .2s;
+      color:var(--muted); background:transparent;
+    }
+    .lang-b.active { background:var(--red); color:var(--white); }
+
+    .icon-b {
+      width:36px; height:36px; border-radius:8px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,0.03);
+      color:var(--white); font-size:15px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; transition:all .2s; position:relative;
+    }
+    .icon-b:hover { background:rgba(229,57,53,0.15); border-color:var(--red); }
+    .cart-badge {
+      position:absolute; top:-5px; right:-5px;
+      background:var(--red); color:var(--white);
+      font-size:9px; font-weight:700;
+      width:17px; height:17px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+    }
+
+    /* ===== HERO ===== */
+    #hero {
+      padding:100px 24px 50px;
+      text-align:left; position:relative;
+    }
+    .hero-title {
+      font-size:clamp(32px,9vw,48px);
+      font-weight:800; line-height:1.1;
+      color:var(--white);
+      margin-bottom:8px;
+    }
+    .hero-brand {
+      font-size:clamp(36px,10vw,56px);
+      font-weight:800; color:var(--red);
+      display:block; margin-bottom:20px;
+    }
+    .hero-desc {
+      font-size:14px; color:var(--muted);
+      line-height:1.8; margin-bottom:32px;
+    }
+    .hero-logo-wrap {
+      display:flex; justify-content:center;
+      margin-top:20px;
+    }
+    .hero-logo-circle {
+      width:200px; height:200px; border-radius:50%;
+      background:radial-gradient(circle, rgba(200,168,78,0.15) 0%, rgba(10,14,39,0.8) 70%);
+      border:3px solid var(--gold);
+      display:flex; align-items:center; justify-content:center;
+      flex-direction:column;
+    }
+    .hero-logo-circle .hl-icon { font-size:48px; margin-bottom:4px; }
+    .hero-logo-circle .hl-text {
+      font-size:16px; font-weight:800; letter-spacing:4px;
+      color:var(--gold); text-transform:uppercase;
+    }
+
+    /* ===== SECTION HEADER ===== */
+    .sec-hd { padding:48px 20px 20px; }
+    .sec-ttl {
+      font-size:clamp(24px,7vw,36px);
+      font-weight:800; color:var(--red); line-height:1.2;
+    }
+    .sec-line {
+      width:50px; height:3px; background:var(--red);
+      border-radius:2px; margin-top:12px;
+    }
+
+    /* ===== SERVICE CARDS (white bg like website) ===== */
+    .services-sec { padding:0 16px 48px; }
+    .service-card {
+      background:var(--white);
+      border-radius:16px;
+      padding:28px 22px;
+      margin-bottom:14px;
+      transition:transform .3s;
+    }
+    .service-card:hover { transform:translateY(-3px); }
+    .service-icon-wrap {
+      width:52px; height:52px; border-radius:50%;
+      background:rgba(229,57,53,0.1);
+      display:flex; align-items:center; justify-content:center;
+      margin-bottom:16px;
+    }
+    .service-icon-wrap .si-emoji { font-size:24px; }
+    .service-ttl {
+      font-size:17px; font-weight:700; color:#1a1a2e;
+      margin-bottom:8px;
+    }
+    .service-txt { font-size:13px; color:#666; line-height:1.7; }
+
+    /* ===== FILTER ===== */
+    .filter-wrap {
+      display:flex; gap:6px;
+      padding:16px 16px;
+      flex-wrap:wrap;
+    }
+    .tab-btn {
+      font-family:'Inter', sans-serif;
+      font-size:11px; font-weight:600;
+      padding:8px 18px; border-radius:20px;
+      cursor:pointer;
+      border:1px solid var(--border);
+      color:var(--muted); background:transparent;
+      transition:all .25s;
+    }
+    .tab-btn.active,.tab-btn:hover {
+      background:var(--red);
+      color:var(--white);
+      border-color:var(--red);
+    }
+
+    /* ===== PRODUCT GRID ===== */
+    .product-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(160px,1fr));
+      gap:12px; padding:8px 16px 48px;
+    }
+    .product-card {
+      background:var(--card);
+      border:1px solid var(--border2);
+      border-radius:14px; overflow:hidden;
+      transition:all .3s;
+      animation:fadeUp .5s ease both;
+    }
+    .product-card:hover {
+      border-color:rgba(229,57,53,0.3);
+      transform:translateY(-4px);
+      box-shadow:0 16px 32px rgba(0,0,0,0.3);
+    }
+    .product-img-wrap { position:relative; overflow:hidden; height:150px; }
+    .product-img-wrap img {
+      width:100%; height:100%; object-fit:cover; display:block;
+      transition:transform .5s ease;
+    }
+    .product-card:hover .product-img-wrap img { transform:scale(1.06); }
+    .product-img-wrap::after {
+      content:''; position:absolute; inset:0;
+      background:linear-gradient(to top, rgba(10,14,39,0.5) 0%, transparent 50%);
+    }
+    .img-placeholder {
+      width:100%; height:150px;
+      background:linear-gradient(135deg, var(--navy3), var(--card));
+      display:flex; align-items:center; justify-content:center;
+      font-size:36px;
+    }
+    .product-info { padding:14px; }
+    .product-info h3 {
+      font-size:14px; font-weight:600;
+      margin-bottom:4px; color:var(--white);
+    }
+    .product-info .cat {
+      font-size:10px; letter-spacing:1px;
+      text-transform:uppercase; color:var(--muted);
+      margin-bottom:8px;
+    }
+    .product-info .price {
+      font-size:16px; font-weight:700; color:var(--red);
+      display:block; margin-bottom:10px;
+    }
+    .add-btn {
+      width:100%; padding:9px;
+      background:var(--red);
+      border:none;
+      color:var(--white);
+      font-family:'Inter', sans-serif;
+      font-size:10px; font-weight:600;
+      letter-spacing:1px; text-transform:uppercase;
+      border-radius:8px; cursor:pointer;
+      transition:all .3s;
+    }
+    .add-btn:hover { background:var(--red2); }
+
+    /* ===== GALLERY ===== */
+    .gallery-sec { padding-bottom:48px; }
+    .gallery-subtitle {
+      font-size:14px; color:var(--muted);
+      text-align:center; padding:0 20px 16px;
+      line-height:1.7;
+    }
+    .gallery-grid {
+      display:grid; grid-template-columns:repeat(2,1fr);
+      gap:8px; padding:0 16px;
+    }
+    .gallery-item {
+      border-radius:12px; overflow:hidden; cursor:pointer; position:relative;
+    }
+    .gallery-item:first-child { grid-row:span 2; }
+    .gallery-item img {
+      width:100%; height:100%; object-fit:cover; display:block;
+      transition:transform .5s ease;
+    }
+    .gallery-item:hover img { transform:scale(1.08); }
+
+    /* ===== FAQ ===== */
+    .faq-sec { padding:0 16px 48px; }
+    .faq-item {
+      background:var(--white);
+      border-radius:12px; margin-bottom:10px;
+      overflow:hidden;
+    }
+    .faq-q {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:18px 20px; cursor:pointer;
+      font-size:14px; font-weight:500; color:#1a1a2e;
+    }
+    .faq-plus {
+      font-size:20px; color:var(--muted);
+      transition:transform .3s; flex-shrink:0; margin-left:12px;
+      font-weight:300;
+    }
+    .faq-item.open .faq-plus { transform:rotate(45deg); color:var(--red); }
+    .faq-a {
+      max-height:0; overflow:hidden;
+      transition:max-height .4s ease;
+    }
+    .faq-item.open .faq-a { max-height:300px; }
+    .faq-a-text {
+      font-size:13px; color:#666;
+      line-height:1.8;
+      padding:0 20px 18px;
+      border-top:1px solid #eee;
+      margin-top:0; padding-top:14px;
+    }
+
+    /* ===== LOCATION ===== */
+    .loc-sec { padding-bottom:48px; }
+    .location-card {
+      margin:0 16px; border-radius:14px;
+      border:1px solid var(--border); background:var(--card);
+      padding:24px;
+    }
+    .loc-row {
+      display:flex; align-items:flex-start; gap:14px;
+      padding:12px 0; border-bottom:1px solid var(--border2);
+    }
+    .loc-row:last-child { border-bottom:none; }
+    .loc-icon { font-size:16px; margin-top:2px; flex-shrink:0; }
+    .loc-lbl { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--red); margin-bottom:4px; font-weight:600; }
+    .loc-val { font-size:13px; color:var(--text); line-height:1.5; }
+    .loc-val a { color:var(--red2); text-decoration:none; }
+
+    /* ===== LIGHTBOX ===== */
+    .lightbox {
+      position:fixed; inset:0; z-index:200;
+      background:rgba(5,5,15,0.97);
+      display:none; align-items:center; justify-content:center; padding:20px;
+    }
+    .lightbox.open { display:flex; }
+    .lightbox img { max-width:100%; max-height:88vh; border-radius:8px; }
+    .lb-close {
+      position:absolute; top:18px; right:18px;
+      background:rgba(255,255,255,0.1); border:none;
+      color:var(--white); width:40px; height:40px; border-radius:50%;
+      font-size:16px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .lb-prev,.lb-next {
+      position:absolute; top:50%; transform:translateY(-50%);
+      background:rgba(255,255,255,0.1); border:none;
+      color:var(--white); width:44px; height:44px; border-radius:50%;
+      font-size:16px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .lb-prev { left:12px; } .lb-next { right:12px; }
+    .lb-prev:hover,.lb-next:hover { background:rgba(229,57,53,0.3); }
+
+    /* ===== PANELS ===== */
+    .panel {
+      position:fixed; top:0; right:0; height:100%;
+      width:min(360px,100vw);
+      background:var(--navy2);
+      border-left:1px solid var(--border);
+      z-index:50;
+      transform:translateX(100%);
+      transition:transform .35s cubic-bezier(.4,0,.2,1);
+      overflow-y:auto; display:flex; flex-direction:column;
+    }
+    .panel.open { transform:translateX(0); }
+    .panel-hd {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:20px 24px;
+      border-bottom:1px solid var(--border);
+      position:sticky; top:0; background:var(--navy2); z-index:2;
+    }
+    .panel-ttl { font-size:18px; font-weight:700; color:var(--white); }
+    .close-btn {
+      background:transparent; border:1px solid var(--border);
+      color:var(--muted); width:32px; height:32px; border-radius:8px;
+      cursor:pointer; font-size:13px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .close-btn:hover { color:var(--white); border-color:var(--red); }
+
+    .cart-item {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:16px 24px; border-bottom:1px solid var(--border2);
+    }
+    .cart-item-name { font-size:14px; margin-bottom:3px; font-weight:500; }
+    .cart-item-price { font-size:15px; color:var(--red); font-weight:700; }
+    .qty-controls { display:flex; align-items:center; gap:10px; }
+    .qty-btn {
+      width:28px; height:28px; border-radius:6px;
+      border:1px solid var(--border); background:transparent;
+      color:var(--white); font-size:15px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+    }
+    .qty-btn:hover { background:rgba(229,57,53,0.2); border-color:var(--red); }
+    .qty-num { font-size:14px; min-width:20px; text-align:center; }
+
+    .cart-ft {
+      margin-top:auto; padding:20px 24px;
+      border-top:1px solid var(--border);
+      position:sticky; bottom:0; background:var(--navy2);
+    }
+    .cart-total-row {
+      display:flex; justify-content:space-between;
+      font-size:18px; font-weight:700; margin-bottom:14px;
+    }
+    .cart-total-row span:last-child { color:var(--red); }
+
+    .order-type-row { display:flex; gap:8px; margin-bottom:12px; }
+    .otype-btn {
+      flex:1; padding:10px; border-radius:8px;
+      border:1px solid var(--border); background:transparent;
+      color:var(--muted); font-family:'Inter', sans-serif;
+      font-size:10px; font-weight:600; letter-spacing:1px; text-transform:uppercase;
+      cursor:pointer; transition:all .2s;
+    }
+    .otype-btn.active { background:var(--red); border-color:var(--red); color:var(--white); }
+
+    .tbl-input {
+      width:100%; padding:10px 14px; background:var(--navy);
+      border:1px solid var(--border); border-radius:8px;
+      color:var(--text); font-family:'Inter', sans-serif;
+      font-size:13px; outline:none; margin-bottom:12px;
+    }
+    .tbl-input:focus { border-color:var(--red); }
+
+    .checkout-btn {
+      width:100%; padding:14px; background:var(--red); color:var(--white);
+      font-family:'Inter', sans-serif; font-weight:700;
+      font-size:12px; letter-spacing:2px; text-transform:uppercase;
+      border:none; border-radius:10px; cursor:pointer;
+    }
+    .checkout-btn:hover { background:var(--red2); }
+    .checkout-btn:disabled { opacity:.4; cursor:not-allowed; }
+
+    .profile-card {
+      margin:20px 24px; padding:22px; background:var(--navy);
+      border:1px solid var(--border); border-radius:14px;
+    }
+    .profile-avatar {
+      width:50px; height:50px; border-radius:50%;
+      background:linear-gradient(135deg, var(--navy3), var(--red));
+      display:flex; align-items:center; justify-content:center;
+      font-size:20px; margin-bottom:14px;
+    }
+    .profile-name { font-size:16px; font-weight:700; margin-bottom:4px; }
+    .profile-username { font-size:12px; color:var(--muted); margin-bottom:6px; }
+    .profile-phone { font-size:12px; color:var(--red2); }
+
+    .order-card {
+      margin:0 24px 12px; padding:16px; background:var(--navy);
+      border:1px solid var(--border2); border-radius:12px;
+    }
+    .order-items { font-size:12px; margin-bottom:6px; line-height:1.6; color:var(--muted); }
+    .order-total { font-size:16px; color:var(--red); font-weight:700; margin-bottom:5px; }
+    .order-status {
+      display:inline-block; font-size:9px; letter-spacing:1.5px; text-transform:uppercase;
+      padding:3px 10px; border:1px solid var(--red); color:var(--red); border-radius:6px; margin-bottom:4px; font-weight:600;
+    }
+    .order-date { font-size:10px; color:var(--muted); }
+
+    #overlay { position:fixed; inset:0; z-index:45; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); display:none; }
+    #overlay.show { display:block; }
+
+    .empty-state { text-align:center; padding:48px 20px; color:var(--muted); }
+    .empty-icon { font-size:34px; margin-bottom:12px; opacity:0.5; }
+    .empty-txt { font-size:13px; }
+
+    /* ===== FOOTER (matching website) ===== */
+    .footer {
+      background:var(--navy2); border-top:1px solid var(--border);
+      padding:40px 20px 24px;
+    }
+    .footer-brand { display:flex; align-items:center; gap:6px; margin-bottom:12px; }
+    .footer-brand-text { font-size:24px; font-weight:700; color:var(--white); }
+    .footer-brand-text b { color:var(--red); }
+    .footer-brand-plane { font-size:22px; }
+    .footer-desc {
+      font-size:13px; color:var(--muted); line-height:1.7;
+      margin-bottom:20px;
+    }
+    .footer-social { display:flex; gap:10px; margin-bottom:28px; }
+    .footer-social a {
+      width:32px; height:32px; border-radius:50%;
+      border:1px solid var(--border);
+      display:flex; align-items:center; justify-content:center;
+      color:var(--muted); font-size:14px; text-decoration:none;
+      transition:all .2s;
+    }
+    .footer-social a:hover { border-color:var(--red); color:var(--red); }
+
+    .footer-section-ttl {
+      font-size:14px; font-weight:700; color:var(--white);
+      margin-bottom:14px;
+    }
+    .footer-links { list-style:none; margin-bottom:28px; }
+    .footer-links li { margin-bottom:10px; }
+    .footer-links li a,.footer-links li button {
+      font-size:13px; color:var(--muted);
+      text-decoration:none; background:none; border:none; cursor:pointer;
+      transition:color .2s; padding:0; font-family:'Inter', sans-serif;
+    }
+    .footer-links li a:hover,.footer-links li button:hover { color:var(--red2); }
+
+    .footer-contact-row {
+      display:flex; align-items:center; gap:10px;
+      margin-bottom:10px; font-size:13px; color:var(--muted);
+    }
+    .footer-contact-row span:first-child { font-size:14px; }
+
+    .footer-bottom {
+      text-align:center; font-size:11px; color:var(--muted);
+      border-top:1px solid var(--border2); padding-top:20px;
+      margin-top:12px;
+    }
+
+    /* ===== TG WARNING ===== */
+    #tgWarning {
+      display:none; position:fixed; inset:0; z-index:100;
+      background:rgba(10,14,39,0.98);
+      flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; padding:32px;
+    }
+    .tg-ico { font-size:44px; margin-bottom:20px; opacity:0.6; }
+    .tg-ttl { font-size:22px; font-weight:700; color:var(--white); margin-bottom:12px; }
+    .tg-dsc { font-size:13px; color:var(--muted); line-height:1.8; max-width:280px; margin-bottom:28px; }
+    .tg-btn {
+      padding:14px 32px; background:var(--red); color:var(--white);
+      font-family:'Inter', sans-serif; font-size:12px; font-weight:700;
+      letter-spacing:2px; text-transform:uppercase; text-decoration:none;
+      border-radius:10px;
+    }
+    .tg-btn:hover { background:var(--red2); }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(20px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<nav id="topbar">
+  <div class="logo">
+    <span class="logo-text">Aqso<b>Tour</b></span>
+    <span class="logo-plane">✈️</span>
+  </div>
+  <div class="nav-actions">
+    <div class="lang-sw">
+      <button class="lang-b active" data-lang="uz" onclick="setLang('uz')">UZ</button>
+      <button class="lang-b" data-lang="ru" onclick="setLang('ru')">RU</button>
+    </div>
+    <button class="icon-b" onclick="openUserPanel()">👤</button>
+    <button class="icon-b" onclick="toggleCart()">
+      🛒<span class="cart-badge" id="cartCount">0</span>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header id="hero">
+  <h1 class="hero-title">Biz bilan sayohatingizni mukammal rejalashtiring!</h1>
+  <span class="hero-brand">AqsoTour</span>
+  <p class="hero-desc">Unutilmas sarguzashtlarga boradigan joyingiz - AqsoTourga xush kelibsiz! Turli yo'nalishlarni o'rganing, muammosiz rejalashtiring va umr bo'yi sayohatga chiqing.</p>
+  <div class="hero-logo-wrap">
+    <div class="hero-logo-circle">
+      <img src="https://start-up-blond.vercel.app/Aqso.png" alt="Aqso img">
+    </div>
+  </div>
+</header>
+
+<!-- SERVICES -->
+<section>
+  <div class="sec-hd">
+    <h2 class="sec-ttl">Bizning eng yaxshi xizmatlarimiz</h2>
+    <div class="sec-line"></div>
+  </div>
+  <div class="services-sec" id="servicesGrid"></div>
+</section>
+
+<!-- TOURS -->
+<section id="menu">
+  <div class="sec-hd">
+    <h2 class="sec-ttl" data-i18n="menu.sub">Turlar & Paketlar</h2>
+    <div class="sec-line"></div>
+  </div>
+  <div class="filter-wrap" id="filterTabs">
+    <button class="tab-btn active" data-cat="all" onclick="filterCategory('all',this)">Barchasi</button>
+  </div>
+  <div class="product-grid" id="products">
+    <div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-icon">✈️</div>
+      <div class="empty-txt" data-i18n="product.loading">Yuklanmoqda...</div>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section class="gallery-sec" id="gallery">
+  <div class="sec-hd">
+    <h2 class="sec-ttl">Bizning Galleriyamiz</h2>
+    <div class="sec-line"></div>
+  </div>
+  <p class="gallery-subtitle">"Galereyamizda sayohat mo'jizalarini oching, Aqso Tour sarguzashtlaridan lavha."</p>
+  <div class="gallery-grid" id="galleryGrid"></div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="sec-hd">
+    <h2 class="sec-ttl">Tez-tez so'raladigan savol.</h2>
+    <div class="sec-line"></div>
+  </div>
+  <div class="faq-sec" id="faqList"></div>
+</section>
+
+<!-- LOCATION -->
+<section class="loc-sec" id="location">
+  <div class="sec-hd">
+    <h2 class="sec-ttl">Biz bilan bog'laning</h2>
+    <div class="sec-line"></div>
+  </div>
+  <div class="location-card">
+    <div class="loc-row">
+      <span class="loc-icon">📍</span>
+      <div>
+        <div class="loc-lbl">Manzil</div>
+        <div class="loc-val" data-i18n="location.addr.val"></div>
+      </div>
+    </div>
+    <div class="loc-row">
+      <span class="loc-icon">📞</span>
+      <div>
+        <div class="loc-lbl">Telefon</div>
+        <div class="loc-val" id="phoneLink"></div>
+      </div>
+    </div>
+    <div class="loc-row">
+      <span class="loc-icon">✉️</span>
+      <div>
+        <div class="loc-lbl">Email</div>
+        <div class="loc-val" id="emailLink"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer" id="contact">
+  <div class="footer-brand">
+    <span class="footer-brand-text">Aqso<b>Tour</b></span>
+    <span class="footer-brand-plane">✈️</span>
+  </div>
+  <p class="footer-desc">Aqso Tour – sizning orzudagi sayohatlaringizni amalga oshirish uchun ishonchli hamkoringiz. Eng yaxshi yo'nalishlar, qulay narxlar va unutilmas tajribalar sizni kutmoqda!</p>
+  <div class="footer-social" id="footerSocial"></div>
+
+  <div class="footer-section-ttl">Tezkor havola</div>
+  <ul class="footer-links">
+    <li><button onclick="scrollToSec('hero')">Bosh sahifa</button></li>
+    <li><button onclick="scrollToSec('menu')">Xizmatlar</button></li>
+    <li><button onclick="scrollToSec('faq')">FAQ</button></li>
+    <li><button onclick="scrollToSec('location')">Aloqa</button></li>
+  </ul>
+
+  <div class="footer-section-ttl">Biz bilan bog'laning</div>
+  <div class="footer-contact-row"><span>📍</span> Andijon, O'zbekiston</div>
+  <div class="footer-contact-row"><span>📞</span> <a href="tel:+998770074909" style="color:var(--muted);text-decoration:none">+998 (77) 007-49-09</a></div>
+  <div class="footer-contact-row"><span>✉️</span> aqsotourtraveling@gmail.com</div>
+
+  <div class="footer-bottom">
+    © 2026 Aqso Tour. Barcha huquqlar himoyalangan.
+  </div>
+</footer>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" onclick="closeLightbox()">✕</button>
+  <button class="lb-prev" onclick="lbShift(-1)">←</button>
+  <img id="lightboxImg" src="" alt="" onclick="event.stopPropagation()">
+  <button class="lb-next" onclick="lbShift(1)">→</button>
+</div>
+
+<!-- OVERLAY -->
+<div id="overlay" onclick="closePanels()"></div>
+
+<!-- CART PANEL -->
+<div class="panel" id="cartPanel">
+  <div class="panel-hd">
+    <div class="panel-ttl" data-i18n="cart.title">Tanlangan turlar</div>
+    <button class="close-btn" onclick="closePanels()">✕</button>
+  </div>
+  <div id="cartItems" style="flex:1">
+    <div class="empty-state"><div class="empty-icon">✈️</div><div class="empty-txt">Hali tur tanlanmagan</div></div>
+  </div>
+  <div class="cart-ft">
+    <div class="cart-total-row">
+      <span>Jami:</span>
+      <span><span id="cartTotal">0</span> so'm</span>
+    </div>
+    <div class="order-type-row">
+      <button id="btnDineIn" class="otype-btn" onclick="selectOrderType('dine_in')">🏢 Ofisda</button>
+      <button id="btnOnline" class="otype-btn" onclick="selectOrderType('online')">🌐 Online</button>
+    </div>
+    <div id="tableInputWrap" style="display:none">
+      <input class="tbl-input" id="tableInput" type="text" placeholder="Izoh..."/>
+    </div>
+    <button class="checkout-btn" id="checkoutBtn" onclick="checkout()">Bron Qilish</button>
+  </div>
+</div>
+
+<!-- USER PANEL -->
+<div class="panel" id="userPanel">
+  <div class="panel-hd">
+    <div class="panel-ttl">Profilim</div>
+    <button class="close-btn" onclick="closePanels()">✕</button>
+  </div>
+  <div class="profile-card">
+    <div class="profile-avatar">👤</div>
+    <div class="profile-name" id="profileName">Yuklanmoqda...</div>
+    <div class="profile-username" id="profileUsername"></div>
+    <div class="profile-phone" id="profilePhone"></div>
+  </div>
+  <div style="padding:16px 24px 8px;display:flex;align-items:center;gap:10px">
+    <span style="font-size:14px;font-weight:700;color:var(--red)">Bronlarim</span>
+    <div style="flex:1;height:1px;background:var(--border2)"></div>
+  </div>
+  <div id="userOrders">
+    <div class="empty-state"><div class="empty-icon">📦</div><div class="empty-txt">Yuklanmoqda...</div></div>
+  </div>
+</div>
+
+<!-- TG WARNING -->
+<div id="tgWarning">
+  <div class="tg-ico">✈️</div>
+  <div class="tg-ttl" data-i18n="tg.title">Telegram orqali kiring</div>
+  <div class="tg-dsc" data-i18n="tg.desc" data-i18n-html="true"></div>
+  <a id="tgBotLink" href="#" class="tg-btn" data-i18n="tg.btn">Botga o'tish →</a>
+</div>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<script>
+(function() {
+  var cfg = window.__CONFIG__ || {};
+  var lang = localStorage.getItem('lang') || 'uz';
+
+  // Services
+  var sg = document.getElementById('servicesGrid');
+  if (sg && cfg.SERVICES) {
+    sg.innerHTML = cfg.SERVICES.map(function(s) {
+      return '<div class="service-card">' +
+        '<div class="service-icon-wrap"><span class="si-emoji">' + s.icon + '</span></div>' +
+        '<div class="service-ttl">' + (lang==='ru' ? s.title_ru : s.title_uz) + '</div>' +
+        '<div class="service-txt">' + (lang==='ru' ? s.desc_ru : s.desc_uz) + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  // FAQ
+  var fl = document.getElementById('faqList');
+  if (fl && cfg.FAQ) {
+    fl.innerHTML = cfg.FAQ.map(function(f, i) {
+      return '<div class="faq-item" id="faq-'+i+'">' +
+        '<div class="faq-q" onclick="toggleFaq('+i+')">' +
+          '<span>' + (lang==='ru' ? f.q_ru : f.q_uz) + '</span>' +
+          '<span class="faq-plus">+</span>' +
+        '</div>' +
+        '<div class="faq-a">' +
+          '<div class="faq-a-text">' + (lang==='ru' ? f.a_ru : f.a_uz) + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  // Gallery
+  var gg = document.getElementById('galleryGrid');
+  if (gg && cfg.GALLERY) {
+    gg.innerHTML = cfg.GALLERY.map(function(img, i) {
+      return '<div class="gallery-item" onclick="openLightbox(' + i + ')">' +
+        '<img src="' + img + '" alt="travel">' +
+      '</div>';
+    }).join('');
+  }
+
+  // Phone & Email
+  var ph = cfg.PHONE || '';
+  var em = cfg.EMAIL || '';
+  var pl = document.getElementById('phoneLink');
+  if (pl) pl.innerHTML = '<a href="tel:' + ph.replace(/[\s()-]/g,'') + '">' + ph + '</a>';
+  var el = document.getElementById('emailLink');
+  if (el) el.innerHTML = '<a href="mailto:' + em + '">' + em + '</a>';
+
+  // Footer social
+  var fs = document.getElementById('footerSocial');
+  if (fs) {
+    fs.innerHTML =
+      '<a href="https://instagram.com/" target="_blank">📷</a>' +
+      '<a href="https://youtube.com/" target="_blank">▶️</a>' +
+      '<a href="https://t.me/' + (cfg.ADMIN_TG||'') + '" target="_blank">✈️</a>';
+  }
+
+  // TG
+  var tb = document.getElementById('tgBotLink');
+  if (tb) tb.href = 'https://t.me/' + (cfg.BOT_USERNAME || '');
+})();
+
+// Topbar scroll
+window.addEventListener('scroll', function() {
+  document.getElementById('topbar').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+function scrollToSec(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior:'smooth' });
+}
+
+// FAQ toggle
+function toggleFaq(i) {
+  var el = document.getElementById('faq-'+i);
+  if (el) el.classList.toggle('open');
+}
+
+// Lightbox
+var galleryImages = (window.__CONFIG__ && window.__CONFIG__.GALLERY) || [];
+var lbIdx = 0;
+function openLightbox(i) {
+  lbIdx = i;
+  document.getElementById('lightboxImg').src = galleryImages[i] || '';
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+function lbShift(d) {
+  lbIdx = (lbIdx + d + galleryImages.length) % galleryImages.length;
+  document.getElementById('lightboxImg').src = galleryImages[lbIdx];
+}
+document.getElementById('lightbox').addEventListener('click', function(e) {
+  if (e.target === this) closeLightbox();
+});
+</script>
+
+<script src="app.js"></script>
+</body>
+</html>

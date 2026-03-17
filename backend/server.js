@@ -278,6 +278,57 @@ const Attendance = mongoose.model("Attendance", new mongoose.Schema({
 }, { timestamps: true }));
 
 // ===================================================
+// ===== INVENTORY MODEL =============================
+// ===================================================
+const inventorySchema = new mongoose.Schema({
+  productId:    { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+  restaurantId: { type: String, required: true },
+  productName:  String,
+  unit:         { type: String, default: "dona" }, // dona, kg, litr, etc.
+  currentStock: { type: Number, default: 0 },
+  minStock:     { type: Number, default: 5 },
+  maxStock:     { type: Number, default: 1000 },
+  costPrice:    { type: Number, default: 0 },
+  lastRestocked: Date,
+  active:       { type: Boolean, default: true }
+}, { timestamps: true });
+inventorySchema.index({ productId: 1, restaurantId: 1 }, { unique: true });
+const Inventory = mongoose.model("Inventory", inventorySchema);
+
+const inventoryLogSchema = new mongoose.Schema({
+  inventoryId:  { type: mongoose.Schema.Types.ObjectId, ref: "Inventory" },
+  restaurantId: { type: String, required: true },
+  type:         { type: String, enum: ["in", "out", "adjust"], required: true },
+  quantity:     { type: Number, required: true },
+  note:         String,
+  createdBy:    String
+}, { timestamps: true });
+const InventoryLog = mongoose.model("InventoryLog", inventoryLogSchema);
+
+// ===================================================
+// ===== NOTIFICATION MODEL ==========================
+// ===================================================
+const notificationSchema = new mongoose.Schema({
+  restaurantId: { type: String, required: true },
+  type:         { type: String, required: true }, // order_new, order_accepted, stock_low, employee_late, broadcast
+  title:        { type: String, required: true },
+  message:      String,
+  icon:         { type: String, default: "🔔" },
+  read:         { type: Boolean, default: false },
+  targetRole:   { type: String, default: "admin" }, // admin, employee, user
+  targetId:     String, // specific user/employee id if needed
+  data:         Object  // extra data like orderId, productId, etc.
+}, { timestamps: true });
+const Notification = mongoose.model("Notification", notificationSchema);
+
+// Helper: Create notification
+async function createNotification(restaurantId, type, title, message, icon, targetRole, targetId, data) {
+  try {
+    await Notification.create({ restaurantId, type, title, message: message || "", icon: icon || "🔔", targetRole: targetRole || "admin", targetId, data });
+  } catch(e) { console.error("Notification create error:", e.message); }
+}
+
+// ===================================================
 // ===== HELPERS =====================================
 // ===================================================
 async function isBotBlocked(restaurantId) {
@@ -659,6 +710,13 @@ app.post("/order", async (req, res) => {
       });
     }
     res.json({ success: true, order });
+
+    // Create notification for admin
+    await createNotification(restaurantId, "order_new",
+      "🆕 Yangi buyurtma #" + String(order._id).slice(-6),
+      name + " — " + total.toLocaleString() + " so'm",
+      "🛒", "admin", null, { orderId: order._id }
+    );
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -1123,6 +1181,249 @@ app.get("/admin/attendance/branches-summary", authMiddleware, async (req, res) =
       result.push({ branch: { id: null, name: "Filialsiz ishchilar", address: "" }, total: noBranch.length, came, late: nbAtts.filter(a=>a.lateMinutes>0).length, absent: Math.max(0, noBranch.length - came - dayOff), dayOff });
     }
     res.json({ ok: true, today, summary: result });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ===================================================
+// ===== INVENTORY ENDPOINTS =========================
+// ===================================================
+app.get("/admin/inventory", authMiddleware, async (req, res) => {
+  try {
+    const rId = req.admin.restaurantId;
+    const items = await Inventory.find({ restaurantId: rId, active: true }).populate("productId", "name name_ru price image active").sort({ productName: 1 });
+    const lowStock = items.filter(i => i.currentStock <= i.minStock);
+    res.json({ ok: true, items, lowStockCount: lowStock.length, totalItems: items.length });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/admin/inventory", authMiddleware, async (req, res) => {
+  try {
+    const rId = req.admin.restaurantId;
+    const { productId, productName, unit, currentStock, minStock, maxStock, costPrice } = req.body;
+    if (!productName) return res.status(400).json({ error: "Mahsulot nomi kerak" });
+    const item = await Inventory.create({
+      productId: productId || null, restaurantId: rId, productName, unit: unit || "dona",
+      currentStock: currentStock || 0, minStock: minStock || 5, maxStock: maxStock || 1000,
+      costPrice: costPrice || 0, lastRestocked: new Date(), active: true
+    });
+    res.json({ ok: true, item });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put("/admin/inventory/:id", authMiddleware, async (req, res) => {
+  try {
+    const item = await Inventory.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json({ ok: true, item });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete("/admin/inventory/:id", authMiddleware, async (req, res) => {
+  try {
+    await Inventory.findByIdAndUpdate(req.params.id, { active: false });
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Ombor kirim/chiqim
+app.post("/admin/inventory/:id/stock", authMiddleware, async (req, res) => {
+  try {
+    const { type, quantity, note } = req.body;
+    if (!type || !quantity) return res.status(400).json({ error: "Turi va miqdor kerak" });
+    const item = await Inventory.findById(req.params.id);
+    if (!item) return res.status(404).json({ error: "Topilmadi" });
+
+    let newStock = item.currentStock;
+    if (type === "in") { newStock += Number(quantity); item.lastRestocked = new Date(); }
+    else if (type === "out") { newStock = Math.max(0, newStock - Number(quantity)); }
+    else if (type === "adjust") { newStock = Number(quantity); }
+
+    item.currentStock = newStock;
+    await item.save();
+
+    await InventoryLog.create({
+      inventoryId: item._id, restaurantId: item.restaurantId,
+      type, quantity: Number(quantity), note: note || "",
+      createdBy: req.admin.username || "admin"
+    });
+
+    // Kam qolsa notification
+    if (newStock <= item.minStock) {
+      await createNotification(item.restaurantId, "stock_low",
+        "⚠️ Kam qoldi: " + item.productName,
+        item.productName + " — faqat " + newStock + " " + item.unit + " qoldi!",
+        "📦", "admin"
+      );
+    }
+
+    res.json({ ok: true, item, newStock });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/admin/inventory/:id/logs", authMiddleware, async (req, res) => {
+  try {
+    const logs = await InventoryLog.find({ inventoryId: req.params.id }).sort({ createdAt: -1 }).limit(50);
+    res.json({ ok: true, logs });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Inventory summary
+app.get("/admin/inventory/summary/all", authMiddleware, async (req, res) => {
+  try {
+    const rId = req.admin.restaurantId;
+    const items = await Inventory.find({ restaurantId: rId, active: true });
+    const totalValue = items.reduce((s, i) => s + (i.currentStock * i.costPrice), 0);
+    const lowStock = items.filter(i => i.currentStock <= i.minStock);
+    const outOfStock = items.filter(i => i.currentStock === 0);
+    res.json({
+      ok: true,
+      totalItems: items.length,
+      totalValue: Math.round(totalValue),
+      lowStockCount: lowStock.length,
+      outOfStockCount: outOfStock.length,
+      lowStockItems: lowStock.map(i => ({ name: i.productName, stock: i.currentStock, min: i.minStock, unit: i.unit }))
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ===================================================
+// ===== NOTIFICATION ENDPOINTS ======================
+// ===================================================
+app.get("/admin/notifications", authMiddleware, async (req, res) => {
+  try {
+    const rId = req.admin.restaurantId;
+    const { limit = 30, unreadOnly } = req.query;
+    const filter = { restaurantId: rId, targetRole: "admin" };
+    if (unreadOnly === "true") filter.read = false;
+    const notifications = await Notification.find(filter).sort({ createdAt: -1 }).limit(Number(limit));
+    const unreadCount = await Notification.countDocuments({ restaurantId: rId, targetRole: "admin", read: false });
+    res.json({ ok: true, notifications, unreadCount });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put("/admin/notifications/read-all", authMiddleware, async (req, res) => {
+  try {
+    await Notification.updateMany({ restaurantId: req.admin.restaurantId, targetRole: "admin", read: false }, { read: true });
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put("/admin/notifications/:id/read", authMiddleware, async (req, res) => {
+  try {
+    await Notification.findByIdAndUpdate(req.params.id, { read: true });
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete("/admin/notifications/clear", authMiddleware, async (req, res) => {
+  try {
+    await Notification.deleteMany({ restaurantId: req.admin.restaurantId, targetRole: "admin", read: true });
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ===================================================
+// ===== ENHANCED ANALYTICS ==========================
+// ===================================================
+app.get("/admin/analytics/advanced", authMiddleware, async (req, res) => {
+  try {
+    const rId = (req.admin.role === "superadmin" && req.query.restaurantId) ? req.query.restaurantId : req.admin.restaurantId;
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+    // Oylik buyurtmalar
+    const monthOrders = await Order.find({ restaurantId: rId, createdAt: { $gte: monthStart } });
+    const prevMonthOrders = await Order.find({ restaurantId: rId, createdAt: { $gte: prevMonthStart, $lte: prevMonthEnd } });
+
+    // Kunlik trend (30 kun)
+    const dailyTrend = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today); d.setDate(d.getDate() - i);
+      const dn = new Date(d); dn.setDate(dn.getDate() + 1);
+      const dayOrders = await Order.find({ restaurantId: rId, createdAt: { $gte: d, $lt: dn } });
+      dailyTrend.push({
+        date: d.toISOString().split("T")[0],
+        label: d.toLocaleDateString("uz-UZ", { month: "short", day: "numeric" }),
+        orders: dayOrders.length,
+        revenue: dayOrders.reduce((s, o) => s + (o.total || 0), 0)
+      });
+    }
+
+    // Soatlik taqsimot (bugun)
+    const hourlyDist = [];
+    const todayOrders = await Order.find({ restaurantId: rId, createdAt: { $gte: today } });
+    for (let h = 0; h < 24; h++) {
+      const count = todayOrders.filter(o => new Date(o.createdAt).getHours() === h).length;
+      hourlyDist.push({ hour: h, label: String(h).padStart(2, "0") + ":00", orders: count });
+    }
+
+    // Top mahsulotlar (10 ta)
+    const topProducts = await Order.aggregate([
+      { $match: { restaurantId: rId, createdAt: { $gte: monthStart } } },
+      { $unwind: "$items" },
+      { $group: { _id: "$items.name", totalRevenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }, totalQty: { $sum: "$items.quantity" }, orderCount: { $sum: 1 } } },
+      { $sort: { totalQty: -1 } }, { $limit: 10 }
+    ]);
+
+    // Kategoriya bo'yicha
+    const categoryStats = await Order.aggregate([
+      { $match: { restaurantId: rId, createdAt: { $gte: monthStart } } },
+      { $unwind: "$items" },
+      { $group: { _id: "$items.category", totalRevenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }, totalQty: { $sum: "$items.quantity" } } },
+      { $sort: { totalRevenue: -1 } }
+    ]);
+
+    // Order type distribution
+    const orderTypeDist = await Order.aggregate([
+      { $match: { restaurantId: rId, createdAt: { $gte: monthStart } } },
+      { $group: { _id: "$orderType", count: { $sum: 1 }, revenue: { $sum: "$total" } } }
+    ]);
+
+    // O'rtacha buyurtma qiymati
+    const avgOrderValue = monthOrders.length > 0
+      ? Math.round(monthOrders.reduce((s, o) => s + (o.total || 0), 0) / monthOrders.length)
+      : 0;
+    const prevAvgOrderValue = prevMonthOrders.length > 0
+      ? Math.round(prevMonthOrders.reduce((s, o) => s + (o.total || 0), 0) / prevMonthOrders.length)
+      : 0;
+
+    // Foydalanuvchilar o'sishi
+    const totalUsers = await User.countDocuments({ restaurantId: rId });
+    const monthUsers = await User.countDocuments({ restaurantId: rId, createdAt: { $gte: monthStart } });
+
+    // Hafta kunlari bo'yicha
+    const weekdayStats = [0, 0, 0, 0, 0, 0, 0]; // Sun-Sat
+    const weekdayNames = ["Yak", "Du", "Se", "Chor", "Pay", "Ju", "Sha"];
+    monthOrders.forEach(o => { weekdayStats[new Date(o.createdAt).getDay()]++; });
+
+    // Reyting taqsimoti
+    const ratingDist = await Order.aggregate([
+      { $match: { restaurantId: rId, rating: { $ne: null } } },
+      { $group: { _id: "$rating", count: { $sum: 1 } } },
+      { $sort: { _id: 1 } }
+    ]);
+
+    // Revenue growth (oyma-oy %)
+    const currentRevenue = monthOrders.reduce((s, o) => s + (o.total || 0), 0);
+    const prevRevenue = prevMonthOrders.reduce((s, o) => s + (o.total || 0), 0);
+    const revenueGrowth = prevRevenue > 0 ? Math.round(((currentRevenue - prevRevenue) / prevRevenue) * 100) : 0;
+
+    res.json({
+      ok: true,
+      overview: {
+        currentMonth: { orders: monthOrders.length, revenue: currentRevenue, avgOrderValue },
+        prevMonth: { orders: prevMonthOrders.length, revenue: prevRevenue, avgOrderValue: prevAvgOrderValue },
+        revenueGrowth,
+        ordersGrowth: prevMonthOrders.length > 0 ? Math.round(((monthOrders.length - prevMonthOrders.length) / prevMonthOrders.length) * 100) : 0,
+        totalUsers, newUsers: monthUsers
+      },
+      dailyTrend, hourlyDist, topProducts, categoryStats,
+      orderTypeDist,
+      weekdayStats: weekdayNames.map((n, i) => ({ day: n, orders: weekdayStats[i] })),
+      ratingDist
+    });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

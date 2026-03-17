@@ -155,6 +155,7 @@ function _startApp() {
   document.getElementById('sidebarRestName').textContent = adminInfo.restaurantName || 'Restoran';
   document.getElementById('adminUsername').textContent   = '@' + (adminInfo.username || '');
   showPage('dashboard');
+  startNotifPolling();
 }
 
 if (token) {
@@ -234,6 +235,9 @@ function showPage(page) {
   if (page === 'employees')  renderEmployees(main);
   if (page === 'attendance') renderAttendance(main, '');
   if (page === 'empReport')  renderEmpReport(main);
+  if (page === 'inventory')     renderInventory(main);
+  if (page === 'analytics')     renderAnalytics(main);
+  if (page === 'notifications') renderNotifications(main);
 }
 
 // ===== HELPERS =====
@@ -1363,4 +1367,310 @@ async function deleteBranch(id) {
   if (!confirm('Filialni o\'chirishni tasdiqlaysizmi?')) return;
   var d = await apiFetch('/admin/branches/' + id, { method: 'DELETE' });
   if (d.ok) renderBranches(document.getElementById('mainContent'));
+}
+
+// ===================================================
+// ===== NOTIFICATION BADGE POLLING ==================
+// ===================================================
+var notifPollInterval = null;
+async function pollNotifications() {
+  try {
+    var d = await apiFetch('/admin/notifications?unreadOnly=true&limit=1');
+    if (d.ok) {
+      var badge = document.getElementById('notifBadge');
+      if (badge) {
+        if (d.unreadCount > 0) {
+          badge.textContent = d.unreadCount > 99 ? '99+' : d.unreadCount;
+          badge.style.display = 'inline-block';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+    }
+  } catch(e) {}
+}
+function startNotifPolling() {
+  pollNotifications();
+  if (notifPollInterval) clearInterval(notifPollInterval);
+  notifPollInterval = setInterval(pollNotifications, 30000);
+}
+
+// ===================================================
+// ===== INVENTORY PAGE ==============================
+// ===================================================
+var inventoryChart = null;
+
+async function renderInventory(main) {
+  main.innerHTML = '<div class="page"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px"><div><h1 class="text-2xl font-bold" style="color:#f1f5f9">📦 Ombor boshqaruvi</h1><p class="text-sm mt-1" style="color:#64748b">Mahsulotlar zaxirasi va kirim-chiqim</p></div><button onclick="openInvModal()" class="px-4 py-2 rounded-xl text-sm font-bold text-white" style="background:var(--sx-grad)">+ Yangi mahsulot</button></div><div id="invSummary" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"></div><div id="invTable" style="background:#111827;border:1px solid rgba(6,182,212,0.12);border-radius:12px;overflow:hidden"><div style="text-align:center;padding:32px;color:#475569">Yuklanmoqda...</div></div></div>';
+  await loadInventory();
+}
+
+async function loadInventory() {
+  var d = await apiFetch('/admin/inventory');
+  var s = await apiFetch('/admin/inventory/summary/all');
+
+  // Summary cards
+  var sumEl = document.getElementById('invSummary');
+  if (sumEl && s.ok) {
+    sumEl.innerHTML =
+      '<div style="background:#111827;border:1px solid rgba(6,182,212,0.12);border-radius:12px;padding:16px"><div class="text-xs uppercase tracking-widest" style="color:#64748b">Jami mahsulot</div><div class="text-2xl font-bold mt-1" style="color:#22d3ee">' + s.totalItems + '</div></div>' +
+      '<div style="background:#111827;border:1px solid rgba(6,182,212,0.12);border-radius:12px;padding:16px"><div class="text-xs uppercase tracking-widest" style="color:#64748b">Ombor qiymati</div><div class="text-2xl font-bold mt-1" style="color:#10b981">' + Number(s.totalValue).toLocaleString() + '</div></div>' +
+      '<div style="background:#111827;border:1px solid rgba(245,158,11,0.2);border-radius:12px;padding:16px"><div class="text-xs uppercase tracking-widest" style="color:#64748b">Kam qolgan</div><div class="text-2xl font-bold mt-1" style="color:#f59e0b">' + s.lowStockCount + '</div></div>' +
+      '<div style="background:#111827;border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:16px"><div class="text-xs uppercase tracking-widest" style="color:#64748b">Tugagan</div><div class="text-2xl font-bold mt-1" style="color:#ef4444">' + s.outOfStockCount + '</div></div>';
+  }
+
+  // Table
+  var tblEl = document.getElementById('invTable');
+  if (!d.ok || !d.items.length) {
+    tblEl.innerHTML = '<div style="text-align:center;padding:40px;color:#475569">📦 Omborda mahsulot yo\'q. "Yangi mahsulot" tugmasini bosing.</div>';
+    return;
+  }
+
+  var rows = d.items.map(function(item) {
+    var pct = item.maxStock > 0 ? Math.round((item.currentStock / item.maxStock) * 100) : 0;
+    var barColor = item.currentStock <= item.minStock ? '#ef4444' : item.currentStock <= item.minStock * 2 ? '#f59e0b' : '#10b981';
+    var statusText = item.currentStock === 0 ? '<span style="color:#ef4444;font-weight:600">Tugagan</span>' : item.currentStock <= item.minStock ? '<span style="color:#f59e0b;font-weight:600">Kam</span>' : '<span style="color:#10b981">Yetarli</span>';
+    return '<tr style="border-bottom:1px solid rgba(6,182,212,0.06)">' +
+      '<td style="padding:12px 16px;font-weight:600;color:#f1f5f9">' + item.productName + '</td>' +
+      '<td style="padding:12px 16px"><div style="display:flex;align-items:center;gap:8px"><span style="font-weight:700;color:#f1f5f9;min-width:40px">' + item.currentStock + '</span><span style="color:#64748b;font-size:12px">' + item.unit + '</span></div><div style="background:#1a2235;border-radius:4px;height:4px;width:80px;margin-top:4px"><div style="background:' + barColor + ';height:100%;border-radius:4px;width:' + Math.min(100, pct) + '%"></div></div></td>' +
+      '<td style="padding:12px 16px;font-size:13px">' + statusText + '</td>' +
+      '<td style="padding:12px 16px;color:#64748b;font-size:13px">' + Number(item.costPrice).toLocaleString() + ' so\'m</td>' +
+      '<td style="padding:12px 16px"><div style="display:flex;gap:6px"><button onclick="openStockModal(\'' + item._id + '\',\'' + item.productName + '\')" class="px-3 py-1.5 rounded-lg text-xs font-semibold" style="background:rgba(6,182,212,0.1);color:#22d3ee;border:1px solid rgba(6,182,212,0.2)">Kirim/Chiqim</button><button onclick="openInvModal(\'' + item._id + '\')" class="px-3 py-1.5 rounded-lg text-xs" style="background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.2)">✏️</button><button onclick="deleteInventory(\'' + item._id + '\')" class="px-3 py-1.5 rounded-lg text-xs" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2)">🗑</button></div></td>' +
+    '</tr>';
+  }).join('');
+
+  tblEl.innerHTML = '<div style="overflow-x:auto"><table style="width:100%;font-size:14px;border-collapse:collapse"><thead><tr style="border-bottom:1px solid rgba(6,182,212,0.1)"><th style="padding:12px 16px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#64748b">Mahsulot</th><th style="padding:12px 16px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#64748b">Zaxira</th><th style="padding:12px 16px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#64748b">Holat</th><th style="padding:12px 16px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#64748b">Tan narx</th><th style="padding:12px 16px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#64748b">Amal</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+
+function openInvModal(id) {
+  document.getElementById('invEditId').value = id || '';
+  document.getElementById('invName').value = '';
+  document.getElementById('invStock').value = '';
+  document.getElementById('invUnit').value = 'dona';
+  document.getElementById('invMin').value = '5';
+  document.getElementById('invCost').value = '';
+  document.getElementById('invModalTitle').textContent = id ? 'Mahsulotni tahrirlash' : 'Yangi mahsulot';
+  if (id) {
+    apiFetch('/admin/inventory').then(function(d) {
+      if (d.ok) {
+        var item = d.items.find(function(i) { return i._id === id; });
+        if (item) {
+          document.getElementById('invName').value = item.productName || '';
+          document.getElementById('invStock').value = item.currentStock || 0;
+          document.getElementById('invUnit').value = item.unit || 'dona';
+          document.getElementById('invMin').value = item.minStock || 5;
+          document.getElementById('invCost').value = item.costPrice || 0;
+        }
+      }
+    });
+  }
+  document.getElementById('invModal').style.display = 'flex';
+}
+function closeInvModal() { document.getElementById('invModal').style.display = 'none'; }
+
+async function saveInventory() {
+  var id = document.getElementById('invEditId').value;
+  var body = JSON.stringify({
+    productName: document.getElementById('invName').value.trim(),
+    currentStock: Number(document.getElementById('invStock').value) || 0,
+    unit: document.getElementById('invUnit').value,
+    minStock: Number(document.getElementById('invMin').value) || 5,
+    costPrice: Number(document.getElementById('invCost').value) || 0
+  });
+  var d = await apiFetch(id ? '/admin/inventory/' + id : '/admin/inventory', { method: id ? 'PUT' : 'POST', body: body });
+  if (d.ok) { closeInvModal(); await loadInventory(); }
+  else alert(d.error || 'Xato');
+}
+
+function openStockModal(id, name) {
+  document.getElementById('stockItemId').value = id;
+  document.getElementById('stockModalTitle').textContent = name;
+  document.getElementById('stockType').value = 'in';
+  document.getElementById('stockQty').value = '';
+  document.getElementById('stockNote').value = '';
+  document.getElementById('stockModal').style.display = 'flex';
+}
+function closeStockModal() { document.getElementById('stockModal').style.display = 'none'; }
+
+async function saveStock() {
+  var id = document.getElementById('stockItemId').value;
+  var d = await apiFetch('/admin/inventory/' + id + '/stock', {
+    method: 'POST',
+    body: JSON.stringify({
+      type: document.getElementById('stockType').value,
+      quantity: Number(document.getElementById('stockQty').value),
+      note: document.getElementById('stockNote').value.trim()
+    })
+  });
+  if (d.ok) { closeStockModal(); await loadInventory(); }
+  else alert(d.error || 'Xato');
+}
+
+async function deleteInventory(id) {
+  if (!confirm('Mahsulotni ombordan olib tashlash?')) return;
+  var d = await apiFetch('/admin/inventory/' + id, { method: 'DELETE' });
+  if (d.ok) loadInventory();
+}
+
+// ===================================================
+// ===== ANALYTICS PAGE ==============================
+// ===================================================
+var analyticsCharts = {};
+
+async function renderAnalytics(main) {
+  main.innerHTML = '<div class="page"><h1 class="text-2xl font-bold mb-1" style="color:#f1f5f9">📈 Kengaytirilgan analitika</h1><p class="text-sm mb-6" style="color:#64748b">30 kunlik chuqur tahlil va trendlar</p><div id="analyticsContent"><div style="text-align:center;padding:48px;color:#475569">Yuklanmoqda...</div></div></div>';
+
+  var d = await apiFetch('/admin/analytics/advanced');
+  if (!d.ok) { document.getElementById('analyticsContent').innerHTML = '<div style="text-align:center;padding:32px;color:#ef4444">Xato: ' + (d.error || 'Yuklab bolmadi') + '</div>'; return; }
+
+  var ov = d.overview;
+  var growthColor = ov.revenueGrowth >= 0 ? '#10b981' : '#ef4444';
+  var ordGrowthColor = ov.ordersGrowth >= 0 ? '#10b981' : '#ef4444';
+  var arrow = function(v) { return v >= 0 ? '↑' : '↓'; };
+
+  var html = '' +
+    // Overview cards
+    '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">' +
+      '<div style="background:#111827;border:1px solid rgba(6,182,212,0.12);border-radius:12px;padding:16px"><div class="text-xs uppercase tracking-widest" style="color:#64748b">Oylik daromad</div><div class="text-xl font-bold mt-1" style="color:#10b981">' + Number(ov.currentMonth.revenue).toLocaleString() + '</div><div class="text-xs mt-1" style="color:' + growthColor + '">' + arrow(ov.revenueGrowth) + ' ' + Math.abs(ov.revenueGrowth) + '% o\'tgan oyga</div></div>' +
+      '<div style="background:#111827;border:1px solid rgba(6,182,212,0.12);border-radius:12px;padding:16px"><div class="text-xs uppercase tracking-widest" style="color:#64748b">Buyurtmalar</div><div class="text-xl font-bold mt-1" style="color:#22d3ee">' + ov.currentMonth.orders + '</div><div class="text-xs mt-1" style="color:' + ordGrowthColor + '">' + arrow(ov.ordersGrowth) + ' ' + Math.abs(ov.ordersGrowth) + '% o\'tgan oyga</div></div>' +
+      '<div style="background:#111827;border:1px solid rgba(6,182,212,0.12);border-radius:12px;padding:16px"><div class="text-xs uppercase tracking-widest" style="color:#64748b">O\'rtacha chek</div><div class="text-xl font-bold mt-1" style="color:#a78bfa">' + Number(ov.currentMonth.avgOrderValue).toLocaleString() + '</div><div class="text-xs mt-1" style="color:#64748b">Avvalgi: ' + Number(ov.prevMonth.avgOrderValue).toLocaleString() + '</div></div>' +
+      '<div style="background:#111827;border:1px solid rgba(6,182,212,0.12);border-radius:12px;padding:16px"><div class="text-xs uppercase tracking-widest" style="color:#64748b">Foydalanuvchilar</div><div class="text-xl font-bold mt-1" style="color:#f59e0b">' + ov.totalUsers + '</div><div class="text-xs mt-1" style="color:#10b981">+' + ov.newUsers + ' yangi</div></div>' +
+    '</div>' +
+
+    // Charts row
+    '<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">' +
+      '<div style="background:#111827;border:1px solid rgba(6,182,212,0.12);border-radius:12px;padding:20px"><h3 class="text-sm font-bold mb-4" style="color:#f1f5f9">📊 30 kunlik daromad</h3><canvas id="revenueChart" height="200"></canvas></div>' +
+      '<div style="background:#111827;border:1px solid rgba(6,182,212,0.12);border-radius:12px;padding:20px"><h3 class="text-sm font-bold mb-4" style="color:#f1f5f9">📦 30 kunlik buyurtmalar</h3><canvas id="ordersChart" height="200"></canvas></div>' +
+    '</div>' +
+
+    '<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">' +
+      '<div style="background:#111827;border:1px solid rgba(6,182,212,0.12);border-radius:12px;padding:20px"><h3 class="text-sm font-bold mb-4" style="color:#f1f5f9">🕐 Soatlik taqsimot (bugun)</h3><canvas id="hourlyChart" height="200"></canvas></div>' +
+      '<div style="background:#111827;border:1px solid rgba(6,182,212,0.12);border-radius:12px;padding:20px"><h3 class="text-sm font-bold mb-4" style="color:#f1f5f9">📅 Hafta kunlari</h3><canvas id="weekdayChart" height="200"></canvas></div>' +
+    '</div>' +
+
+    // Top products & category pie
+    '<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">' +
+      '<div style="background:#111827;border:1px solid rgba(6,182,212,0.12);border-radius:12px;padding:20px"><h3 class="text-sm font-bold mb-4" style="color:#f1f5f9">🏆 Top 10 mahsulot</h3><div id="topProductsList"></div></div>' +
+      '<div style="background:#111827;border:1px solid rgba(6,182,212,0.12);border-radius:12px;padding:20px"><h3 class="text-sm font-bold mb-4" style="color:#f1f5f9">⭐ Reyting taqsimoti</h3><canvas id="ratingChart" height="200"></canvas></div>' +
+    '</div>';
+
+  document.getElementById('analyticsContent').innerHTML = html;
+
+  // Destroy old charts
+  Object.values(analyticsCharts).forEach(function(c) { if (c) c.destroy(); });
+  analyticsCharts = {};
+
+  var chartDefaults = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#475569', font: { size: 10 } }, grid: { color: 'rgba(6,182,212,0.05)' } }, y: { ticks: { color: '#475569', font: { size: 10 } }, grid: { color: 'rgba(6,182,212,0.05)' } } } };
+
+  // Revenue chart
+  analyticsCharts.revenue = new Chart(document.getElementById('revenueChart'), {
+    type: 'line', data: { labels: d.dailyTrend.map(function(x){return x.label}), datasets: [{ data: d.dailyTrend.map(function(x){return x.revenue}), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.4, pointRadius: 1 }] },
+    options: Object.assign({}, chartDefaults)
+  });
+
+  // Orders chart
+  analyticsCharts.orders = new Chart(document.getElementById('ordersChart'), {
+    type: 'bar', data: { labels: d.dailyTrend.map(function(x){return x.label}), datasets: [{ data: d.dailyTrend.map(function(x){return x.orders}), backgroundColor: 'rgba(6,182,212,0.6)', borderRadius: 4 }] },
+    options: Object.assign({}, chartDefaults)
+  });
+
+  // Hourly chart
+  analyticsCharts.hourly = new Chart(document.getElementById('hourlyChart'), {
+    type: 'bar', data: { labels: d.hourlyDist.map(function(x){return x.label}), datasets: [{ data: d.hourlyDist.map(function(x){return x.orders}), backgroundColor: 'rgba(167,139,250,0.6)', borderRadius: 4 }] },
+    options: Object.assign({}, chartDefaults)
+  });
+
+  // Weekday chart
+  analyticsCharts.weekday = new Chart(document.getElementById('weekdayChart'), {
+    type: 'bar', data: { labels: d.weekdayStats.map(function(x){return x.day}), datasets: [{ data: d.weekdayStats.map(function(x){return x.orders}), backgroundColor: ['#ef4444','#f59e0b','#10b981','#06b6d4','#8b5cf6','#ec4899','#64748b'], borderRadius: 6 }] },
+    options: Object.assign({}, chartDefaults)
+  });
+
+  // Rating chart
+  var ratingLabels = ['⭐1','⭐2','⭐3','⭐4','⭐5'];
+  var ratingData = [0,0,0,0,0];
+  d.ratingDist.forEach(function(r) { if (r._id >= 1 && r._id <= 5) ratingData[r._id - 1] = r.count; });
+  analyticsCharts.rating = new Chart(document.getElementById('ratingChart'), {
+    type: 'doughnut', data: { labels: ratingLabels, datasets: [{ data: ratingData, backgroundColor: ['#ef4444','#f97316','#f59e0b','#10b981','#06b6d4'], borderWidth: 0 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 12 } } } }
+  });
+
+  // Top products list
+  var tpEl = document.getElementById('topProductsList');
+  if (d.topProducts.length) {
+    tpEl.innerHTML = d.topProducts.map(function(p, i) {
+      var maxQty = d.topProducts[0].totalQty;
+      var pct = Math.round((p.totalQty / maxQty) * 100);
+      return '<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(6,182,212,0.05)">' +
+        '<span style="color:#475569;font-size:12px;min-width:20px">' + (i+1) + '.</span>' +
+        '<div style="flex:1"><div style="font-size:13px;font-weight:600;color:#f1f5f9">' + p._id + '</div>' +
+        '<div style="background:#1a2235;border-radius:4px;height:4px;margin-top:4px"><div style="background:var(--sx-grad);height:100%;border-radius:4px;width:' + pct + '%"></div></div></div>' +
+        '<div style="text-align:right"><div style="font-size:13px;font-weight:700;color:#22d3ee">' + p.totalQty + ' ta</div><div style="font-size:11px;color:#64748b">' + Number(p.totalRevenue).toLocaleString() + '</div></div></div>';
+    }).join('');
+  } else {
+    tpEl.innerHTML = '<div style="text-align:center;padding:20px;color:#475569">Ma\'lumot yo\'q</div>';
+  }
+}
+
+// ===================================================
+// ===== NOTIFICATIONS PAGE ==========================
+// ===================================================
+async function renderNotifications(main) {
+  main.innerHTML = '<div class="page"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px"><div><h1 class="text-2xl font-bold" style="color:#f1f5f9">🔔 Bildirishnomalar</h1><p class="text-sm mt-1" style="color:#64748b">Barcha bildirishnomalar va ogohlantirishlar</p></div><div style="display:flex;gap:8px"><button onclick="markAllRead()" class="px-4 py-2 rounded-xl text-xs font-semibold" style="background:rgba(6,182,212,0.1);color:#22d3ee;border:1px solid rgba(6,182,212,0.2)">✓ Hammasini o\'qilgan</button><button onclick="clearReadNotifs()" class="px-4 py-2 rounded-xl text-xs font-semibold" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2)">🗑 Tozalash</button></div></div><div id="notifList"></div></div>';
+  await loadNotifications();
+}
+
+async function loadNotifications() {
+  var d = await apiFetch('/admin/notifications?limit=50');
+  var el = document.getElementById('notifList');
+  if (!d.ok || !d.notifications.length) {
+    el.innerHTML = '<div style="text-align:center;padding:48px;color:#475569"><div style="font-size:40px;margin-bottom:8px">🔕</div>Bildirishnomalar yo\'q</div>';
+    return;
+  }
+
+  el.innerHTML = d.notifications.map(function(n) {
+    var timeAgo = getTimeAgo(n.createdAt);
+    var bgStyle = n.read ? 'background:#111827' : 'background:rgba(6,182,212,0.04);border-left:3px solid #06b6d4';
+    var typeColors = { order_new: '#f59e0b', stock_low: '#ef4444', employee_late: '#a78bfa', broadcast: '#06b6d4' };
+    var dotColor = typeColors[n.type] || '#64748b';
+    return '<div style="' + bgStyle + ';border:1px solid rgba(6,182,212,0.08);border-radius:12px;padding:16px;margin-bottom:8px;cursor:pointer;transition:background .15s" onclick="markNotifRead(\'' + n._id + '\',this)" onmouseover="this.style.background=\'rgba(6,182,212,0.06)\'" onmouseout="this.style.background=\'' + (n.read ? '#111827' : 'rgba(6,182,212,0.04)') + '\'">' +
+      '<div style="display:flex;align-items:flex-start;gap:12px">' +
+        '<div style="font-size:24px;flex-shrink:0">' + (n.icon || '🔔') + '</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><div style="width:6px;height:6px;border-radius:50%;background:' + dotColor + ';flex-shrink:0"></div><span style="font-size:14px;font-weight:600;color:#f1f5f9">' + n.title + '</span></div>' +
+          (n.message ? '<div style="font-size:13px;color:#94a3b8;line-height:1.5">' + n.message + '</div>' : '') +
+        '</div>' +
+        '<div style="font-size:11px;color:#475569;white-space:nowrap;flex-shrink:0">' + timeAgo + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  pollNotifications();
+}
+
+function getTimeAgo(dateStr) {
+  var now = new Date();
+  var d = new Date(dateStr);
+  var diff = Math.floor((now - d) / 1000);
+  if (diff < 60) return 'Hozir';
+  if (diff < 3600) return Math.floor(diff / 60) + ' daq';
+  if (diff < 86400) return Math.floor(diff / 3600) + ' soat';
+  return Math.floor(diff / 86400) + ' kun';
+}
+
+async function markNotifRead(id, el) {
+  await apiFetch('/admin/notifications/' + id + '/read', { method: 'PUT' });
+  if (el) { el.style.borderLeft = 'none'; el.style.background = '#111827'; }
+  pollNotifications();
+}
+
+async function markAllRead() {
+  await apiFetch('/admin/notifications/read-all', { method: 'PUT' });
+  loadNotifications();
+}
+
+async function clearReadNotifs() {
+  if (!confirm('O\'qilgan bildirishnomalarni tozalash?')) return;
+  await apiFetch('/admin/notifications/clear', { method: 'DELETE' });
+  loadNotifications();
 }

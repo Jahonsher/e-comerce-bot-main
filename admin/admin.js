@@ -300,7 +300,7 @@ async function renderDashboard(main) {
   main.innerHTML = '<div class="page">' +
     pageHeader('Dashboard', 'Bugungi holat va statistika') +
     '<div id="statsGrid" class="grid gap-4 mb-6" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))"><div style="color:#64748b">Yuklanmoqda...</div></div>' +
-    '<div class="grid gap-4 mb-5" style="grid-template-columns:2fr 1fr">' +
+    '<div class="grid gap-4 mb-5" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">' +
       '<div class="rounded-xl border p-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)"><div class="text-sm font-semibold mb-4">📈 Haftalik buyurtmalar</div><div style="position:relative;height:220px"><canvas id="weeklyChart"></canvas></div></div>' +
       '<div class="rounded-xl border p-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)"><div class="text-sm font-semibold mb-4">🔵 Buyurtma turi</div><div style="position:relative;height:220px"><canvas id="typeChart"></canvas></div></div>' +
     '</div>' +
@@ -1519,7 +1519,7 @@ async function deleteInventory(id) {
 var analyticsCharts = {};
 
 async function renderAnalytics(main) {
-  main.innerHTML = '<div class="page"><h1 class="text-2xl font-bold mb-1" style="color:#f1f5f9">📈 Kengaytirilgan analitika</h1><p class="text-sm mb-6" style="color:#64748b">30 kunlik chuqur tahlil va trendlar</p><div id="analyticsContent"><div style="text-align:center;padding:48px;color:#475569">Yuklanmoqda...</div></div></div>';
+  main.innerHTML = '<div class="page" style="max-width:100%;overflow:hidden"><h1 class="text-2xl font-bold mb-1" style="color:#f1f5f9">📈 Kengaytirilgan analitika</h1><p class="text-sm mb-6" style="color:#64748b">30 kunlik chuqur tahlil va trendlar</p><div id="analyticsContent" style="overflow:hidden"><div style="text-align:center;padding:48px;color:#475569">Yuklanmoqda...</div></div></div>';
 
   var d = await apiFetch('/admin/analytics/advanced');
   if (!d.ok) { document.getElementById('analyticsContent').innerHTML = '<div style="text-align:center;padding:32px;color:#ef4444">Xato: ' + (d.error || 'Yuklab bolmadi') + '</div>'; return; }

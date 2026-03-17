@@ -341,6 +341,56 @@ const notificationSchema = new mongoose.Schema({
 }, { timestamps: true });
 const Notification = mongoose.model("Notification", notificationSchema);
 
+// ===================================================
+// ===== AUDIT LOG MODEL =============================
+// ===================================================
+const auditLogSchema = new mongoose.Schema({
+  action:       { type: String, required: true }, // restaurant_create, restaurant_block, payment_add, login, etc.
+  actor:        { type: String, required: true }, // username
+  actorRole:    { type: String, default: "superadmin" },
+  restaurantId: String,
+  details:      String,
+  ip:           String
+}, { timestamps: true });
+const AuditLog = mongoose.model("AuditLog", auditLogSchema);
+
+async function logAudit(action, actor, role, restaurantId, details, ip) {
+  try { await AuditLog.create({ action, actor, actorRole: role || "superadmin", restaurantId: restaurantId || "", details: details || "", ip: ip || "" }); }
+  catch(e) { console.error("AuditLog error:", e.message); }
+}
+
+// ===================================================
+// ===== PAYMENT MODEL ===============================
+// ===================================================
+const paymentSchema = new mongoose.Schema({
+  restaurantId: { type: String, required: true },
+  amount:       { type: Number, required: true },
+  type:         { type: String, enum: ["subscription","custom","refund"], default: "subscription" },
+  method:       { type: String, default: "cash" }, // cash, card, transfer
+  days:         { type: Number, default: 30 },
+  note:         String,
+  createdBy:    String
+}, { timestamps: true });
+const Payment = mongoose.model("Payment", paymentSchema);
+
+// ===================================================
+// ===== SUPERADMIN NOTIFICATION MODEL ===============
+// ===================================================
+const saNotifSchema = new mongoose.Schema({
+  type:    { type: String, required: true },
+  title:   { type: String, required: true },
+  message: String,
+  icon:    { type: String, default: "🔔" },
+  read:    { type: Boolean, default: false },
+  data:    Object
+}, { timestamps: true });
+const SANotification = mongoose.model("SANotification", saNotifSchema);
+
+async function createSANotif(type, title, message, icon, data) {
+  try { await SANotification.create({ type, title, message: message || "", icon: icon || "🔔", data }); }
+  catch(e) {}
+}
+
 // Helper: Create notification
 async function createNotification(restaurantId, type, title, message, icon, targetRole, targetId, data) {
   try {
@@ -808,6 +858,8 @@ app.post("/superadmin/restaurants", superMiddleware, async (req, res) => {
       { name: "Ichimlik", name_ru: "Напитки", emoji: "🥤", order: 2, restaurantId }
     ]);
     if (botToken) await startBot(restaurantId, botToken, webappUrl, Number(chefId));
+    await logAudit("restaurant_create", req.admin.username, "superadmin", restaurantId, "Yangi restoran: " + restaurantName);
+    await createSANotif("restaurant_new", "🏪 Yangi restoran qo'shildi", restaurantName + " (ID: " + restaurantId + ")", "🏪");
     res.json({ ok: true, admin: { username: admin.username, restaurantName: admin.restaurantName, restaurantId: admin.restaurantId } });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
@@ -884,6 +936,189 @@ app.get("/superadmin/stats", superMiddleware, async (req, res) => {
       totalUsers:       await User.countDocuments(),
       perRestaurant
     });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ===== SUPERADMIN: PLATFORM ANALYTICS =====
+app.get("/superadmin/analytics", superMiddleware, async (req, res) => {
+  try {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+    // 30 kunlik trend
+    const dailyTrend = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today); d.setDate(d.getDate() - i);
+      const dn = new Date(d); dn.setDate(dn.getDate() + 1);
+      const dayOrders = await Order.countDocuments({ createdAt: { $gte: d, $lt: dn } });
+      const dayRevenue = await Order.aggregate([{ $match: { createdAt: { $gte: d, $lt: dn } } }, { $group: { _id: null, total: { $sum: "$total" } } }]);
+      const dayUsers = await User.countDocuments({ createdAt: { $gte: d, $lt: dn } });
+      dailyTrend.push({
+        date: d.toISOString().split("T")[0],
+        label: d.toLocaleDateString("uz-UZ", { month: "short", day: "numeric" }),
+        orders: dayOrders,
+        revenue: dayRevenue[0]?.total || 0,
+        newUsers: dayUsers
+      });
+    }
+
+    // Soatlik (bugun)
+    const hourly = [];
+    const todayOrders = await Order.find({ createdAt: { $gte: today } });
+    for (let h = 0; h < 24; h++) {
+      hourly.push({ hour: h, label: String(h).padStart(2,"0")+":00", orders: todayOrders.filter(o => new Date(o.createdAt).getHours() === h).length });
+    }
+
+    // Oylik taqqoslash
+    const monthOrders = await Order.countDocuments({ createdAt: { $gte: monthStart } });
+    const monthRevAgg = await Order.aggregate([{ $match: { createdAt: { $gte: monthStart } } }, { $group: { _id: null, total: { $sum: "$total" } } }]);
+    const monthRev = monthRevAgg[0]?.total || 0;
+    const prevOrders = await Order.countDocuments({ createdAt: { $gte: prevMonthStart, $lte: prevMonthEnd } });
+    const prevRevAgg = await Order.aggregate([{ $match: { createdAt: { $gte: prevMonthStart, $lte: prevMonthEnd } } }, { $group: { _id: null, total: { $sum: "$total" } } }]);
+    const prevRev = prevRevAgg[0]?.total || 0;
+
+    // Per-restoran performance
+    const perRest = await Order.aggregate([
+      { $match: { createdAt: { $gte: monthStart } } },
+      { $group: { _id: "$restaurantId", orders: { $sum: 1 }, revenue: { $sum: "$total" } } },
+      { $sort: { revenue: -1 } }
+    ]);
+
+    // Yangi foydalanuvchilar trend
+    const monthUsers = await User.countDocuments({ createdAt: { $gte: monthStart } });
+    const prevMonthUsers = await User.countDocuments({ createdAt: { $gte: prevMonthStart, $lte: prevMonthEnd } });
+
+    res.json({
+      ok: true,
+      dailyTrend, hourly,
+      current: { orders: monthOrders, revenue: monthRev, users: monthUsers },
+      previous: { orders: prevOrders, revenue: prevRev, users: prevMonthUsers },
+      ordersGrowth: prevOrders > 0 ? Math.round(((monthOrders - prevOrders) / prevOrders) * 100) : 0,
+      revenueGrowth: prevRev > 0 ? Math.round(((monthRev - prevRev) / prevRev) * 100) : 0,
+      perRestaurant: perRest,
+      totalUsers: await User.countDocuments(),
+      totalOrders: await Order.countDocuments(),
+      totalRestaurants: await Admin.countDocuments({ role: "admin" })
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ===== SUPERADMIN: AUDIT LOG =====
+app.get("/superadmin/audit-log", superMiddleware, async (req, res) => {
+  try {
+    const { limit = 50, restaurantId, action } = req.query;
+    const filter = {};
+    if (restaurantId) filter.restaurantId = restaurantId;
+    if (action) filter.action = action;
+    const logs = await AuditLog.find(filter).sort({ createdAt: -1 }).limit(Number(limit));
+    res.json({ ok: true, logs });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ===== SUPERADMIN: PAYMENTS =====
+app.get("/superadmin/payments", superMiddleware, async (req, res) => {
+  try {
+    const { restaurantId, limit = 50 } = req.query;
+    const filter = restaurantId ? { restaurantId } : {};
+    const payments = await Payment.find(filter).sort({ createdAt: -1 }).limit(Number(limit));
+    const totalReceived = await Payment.aggregate([{ $match: { type: { $ne: "refund" } } }, { $group: { _id: null, total: { $sum: "$amount" } } }]);
+    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const monthPayments = await Payment.aggregate([{ $match: { createdAt: { $gte: monthStart }, type: { $ne: "refund" } } }, { $group: { _id: null, total: { $sum: "$amount" } } }]);
+    res.json({
+      ok: true, payments,
+      totalReceived: totalReceived[0]?.total || 0,
+      monthReceived: monthPayments[0]?.total || 0
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/superadmin/payments", superMiddleware, async (req, res) => {
+  try {
+    const { restaurantId, amount, type, method, days, note } = req.body;
+    if (!restaurantId || !amount) return res.status(400).json({ error: "restaurantId va summa kerak" });
+    const payment = await Payment.create({ restaurantId, amount: Number(amount), type: type || "subscription", method: method || "cash", days: Number(days) || 30, note, createdBy: req.admin.username });
+    // Obuna muddatini uzaytirish
+    if (days && type !== "refund") {
+      const admin = await Admin.findOne({ restaurantId, role: "admin" });
+      if (admin) {
+        let newEnd = admin.subscriptionEnd && new Date(admin.subscriptionEnd) > new Date() ? new Date(admin.subscriptionEnd) : new Date();
+        newEnd.setDate(newEnd.getDate() + Number(days));
+        await Admin.findByIdAndUpdate(admin._id, { subscriptionEnd: newEnd, active: true });
+        await Restaurant.findOneAndUpdate({ restaurantId }, { blocked: false, blockReason: "" }, { upsert: true });
+      }
+    }
+    await logAudit("payment_add", req.admin.username, "superadmin", restaurantId, amount + " so'm — " + (type || "subscription") + " — " + (days || 0) + " kun");
+    await createSANotif("payment", "💰 To'lov qabul qilindi", restaurantId + " — " + Number(amount).toLocaleString() + " so'm", "💰");
+    res.json({ ok: true, payment });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ===== SUPERADMIN: NOTIFICATIONS =====
+app.get("/superadmin/notifications", superMiddleware, async (req, res) => {
+  try {
+    const { limit = 30, unreadOnly } = req.query;
+    const filter = unreadOnly === "true" ? { read: false } : {};
+    const notifs = await SANotification.find(filter).sort({ createdAt: -1 }).limit(Number(limit));
+    const unread = await SANotification.countDocuments({ read: false });
+    res.json({ ok: true, notifications: notifs, unreadCount: unread });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put("/superadmin/notifications/read-all", superMiddleware, async (req, res) => {
+  try { await SANotification.updateMany({ read: false }, { read: true }); res.json({ ok: true }); }
+  catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ===== SUPERADMIN: BOT MONITORING =====
+app.get("/superadmin/bots", superMiddleware, async (req, res) => {
+  try {
+    const admins = await Admin.find({ role: "admin" }).select("restaurantId restaurantName botToken active");
+    const botStatus = admins.map(a => ({
+      restaurantId: a.restaurantId,
+      restaurantName: a.restaurantName,
+      hasToken: !!a.botToken,
+      isRunning: !!bots[a.restaurantId],
+      isActive: a.active !== false
+    }));
+    res.json({ ok: true, bots: botStatus, runningCount: Object.keys(bots).length, totalCount: admins.length });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/superadmin/bots/:restaurantId/restart", superMiddleware, async (req, res) => {
+  try {
+    const { restaurantId } = req.params;
+    const admin = await Admin.findOne({ restaurantId, role: "admin" });
+    if (!admin || !admin.botToken) return res.status(400).json({ error: "Bot token yo'q" });
+    await stopBot(restaurantId);
+    await startBot(restaurantId, admin.botToken, admin.webappUrl, admin.chefId);
+    await logAudit("bot_restart", req.admin.username, "superadmin", restaurantId, "Bot qayta ishga tushirildi");
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/superadmin/bots/:restaurantId/stop", superMiddleware, async (req, res) => {
+  try {
+    await stopBot(req.params.restaurantId);
+    await logAudit("bot_stop", req.admin.username, "superadmin", req.params.restaurantId, "Bot to'xtatildi");
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ===== SUPERADMIN: SETTINGS =====
+app.put("/superadmin/change-password", superMiddleware, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) return res.status(400).json({ error: "Ikkala maydon kerak" });
+    const admin = await Admin.findById(req.admin.id);
+    const ok = await bcrypt.compare(currentPassword, admin.password);
+    if (!ok) return res.status(400).json({ error: "Joriy parol noto'g'ri" });
+    admin.password = await bcrypt.hash(newPassword, 10);
+    await admin.save();
+    await logAudit("password_change", req.admin.username, "superadmin", "", "Parol o'zgartirildi");
+    res.json({ ok: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

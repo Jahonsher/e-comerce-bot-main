@@ -101,6 +101,8 @@ function startApp() {
   document.getElementById('app').classList.remove('hidden');
   document.getElementById('saUsername').textContent = '@' + (saInfo.username || '');
   showPage('dashboard');
+  pollSANotifs();
+  setInterval(pollSANotifs, 30000);
 }
 
 if (token) startApp();
@@ -137,8 +139,14 @@ function showPage(page) {
     document.getElementById('sidebarOverlay').classList.add('hidden');
   }
   var main = document.getElementById('mainContent');
-  if (page === 'dashboard')   renderDashboard(main);
-  if (page === 'restaurants') renderRestaurants(main);
+  if (page === 'dashboard')     renderDashboard(main);
+  if (page === 'restaurants')   renderRestaurants(main);
+  if (page === 'analytics')     renderSAAnalytics(main);
+  if (page === 'payments')      renderPayments(main);
+  if (page === 'bots')          renderBots(main);
+  if (page === 'auditLog')      renderAuditLog(main);
+  if (page === 'notifications') renderSANotifications(main);
+  if (page === 'settings')      renderSettings(main);
 }
 
 // ===== HELPERS =====
@@ -738,4 +746,225 @@ async function deleteRest(id) {
   if (!confirm("Rostdan ochirmoqchimisiz?")) return;
   await api('/superadmin/restaurants/' + id, { method: 'DELETE' });
   loadRestCards();
+}
+// ===== NOTIFICATION POLLING =====
+async function pollSANotifs() {
+  try {
+    var d = await api('/superadmin/notifications?unreadOnly=true&limit=1');
+    if (d && d.ok) {
+      var b = document.getElementById('saNotifBadge');
+      if (b) { if (d.unreadCount > 0) { b.textContent = d.unreadCount > 99 ? '99+' : d.unreadCount; b.style.display = 'inline-block'; } else { b.style.display = 'none'; } }
+    }
+  } catch(e) {}
+}
+
+// ===== ANALYTICS PAGE =====
+var saCharts = {};
+async function renderSAAnalytics(main) {
+  main.innerHTML = '<div class="page"><h1 class="text-2xl font-bold font-serif mb-1">📈 Platforma analitikasi</h1><p class="text-sm text-slate-500 mb-6">30 kunlik trend va taqqoslash</p><div id="saAnalyticsContent" class="text-slate-500 text-center py-20">Yuklanmoqda...</div></div>';
+  var d = await api('/superadmin/analytics');
+  if (!d || !d.ok) { document.getElementById('saAnalyticsContent').innerHTML = '<div class="text-red-400">Xato</div>'; return; }
+  var gc = function(v) { return v >= 0 ? 'text-emerald-400' : 'text-red-400'; };
+  var ar = function(v) { return v >= 0 ? '↑' : '↓'; };
+
+  document.getElementById('saAnalyticsContent').innerHTML =
+    '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">' +
+      sc('📦','Oylik buyurtma', d.current.orders, '<span class="' + gc(d.ordersGrowth) + '">' + ar(d.ordersGrowth) + ' ' + Math.abs(d.ordersGrowth) + '%</span> o\'tgan oyga') +
+      sc('💰','Oylik daromad', Number(d.current.revenue).toLocaleString(), '<span class="' + gc(d.revenueGrowth) + '">' + ar(d.revenueGrowth) + ' ' + Math.abs(d.revenueGrowth) + '%</span>') +
+      sc('👥','Foydalanuvchilar', d.totalUsers, '+' + d.current.users + ' bu oy') +
+      sc('🏪','Restoranlar', d.totalRestaurants, 'Jami') +
+    '</div>' +
+    '<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">' +
+      '<div class="rounded-xl border p-5" style="' + border12() + '"><div class="text-sm font-bold mb-4">💰 30 kunlik daromad</div><div style="height:220px"><canvas id="saRevChart"></canvas></div></div>' +
+      '<div class="rounded-xl border p-5" style="' + border12() + '"><div class="text-sm font-bold mb-4">📦 30 kunlik buyurtmalar</div><div style="height:220px"><canvas id="saOrdChart"></canvas></div></div>' +
+    '</div>' +
+    '<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">' +
+      '<div class="rounded-xl border p-5" style="' + border12() + '"><div class="text-sm font-bold mb-4">🕐 Soatlik taqsimot (bugun)</div><div style="height:220px"><canvas id="saHourChart"></canvas></div></div>' +
+      '<div class="rounded-xl border p-5" style="' + border12() + '"><div class="text-sm font-bold mb-4">👥 Yangi foydalanuvchilar</div><div style="height:220px"><canvas id="saUserChart"></canvas></div></div>' +
+    '</div>';
+
+  Object.values(saCharts).forEach(function(c) { if (c) c.destroy(); });
+  var co = { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#475569',font:{size:10}},grid:{color:'rgba(6,182,212,0.05)'}}, y:{ticks:{color:'#475569',font:{size:10}},grid:{color:'rgba(6,182,212,0.05)'}} } };
+  saCharts.rev = new Chart(document.getElementById('saRevChart'), { type:'line', data:{ labels:d.dailyTrend.map(function(x){return x.label}), datasets:[{data:d.dailyTrend.map(function(x){return x.revenue}),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',fill:true,tension:0.4,pointRadius:1}] }, options:co });
+  saCharts.ord = new Chart(document.getElementById('saOrdChart'), { type:'bar', data:{ labels:d.dailyTrend.map(function(x){return x.label}), datasets:[{data:d.dailyTrend.map(function(x){return x.orders}),backgroundColor:'rgba(6,182,212,0.6)',borderRadius:4}] }, options:co });
+  saCharts.hour = new Chart(document.getElementById('saHourChart'), { type:'bar', data:{ labels:d.hourly.map(function(x){return x.label}), datasets:[{data:d.hourly.map(function(x){return x.orders}),backgroundColor:'rgba(167,139,250,0.6)',borderRadius:4}] }, options:co });
+  saCharts.user = new Chart(document.getElementById('saUserChart'), { type:'line', data:{ labels:d.dailyTrend.map(function(x){return x.label}), datasets:[{data:d.dailyTrend.map(function(x){return x.newUsers}),borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.1)',fill:true,tension:0.4,pointRadius:1}] }, options:co });
+}
+
+// ===== PAYMENTS PAGE =====
+async function renderPayments(main) {
+  main.innerHTML = '<div class="page"><div class="flex items-center justify-between flex-wrap gap-3 mb-6"><div><h1 class="text-2xl font-bold font-serif">💰 To\'lovlar</h1><p class="text-sm text-slate-500 mt-1">Obuna to\'lovlari va tarix</p></div><button onclick="openPayModal()" class="px-4 py-2 rounded-xl text-sm font-bold text-white" style="background:var(--sx-grad)">+ To\'lov qo\'shish</button></div><div id="paySummary" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6"></div><div id="payTable" style="' + border12() + '" class="text-slate-500 text-center py-12">Yuklanmoqda...</div></div>';
+  var d = await api('/superadmin/payments');
+  if (!d || !d.ok) return;
+
+  document.getElementById('paySummary').innerHTML =
+    sc('💰','Jami tushum', Number(d.totalReceived).toLocaleString() + " so'm", 'Barcha vaqt') +
+    sc('📅','Bu oylik', Number(d.monthReceived).toLocaleString() + " so'm", 'Joriy oy') +
+    sc('🧾','To\'lovlar soni', d.payments.length, 'Oxirgi 50 ta');
+
+  if (!d.payments.length) { document.getElementById('payTable').innerHTML = '<div class="text-center py-12 text-slate-500">To\'lovlar yo\'q</div>'; return; }
+
+  var rows = d.payments.map(function(p) {
+    var tc = p.type === 'refund' ? 'text-red-400' : 'text-emerald-400';
+    var mc = { cash:'Naqd', card:'Karta', transfer:"O'tkazma" };
+    return '<tr class="border-b border-cyan-500/5"><td class="px-4 py-3 text-sm font-semibold">' + p.restaurantId + '</td><td class="px-4 py-3 text-sm ' + tc + ' font-bold">' + Number(p.amount).toLocaleString() + '</td><td class="px-4 py-3 text-xs">' + (mc[p.method] || p.method) + '</td><td class="px-4 py-3 text-xs text-cyan-400">' + (p.days || 0) + ' kun</td><td class="px-4 py-3 text-xs text-slate-500">' + (p.note || '') + '</td><td class="px-4 py-3 text-xs text-slate-500">' + new Date(p.createdAt).toLocaleDateString('uz-UZ') + '</td></tr>';
+  }).join('');
+
+  document.getElementById('payTable').innerHTML = '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="border-b border-cyan-500/10"><th class="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Restoran</th><th class="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Summa</th><th class="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Usul</th><th class="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Kunlar</th><th class="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Izoh</th><th class="px-4 py-3 text-left text-xs uppercase tracking-wider text-slate-500">Sana</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+
+function openPayModal(rId) {
+  var sel = document.getElementById('payRestId');
+  sel.innerHTML = allRests.map(function(r) { return '<option value="' + r.restaurantId + '"' + (r.restaurantId === rId ? ' selected' : '') + '>' + r.restaurantName + '</option>'; }).join('');
+  document.getElementById('payAmount').value = '';
+  document.getElementById('payDays').value = '30';
+  document.getElementById('payNote').value = '';
+  document.getElementById('payModal').style.display = 'flex';
+}
+function closePayModal() { document.getElementById('payModal').style.display = 'none'; }
+
+async function savePayment() {
+  var d = await api('/superadmin/payments', { method:'POST', body: JSON.stringify({
+    restaurantId: document.getElementById('payRestId').value,
+    amount: Number(document.getElementById('payAmount').value),
+    type: document.getElementById('payType').value,
+    method: document.getElementById('payMethod').value,
+    days: Number(document.getElementById('payDays').value),
+    note: document.getElementById('payNote').value.trim()
+  })});
+  if (d && d.ok) { closePayModal(); renderPayments(document.getElementById('mainContent')); }
+  else alert('Xato: ' + ((d && d.error) || ''));
+}
+
+// ===== BOTS PAGE =====
+async function renderBots(main) {
+  main.innerHTML = '<div class="page"><h1 class="text-2xl font-bold font-serif mb-1">📱 Bot monitoring</h1><p class="text-sm text-slate-500 mb-6">Telegram botlar holati</p><div id="botCards" class="text-center py-12 text-slate-500">Yuklanmoqda...</div></div>';
+  var d = await api('/superadmin/bots');
+  if (!d || !d.ok) return;
+
+  var summary = '<div class="grid grid-cols-3 gap-4 mb-6">' +
+    sc('🤖','Jami botlar', d.totalCount, '') +
+    sc('✅','Ishlayotgan', d.runningCount, 'Aktiv') +
+    sc('⛔','To\'xtagan', d.totalCount - d.runningCount, '') +
+  '</div>';
+
+  var cards = d.bots.map(function(b) {
+    var statusColor = b.isRunning ? 'bg-emerald-500' : 'bg-red-500';
+    var statusText = b.isRunning ? 'Ishlayapti' : b.hasToken ? 'To\'xtagan' : 'Token yo\'q';
+    return '<div class="rounded-xl border p-4 mb-3" style="' + border12() + '">' +
+      '<div class="flex items-center gap-3">' +
+        '<div class="w-3 h-3 rounded-full ' + statusColor + ' animate-pulse flex-shrink-0"></div>' +
+        '<div class="flex-1"><div class="font-semibold text-sm">' + b.restaurantName + '</div><div class="text-xs text-slate-500">' + b.restaurantId + ' · ' + statusText + '</div></div>' +
+        '<div class="flex gap-2">' +
+          (b.hasToken ? '<button onclick="restartBot(\'' + b.restaurantId + '\')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">🔄 Qayta ishga</button>' : '') +
+          (b.isRunning ? '<button onclick="stopBotUI(\'' + b.restaurantId + '\')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20">⏹ To\'xtatish</button>' : '') +
+        '</div>' +
+      '</div></div>';
+  }).join('');
+
+  document.getElementById('botCards').innerHTML = summary + cards;
+}
+
+async function restartBot(rId) {
+  var d = await api('/superadmin/bots/' + rId + '/restart', { method:'POST' });
+  if (d && d.ok) { alert('✅ Bot qayta ishga tushdi'); renderBots(document.getElementById('mainContent')); }
+  else alert('Xato');
+}
+async function stopBotUI(rId) {
+  if (!confirm('Botni to\'xtatish?')) return;
+  await api('/superadmin/bots/' + rId + '/stop', { method:'POST' });
+  renderBots(document.getElementById('mainContent'));
+}
+
+// ===== AUDIT LOG PAGE =====
+async function renderAuditLog(main) {
+  main.innerHTML = '<div class="page"><h1 class="text-2xl font-bold font-serif mb-1">📋 Audit log</h1><p class="text-sm text-slate-500 mb-6">Barcha amallar tarixi</p><div id="auditContent" class="text-center py-12 text-slate-500">Yuklanmoqda...</div></div>';
+  var d = await api('/superadmin/audit-log?limit=100');
+  if (!d || !d.ok) return;
+
+  if (!d.logs.length) { document.getElementById('auditContent').innerHTML = '<div class="text-center py-12 text-slate-500">Amallar tarixi bo\'sh</div>'; return; }
+
+  var actionIcons = { restaurant_create:'🏪', restaurant_block:'🔒', restaurant_unblock:'✅', payment_add:'💰', bot_restart:'🔄', bot_stop:'⏹', password_change:'🔑' };
+  var rows = d.logs.map(function(l) {
+    var icon = actionIcons[l.action] || '📝';
+    var timeAgo = getTimeAgo(l.createdAt);
+    return '<div class="flex items-start gap-3 py-3 border-b border-cyan-500/5">' +
+      '<div class="text-xl flex-shrink-0 mt-0.5">' + icon + '</div>' +
+      '<div class="flex-1 min-w-0"><div class="text-sm font-semibold">' + l.action.replace(/_/g, ' ').toUpperCase() + '</div>' +
+      '<div class="text-xs text-slate-500 mt-0.5">' + (l.details || '') + '</div>' +
+      (l.restaurantId ? '<div class="text-xs text-cyan-400 mt-0.5">🏪 ' + l.restaurantId + '</div>' : '') + '</div>' +
+      '<div class="text-right flex-shrink-0"><div class="text-xs text-slate-500">' + timeAgo + '</div><div class="text-xs text-slate-600">@' + l.actor + '</div></div>' +
+    '</div>';
+  }).join('');
+
+  document.getElementById('auditContent').innerHTML = '<div class="rounded-xl border p-5" style="' + border12() + '">' + rows + '</div>';
+}
+
+function getTimeAgo(dateStr) {
+  var now = new Date(), d = new Date(dateStr), diff = Math.floor((now - d) / 1000);
+  if (diff < 60) return 'Hozir';
+  if (diff < 3600) return Math.floor(diff / 60) + ' daq';
+  if (diff < 86400) return Math.floor(diff / 3600) + ' soat';
+  return Math.floor(diff / 86400) + ' kun';
+}
+
+// ===== SA NOTIFICATIONS PAGE =====
+async function renderSANotifications(main) {
+  main.innerHTML = '<div class="page"><div class="flex items-center justify-between flex-wrap gap-3 mb-6"><div><h1 class="text-2xl font-bold font-serif">🔔 Bildirishnomalar</h1><p class="text-sm text-slate-500 mt-1">Platforma ogohlantirishlari</p></div><button onclick="markAllSARead()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">✓ Hammasini o\'qilgan</button></div><div id="saNotifList" class="text-center py-12 text-slate-500">Yuklanmoqda...</div></div>';
+  var d = await api('/superadmin/notifications?limit=50');
+  if (!d || !d.ok) return;
+
+  if (!d.notifications.length) { document.getElementById('saNotifList').innerHTML = '<div class="text-center py-12 text-slate-500">🔕 Bildirishnomalar yo\'q</div>'; return; }
+
+  document.getElementById('saNotifList').innerHTML = d.notifications.map(function(n) {
+    var bg = n.read ? border12('padding:16px;margin-bottom:8px') : border12('padding:16px;margin-bottom:8px;border-left:3px solid #06b6d4');
+    return '<div style="' + bg + '">' +
+      '<div class="flex items-start gap-3">' +
+        '<div class="text-2xl flex-shrink-0">' + (n.icon || '🔔') + '</div>' +
+        '<div class="flex-1"><div class="text-sm font-semibold">' + n.title + '</div>' + (n.message ? '<div class="text-xs text-slate-500 mt-1">' + n.message + '</div>' : '') + '</div>' +
+        '<div class="text-xs text-slate-600 flex-shrink-0">' + getTimeAgo(n.createdAt) + '</div>' +
+      '</div></div>';
+  }).join('');
+  pollSANotifs();
+}
+
+async function markAllSARead() {
+  await api('/superadmin/notifications/read-all', { method:'PUT' });
+  renderSANotifications(document.getElementById('mainContent'));
+}
+
+// ===== SETTINGS PAGE =====
+async function renderSettings(main) {
+  main.innerHTML = '<div class="page"><h1 class="text-2xl font-bold font-serif mb-1">⚙️ Sozlamalar</h1><p class="text-sm text-slate-500 mb-6">Superadmin sozlamalari</p>' +
+    '<div class="rounded-xl border p-6 max-w-md" style="' + border12() + '">' +
+      '<h3 class="text-sm font-bold text-cyan-400 mb-4">🔑 Parol o\'zgartirish</h3>' +
+      '<div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2 text-slate-500">Joriy parol</label><input id="setCurPass" class="inp" type="password"/></div>' +
+      '<div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2 text-slate-500">Yangi parol</label><input id="setNewPass" class="inp" type="password"/></div>' +
+      '<div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2 text-slate-500">Yangi parol (takror)</label><input id="setNewPass2" class="inp" type="password"/></div>' +
+      '<button onclick="changePassword()" class="px-6 py-2.5 rounded-xl text-sm font-bold text-white" style="background:var(--sx-grad)">Saqlash</button>' +
+      '<div id="setErr" class="text-sm mt-3 text-red-400" style="display:none"></div>' +
+      '<div id="setOk" class="text-sm mt-3 text-emerald-400" style="display:none"></div>' +
+    '</div>' +
+    '<div class="rounded-xl border p-6 max-w-md mt-6" style="' + border12() + '">' +
+      '<h3 class="text-sm font-bold text-cyan-400 mb-4">ℹ️ Tizim ma\'lumotlari</h3>' +
+      '<div class="text-sm text-slate-500 mb-2">Username: <span class="text-slate-300 font-semibold">@' + (saInfo.username || '') + '</span></div>' +
+      '<div class="text-sm text-slate-500 mb-2">Role: <span class="text-cyan-400 font-semibold">Superadmin</span></div>' +
+      '<div class="text-sm text-slate-500">Platform: <span class="text-slate-300 font-semibold">ServiX v2.0</span></div>' +
+    '</div>' +
+  '</div>';
+}
+
+async function changePassword() {
+  var cur = document.getElementById('setCurPass').value;
+  var np = document.getElementById('setNewPass').value;
+  var np2 = document.getElementById('setNewPass2').value;
+  var err = document.getElementById('setErr');
+  var ok = document.getElementById('setOk');
+  err.style.display = 'none'; ok.style.display = 'none';
+  if (!cur || !np) { err.textContent = 'Barcha maydonlarni to\'ldiring'; err.style.display = 'block'; return; }
+  if (np !== np2) { err.textContent = 'Yangi parollar mos kelmaydi'; err.style.display = 'block'; return; }
+  if (np.length < 4) { err.textContent = 'Parol kamida 4 belgidan iborat bo\'lsin'; err.style.display = 'block'; return; }
+  var d = await api('/superadmin/change-password', { method:'PUT', body: JSON.stringify({ currentPassword: cur, newPassword: np }) });
+  if (d && d.ok) { ok.textContent = '✅ Parol o\'zgartirildi!'; ok.style.display = 'block'; document.getElementById('setCurPass').value = ''; document.getElementById('setNewPass').value = ''; document.getElementById('setNewPass2').value = ''; }
+  else { err.textContent = (d && d.error) || 'Xato'; err.style.display = 'block'; }
 }

@@ -141,7 +141,6 @@ function showPage(page) {
   var main = document.getElementById('mainContent');
   if (page === 'dashboard')     renderDashboard(main);
   if (page === 'restaurants')   renderRestaurants(main);
-  if (page === 'analytics')     renderSAAnalytics(main);
   if (page === 'payments')      renderPayments(main);
   if (page === 'bots')          renderBots(main);
   if (page === 'auditLog')      renderAuditLog(main);
@@ -759,38 +758,6 @@ async function pollSANotifs() {
 }
 
 // ===== ANALYTICS PAGE =====
-var saCharts = {};
-async function renderSAAnalytics(main) {
-  main.innerHTML = '<div class="page"><h1 class="text-2xl font-bold font-serif mb-1">📈 Platforma analitikasi</h1><p class="text-sm text-slate-500 mb-6">30 kunlik trend va taqqoslash</p><div id="saAnalyticsContent" class="text-slate-500 text-center py-20">Yuklanmoqda...</div></div>';
-  var d = await api('/superadmin/analytics');
-  if (!d || !d.ok) { document.getElementById('saAnalyticsContent').innerHTML = '<div class="text-red-400">Xato</div>'; return; }
-  var gc = function(v) { return v >= 0 ? 'text-emerald-400' : 'text-red-400'; };
-  var ar = function(v) { return v >= 0 ? '↑' : '↓'; };
-
-  document.getElementById('saAnalyticsContent').innerHTML =
-    '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">' +
-      sc('📦','Oylik buyurtma', d.current.orders, '<span class="' + gc(d.ordersGrowth) + '">' + ar(d.ordersGrowth) + ' ' + Math.abs(d.ordersGrowth) + '%</span> o\'tgan oyga') +
-      sc('💰','Oylik daromad', Number(d.current.revenue).toLocaleString(), '<span class="' + gc(d.revenueGrowth) + '">' + ar(d.revenueGrowth) + ' ' + Math.abs(d.revenueGrowth) + '%</span>') +
-      sc('👥','Foydalanuvchilar', d.totalUsers, '+' + d.current.users + ' bu oy') +
-      sc('🏪','Restoranlar', d.totalRestaurants, 'Jami') +
-    '</div>' +
-    '<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">' +
-      '<div class="rounded-xl border p-5" style="' + border12() + '"><div class="text-sm font-bold mb-4">💰 30 kunlik daromad</div><div style="height:220px"><canvas id="saRevChart"></canvas></div></div>' +
-      '<div class="rounded-xl border p-5" style="' + border12() + '"><div class="text-sm font-bold mb-4">📦 30 kunlik buyurtmalar</div><div style="height:220px"><canvas id="saOrdChart"></canvas></div></div>' +
-    '</div>' +
-    '<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">' +
-      '<div class="rounded-xl border p-5" style="' + border12() + '"><div class="text-sm font-bold mb-4">🕐 Soatlik taqsimot (bugun)</div><div style="height:220px"><canvas id="saHourChart"></canvas></div></div>' +
-      '<div class="rounded-xl border p-5" style="' + border12() + '"><div class="text-sm font-bold mb-4">👥 Yangi foydalanuvchilar</div><div style="height:220px"><canvas id="saUserChart"></canvas></div></div>' +
-    '</div>';
-
-  Object.values(saCharts).forEach(function(c) { if (c) c.destroy(); });
-  var co = { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#475569',font:{size:10}},grid:{color:'rgba(6,182,212,0.05)'}}, y:{ticks:{color:'#475569',font:{size:10}},grid:{color:'rgba(6,182,212,0.05)'}} } };
-  saCharts.rev = new Chart(document.getElementById('saRevChart'), { type:'line', data:{ labels:d.dailyTrend.map(function(x){return x.label}), datasets:[{data:d.dailyTrend.map(function(x){return x.revenue}),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',fill:true,tension:0.4,pointRadius:1}] }, options:co });
-  saCharts.ord = new Chart(document.getElementById('saOrdChart'), { type:'bar', data:{ labels:d.dailyTrend.map(function(x){return x.label}), datasets:[{data:d.dailyTrend.map(function(x){return x.orders}),backgroundColor:'rgba(6,182,212,0.6)',borderRadius:4}] }, options:co });
-  saCharts.hour = new Chart(document.getElementById('saHourChart'), { type:'bar', data:{ labels:d.hourly.map(function(x){return x.label}), datasets:[{data:d.hourly.map(function(x){return x.orders}),backgroundColor:'rgba(167,139,250,0.6)',borderRadius:4}] }, options:co });
-  saCharts.user = new Chart(document.getElementById('saUserChart'), { type:'line', data:{ labels:d.dailyTrend.map(function(x){return x.label}), datasets:[{data:d.dailyTrend.map(function(x){return x.newUsers}),borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,0.1)',fill:true,tension:0.4,pointRadius:1}] }, options:co });
-}
-
 // ===== PAYMENTS PAGE =====
 async function renderPayments(main) {
   main.innerHTML = '<div class="page"><div class="flex items-center justify-between flex-wrap gap-3 mb-6"><div><h1 class="text-2xl font-bold font-serif">💰 To\'lovlar</h1><p class="text-sm text-slate-500 mt-1">Obuna to\'lovlari va tarix</p></div><button onclick="openPayModal()" class="px-4 py-2 rounded-xl text-sm font-bold text-white" style="background:var(--sx-grad)">+ To\'lov qo\'shish</button></div><div id="paySummary" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6"></div><div id="payTable" style="' + border12() + '" class="text-slate-500 text-center py-12">Yuklanmoqda...</div></div>';
@@ -910,7 +877,7 @@ function getTimeAgo(dateStr) {
 
 // ===== SA NOTIFICATIONS PAGE =====
 async function renderSANotifications(main) {
-  main.innerHTML = '<div class="page"><div class="flex items-center justify-between flex-wrap gap-3 mb-6"><div><h1 class="text-2xl font-bold font-serif">🔔 Bildirishnomalar</h1><p class="text-sm text-slate-500 mt-1">Platforma ogohlantirishlari</p></div><button onclick="markAllSARead()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">✓ Hammasini o\'qilgan</button></div><div id="saNotifList" class="text-center py-12 text-slate-500">Yuklanmoqda...</div></div>';
+  main.innerHTML = '<div class="page"><div class="flex items-center justify-between flex-wrap gap-3 mb-6"><div><h1 class="text-2xl font-bold font-serif">🔔 Bildirishnomalar</h1><p class="text-sm text-slate-500 mt-1">Platforma ogohlantirishlari va xabar yuborish</p></div><div class="flex gap-2"><button onclick="openSendMsgModal()" class="px-4 py-2 rounded-xl text-xs font-semibold" style="background:var(--sx-grad);color:#fff">✉️ Xabar yuborish</button><button onclick="markAllSARead()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">✓ O\'qilgan</button></div></div><div id="saNotifList" class="text-center py-12 text-slate-500">Yuklanmoqda...</div></div>';
   var d = await api('/superadmin/notifications?limit=50');
   if (!d || !d.ok) return;
 
@@ -926,6 +893,61 @@ async function renderSANotifications(main) {
       '</div></div>';
   }).join('');
   pollSANotifs();
+}
+
+// Xabar yuborish modal
+function openSendMsgModal() {
+  var old = document.getElementById('sendMsgModal');
+  if (old) old.remove();
+  var checkboxes = allRests.map(function(r) {
+    return '<label class="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-cyan-500/5 cursor-pointer">' +
+      '<input type="checkbox" value="' + r.restaurantId + '" class="msgRestCheck accent-cyan-500" style="width:16px;height:16px"/>' +
+      '<span class="text-sm">' + r.restaurantName + '</span>' +
+      '<span class="text-xs text-slate-600 ml-auto">' + r.restaurantId + '</span>' +
+    '</label>';
+  }).join('');
+
+  var el = document.createElement('div');
+  el.id = 'sendMsgModal';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px';
+  el.innerHTML =
+    '<div style="background:#0d1220;border:1px solid rgba(6,182,212,0.2);border-radius:16px;padding:24px;max-width:480px;width:100%;max-height:85vh;overflow-y:auto">' +
+      '<h2 class="text-lg font-bold text-cyan-400 mb-4">✉️ Admin\'larga xabar yuborish</h2>' +
+      '<div class="mb-3"><label class="block text-xs uppercase tracking-widest mb-2 text-slate-500">Qabul qiluvchilar</label>' +
+        '<div class="flex gap-2 mb-2"><button onclick="selectAllMsgRests(true)" class="text-xs text-cyan-400 hover:underline">Hammasini belgilash</button><button onclick="selectAllMsgRests(false)" class="text-xs text-slate-500 hover:underline">Bekor qilish</button></div>' +
+        '<div style="max-height:150px;overflow-y:auto;background:#141d2e;border:1px solid rgba(6,182,212,0.15);border-radius:8px;padding:8px">' + checkboxes + '</div>' +
+      '</div>' +
+      '<div class="mb-3"><label class="block text-xs uppercase tracking-widest mb-2 text-slate-500">Sarlavha *</label><input id="msgTitle" class="inp" type="text" placeholder="Muhim xabar!"/></div>' +
+      '<div class="mb-3"><label class="block text-xs uppercase tracking-widest mb-2 text-slate-500">Xabar matni</label><textarea id="msgBody" class="inp" rows="3" placeholder="Batafsil..." style="resize:vertical"></textarea></div>' +
+      '<div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2 text-slate-500">Emoji</label>' +
+        '<div class="flex gap-2">' +
+          ['📩','⚠️','💰','🔧','📢','🎉'].map(function(e) { return '<button onclick="document.getElementById(\'msgIcon\').value=\'' + e + '\';this.parentNode.querySelectorAll(\'button\').forEach(function(b){b.style.background=\'\'});this.style.background=\'rgba(6,182,212,0.2)\'" class="w-10 h-10 rounded-lg border border-cyan-500/20 text-xl flex items-center justify-center cursor-pointer" style="display:flex;align-items:center;justify-content:center">' + e + '</button>'; }).join('') +
+          '<input type="hidden" id="msgIcon" value="📩"/>' +
+        '</div>' +
+      '</div>' +
+      '<div class="flex gap-3">' +
+        '<button onclick="closeSendMsgModal()" class="px-5 py-2.5 rounded-xl text-sm border border-cyan-500/20 text-slate-500">Bekor</button>' +
+        '<button onclick="sendAdminMessage()" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style="background:var(--sx-grad)">Yuborish</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(el);
+  el.addEventListener('click', function(e) { if (e.target === el) closeSendMsgModal(); });
+}
+
+function closeSendMsgModal() { var el = document.getElementById('sendMsgModal'); if (el) el.remove(); }
+function selectAllMsgRests(val) { document.querySelectorAll('.msgRestCheck').forEach(function(cb) { cb.checked = val; }); }
+
+async function sendAdminMessage() {
+  var checked = [];
+  document.querySelectorAll('.msgRestCheck:checked').forEach(function(cb) { checked.push(cb.value); });
+  var title = document.getElementById('msgTitle').value.trim();
+  var message = document.getElementById('msgBody').value.trim();
+  var icon = document.getElementById('msgIcon').value || '📩';
+  if (!checked.length) { alert('Kamida bitta restoran tanlang!'); return; }
+  if (!title) { alert('Sarlavha kiriting!'); return; }
+  var d = await api('/superadmin/send-message', { method:'POST', body: JSON.stringify({ restaurantIds: checked, title: title, message: message, icon: icon }) });
+  if (d && d.ok) { alert('✅ ' + d.sent + ' ta admin\'ga yuborildi!'); closeSendMsgModal(); }
+  else alert('Xato: ' + ((d && d.error) || ''));
 }
 
 async function markAllSARead() {

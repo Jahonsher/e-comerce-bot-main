@@ -103,10 +103,7 @@ tailwind.config = {
       <div class="px-5 py-3 text-xs uppercase tracking-widest opacity-40" style="color:#64748b">Boshqaruv</div>
       <div class="sidebar-item" data-page="products"><span>🍽</span> Menyu</div>
       <div class="sidebar-item" data-page="categories"><span>🗂</span> Kategoriyalar</div>
-      <div class="sidebar-item" data-page="inventory"><span>📦</span> Ombor</div>
-      <div class="sidebar-item" data-page="analytics"><span>📈</span> Analitika</div>
       <div class="sidebar-item" data-page="notifications"><span>🔔</span> Bildirishnomalar <span id="notifBadge" class="ml-auto text-[10px] font-bold rounded-full px-1.5 py-0.5" style="background:rgba(239,68,68,0.2);color:#ef4444;display:none">0</span></div>
-      <div class="sidebar-item" data-page="siteSettings"><span>🌐</span> Sayt sozlamalari</div>
       <div class="sidebar-item" data-page="ratings"><span>⭐</span> Reytinglar</div>
       <div class="sidebar-item" data-page="users"><span>👥</span> Foydalanuvchilar</div>
       <div style="height:1px;background:rgba(6,182,212,0.08);margin:8px 0"></div>
@@ -158,46 +155,6 @@ tailwind.config = {
     <div class="flex gap-3 mt-6">
       <button id="catModalCancel" class="px-5 py-2.5 rounded-xl text-sm border transition-colors hover:text-white" style="border-color:rgba(6,182,212,0.12);color:#64748b">Bekor</button>
       <button id="catModalSave" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style="background:var(--sx-grad)">Saqlash</button>
-    </div>
-  </div>
-</div>
-
-<!-- INVENTORY MODAL -->
-<div id="invModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,0.75)">
-  <div class="w-full max-w-md mx-4 rounded-2xl p-7 border max-h-screen overflow-y-auto" style="background:#111827;border-color:rgba(6,182,212,0.12)">
-    <h2 id="invModalTitle" class="text-xl font-bold mb-5" style="color:#22d3ee">Mahsulot qo'shish</h2>
-    <input type="hidden" id="invEditId"/>
-    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Mahsulot nomi</label><input class="inp" type="text" id="invName" placeholder="Go'sht"/></div>
-    <div class="grid grid-cols-2 gap-3 mb-4">
-      <div><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Hozirgi zaxira</label><input class="inp" type="number" id="invStock" placeholder="100"/></div>
-      <div><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">O'lchov</label>
-        <select class="inp" id="invUnit"><option value="dona">Dona</option><option value="kg">Kg</option><option value="litr">Litr</option><option value="gramm">Gramm</option><option value="paket">Paket</option></select>
-      </div>
-    </div>
-    <div class="grid grid-cols-2 gap-3 mb-4">
-      <div><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Min zaxira</label><input class="inp" type="number" id="invMin" placeholder="5"/></div>
-      <div><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Tan narxi (so'm)</label><input class="inp" type="number" id="invCost" placeholder="15000"/></div>
-    </div>
-    <div class="flex gap-3 mt-6">
-      <button onclick="closeInvModal()" class="px-5 py-2.5 rounded-xl text-sm border transition-colors hover:text-white" style="border-color:rgba(6,182,212,0.12);color:#64748b">Bekor</button>
-      <button onclick="saveInventory()" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style="background:var(--sx-grad)">Saqlash</button>
-    </div>
-  </div>
-</div>
-
-<!-- STOCK MODAL -->
-<div id="stockModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,0.75)">
-  <div class="w-full max-w-sm mx-4 rounded-2xl p-7 border" style="background:#111827;border-color:rgba(6,182,212,0.12)">
-    <h2 id="stockModalTitle" class="text-xl font-bold mb-5" style="color:#22d3ee">Kirim/Chiqim</h2>
-    <input type="hidden" id="stockItemId"/>
-    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Turi</label>
-      <select class="inp" id="stockType"><option value="in">📥 Kirim</option><option value="out">📤 Chiqim</option><option value="adjust">🔧 Tuzatish</option></select>
-    </div>
-    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Miqdor</label><input class="inp" type="number" id="stockQty" placeholder="10"/></div>
-    <div class="mb-4"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Izoh</label><input class="inp" type="text" id="stockNote" placeholder="Yetkazuvchidan keldi"/></div>
-    <div class="flex gap-3 mt-6">
-      <button onclick="closeStockModal()" class="px-5 py-2.5 rounded-xl text-sm border transition-colors hover:text-white" style="border-color:rgba(6,182,212,0.12);color:#64748b">Bekor</button>
-      <button onclick="saveStock()" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style="background:var(--sx-grad)">Tasdiqlash</button>
     </div>
   </div>
 </div>

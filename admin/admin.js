@@ -235,10 +235,7 @@ function showPage(page) {
   if (page === 'employees')  renderEmployees(main);
   if (page === 'attendance') renderAttendance(main, '');
   if (page === 'empReport')  renderEmpReport(main);
-  if (page === 'inventory')     renderInventory(main);
-  if (page === 'analytics')     renderAnalytics(main);
   if (page === 'notifications') renderNotifications(main);
-  if (page === 'siteSettings')  renderSiteSettings(main);
 }
 
 // ===== HELPERS =====
@@ -1617,8 +1614,39 @@ async function renderAnalytics(main) {
 // ===== NOTIFICATIONS PAGE ==========================
 // ===================================================
 async function renderNotifications(main) {
-  main.innerHTML = '<div class="page"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px"><div><h1 class="text-2xl font-bold" style="color:#f1f5f9">🔔 Bildirishnomalar</h1><p class="text-sm mt-1" style="color:#64748b">Barcha bildirishnomalar va ogohlantirishlar</p></div><div style="display:flex;gap:8px"><button onclick="markAllRead()" class="px-4 py-2 rounded-xl text-xs font-semibold" style="background:rgba(6,182,212,0.1);color:#22d3ee;border:1px solid rgba(6,182,212,0.2)">✓ Hammasini o\'qilgan</button><button onclick="clearReadNotifs()" class="px-4 py-2 rounded-xl text-xs font-semibold" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2)">🗑 Tozalash</button></div></div><div id="notifList"></div></div>';
+  main.innerHTML = '<div class="page"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px"><div><h1 class="text-2xl font-bold" style="color:#f1f5f9">🔔 Bildirishnomalar</h1><p class="text-sm mt-1" style="color:#64748b">Barcha bildirishnomalar va xabarlar</p></div><div style="display:flex;gap:8px"><button onclick="openReplyToSA()" class="px-4 py-2 rounded-xl text-xs font-semibold text-white" style="background:var(--sx-grad)">✉️ Superadminga yozish</button><button onclick="markAllRead()" class="px-4 py-2 rounded-xl text-xs font-semibold" style="background:rgba(6,182,212,0.1);color:#22d3ee;border:1px solid rgba(6,182,212,0.2)">✓ O\'qilgan</button><button onclick="clearReadNotifs()" class="px-4 py-2 rounded-xl text-xs font-semibold" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2)">🗑 Tozalash</button></div></div><div id="notifList"></div></div>';
   await loadNotifications();
+}
+
+function openReplyToSA() {
+  var old = document.getElementById('replyModal');
+  if (old) old.remove();
+  var el = document.createElement('div');
+  el.id = 'replyModal';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px';
+  el.innerHTML =
+    '<div style="background:#111827;border:1px solid rgba(6,182,212,0.12);border-radius:16px;padding:24px;max-width:420px;width:100%">' +
+      '<h2 style="font-size:17px;font-weight:700;color:#22d3ee;margin-bottom:16px">✉️ Superadminga xabar</h2>' +
+      '<div style="margin-bottom:12px"><label style="display:block;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;margin-bottom:6px">Sarlavha *</label><input id="replyTitle" class="inp" type="text" placeholder="Muammo haqida..."/></div>' +
+      '<div style="margin-bottom:16px"><label style="display:block;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#64748b;margin-bottom:6px">Xabar</label><textarea id="replyBody" class="inp" rows="3" placeholder="Batafsil yozing..." style="resize:vertical"></textarea></div>' +
+      '<div style="display:flex;gap:10px">' +
+        '<button onclick="closeReplyModal()" style="padding:10px 20px;border-radius:12px;border:1px solid rgba(6,182,212,0.12);color:#64748b;font-size:13px;cursor:pointer;background:transparent">Bekor</button>' +
+        '<button onclick="sendToSuperadmin()" style="flex:1;padding:10px;border-radius:12px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;background:var(--sx-grad);border:none">Yuborish</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(el);
+  el.addEventListener('click', function(e) { if (e.target === el) closeReplyModal(); });
+}
+
+function closeReplyModal() { var el = document.getElementById('replyModal'); if (el) el.remove(); }
+
+async function sendToSuperadmin() {
+  var title = document.getElementById('replyTitle').value.trim();
+  var message = document.getElementById('replyBody').value.trim();
+  if (!title) { alert('Sarlavha kiriting!'); return; }
+  var d = await apiFetch('/admin/send-to-superadmin', { method: 'POST', body: JSON.stringify({ title: title, message: message }) });
+  if (d.ok) { alert('✅ Superadminga yuborildi!'); closeReplyModal(); }
+  else alert('Xato: ' + (d.error || ''));
 }
 
 async function loadNotifications() {

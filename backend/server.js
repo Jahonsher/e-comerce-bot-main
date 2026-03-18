@@ -1072,6 +1072,31 @@ app.put("/superadmin/notifications/read-all", superMiddleware, async (req, res) 
   catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// Superadmin → Admin'ga xabar yuborish
+app.post("/superadmin/send-message", superMiddleware, async (req, res) => {
+  try {
+    const { restaurantIds, title, message, icon } = req.body;
+    if (!restaurantIds || !restaurantIds.length || !title) return res.status(400).json({ error: "Restoran va sarlavha kerak" });
+    let sent = 0;
+    for (const rId of restaurantIds) {
+      await createNotification(rId, "superadmin_message", title, message || "", icon || "📩", "admin", null, { from: "superadmin" });
+      sent++;
+    }
+    await logAudit("send_message", req.admin.username, "superadmin", restaurantIds.join(","), title);
+    res.json({ ok: true, sent });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// Admin → Superadmin'ga xabar yuborish
+app.post("/admin/send-to-superadmin", authMiddleware, async (req, res) => {
+  try {
+    const { title, message } = req.body;
+    if (!title) return res.status(400).json({ error: "Sarlavha kerak" });
+    await createSANotif("admin_message", "📩 " + (req.admin.restaurantName || req.admin.restaurantId) + ": " + title, message || "", "📩", { from: req.admin.restaurantId, restaurantName: req.admin.restaurantName });
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ===== SUPERADMIN: BOT MONITORING =====
 app.get("/superadmin/bots", superMiddleware, async (req, res) => {
   try {

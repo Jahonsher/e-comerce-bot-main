@@ -1573,10 +1573,10 @@ app.get("/admin/employees", authMiddleware, async (req, res) => {
 
 app.post("/admin/employees", authMiddleware, async (req, res) => {
   try {
-    const { name, phone, position, username, password, salary, workStart, workEnd, telegramId, branchId, weeklyOff, photo, faceDescriptor } = req.body;
+    const { name, phone, position, username, password, salary, workStart, workEnd, telegramId, branchId, weeklyOff, photo, faceDescriptor, role, tables } = req.body;
     if (!username || !password) return res.status(400).json({ error: "Login va parol kerak" });
     const hash = await bcrypt.hash(password, 10);
-    const emp  = await Employee.create({ name, phone, position, username, password: hash, salary: salary||0, workStart: workStart||"09:00", workEnd: workEnd||"18:00", telegramId: telegramId||null, branchId: branchId||null, weeklyOff: weeklyOff||"sunday", photo: photo||null, faceDescriptor: faceDescriptor||[], restaurantId: req.admin.restaurantId, active: true });
+    const emp  = await Employee.create({ name, phone, position, username, password: hash, salary: salary||0, workStart: workStart||"09:00", workEnd: workEnd||"18:00", telegramId: telegramId||null, branchId: branchId||null, weeklyOff: weeklyOff||"sunday", photo: photo||null, faceDescriptor: faceDescriptor||[], role: role||"employee", tables: tables||[], restaurantId: req.admin.restaurantId, active: true });
     res.json({ ok: true, employee: { ...emp.toObject(), password: undefined } });
   } catch(e) {
     if (e.code === 11000) return res.status(400).json({ error: "Bu username band" });

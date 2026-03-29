@@ -1097,12 +1097,12 @@ function openChefModal(empJson) {
   document.getElementById('chefModalTitle').textContent = emp ? 'Oshpazni tahrirlash' : 'Yangi oshpaz';
   document.getElementById('chefModalBody').innerHTML =
     '<div style="display:flex;flex-direction:column;gap:12px">' +
-      empInp('cName',     'ISM FAMILIYA', 'text',     emp ? (emp.name||'') : '') +
-      empInp('cPhone2',   'TELEFON',       'text',     emp ? (emp.phone||'') : '') +
-      empInp('cUsername', 'LOGIN',         'text',     emp ? (emp.username||'') : '') +
-      empInp('cPassword', 'PAROL' + (emp ? ' (o\'zgartirish uchun)' : ''), 'password', '') +
-      '<div id="cErr" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;padding:10px;border-radius:8px;font-size:13px"></div>' +
-      '<button id="cSaveBtn" onclick="saveChef(\'' + (emp ? emp._id : '') + '\')" style="width:100%;padding:12px;background:linear-gradient(135deg,#f97316,#ea580c);border:none;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">' +
+      empInp('chefName',     'ISM FAMILIYA', 'text',     emp ? (emp.name||'') : '') +
+      empInp('chefPhone',    'TELEFON',       'text',     emp ? (emp.phone||'') : '') +
+      empInp('chefUsername', 'LOGIN',         'text',     emp ? (emp.username||'') : '') +
+      empInp('chefPassword', 'PAROL' + (emp ? ' (o\'zgartirish uchun)' : ''), 'password', '') +
+      '<div id="chefErr" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;padding:10px;border-radius:8px;font-size:13px"></div>' +
+      '<button id="chefSaveBtn" onclick="saveChef(\'' + (emp ? emp._id : '') + '\')" style="width:100%;padding:12px;background:linear-gradient(135deg,#f97316,#ea580c);border:none;color:#fff;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">' +
         (emp ? '💾 Saqlash' : '+ Qo\'shish') +
       '</button>' +
     '</div>';
@@ -1112,12 +1112,12 @@ function openChefModal(empJson) {
 function closeChefModal() { document.getElementById('chefModal').style.display = 'none'; }
 
 async function saveChef(empId) {
-  var errEl = document.getElementById('cErr');
+  var errEl = document.getElementById('chefErr');
   errEl.style.display = 'none';
-  var name     = (document.getElementById('cName')?.value || '').trim();
-  var phone    = (document.getElementById('cPhone2')?.value || '').trim();
-  var username = (document.getElementById('cUsername')?.value || '').trim();
-  var password = document.getElementById('cPassword')?.value || '';
+  var name     = (document.getElementById('chefName')?.value || '').trim();
+  var phone    = (document.getElementById('chefPhone')?.value || '').trim();
+  var username = (document.getElementById('chefUsername')?.value || '').trim();
+  var password = document.getElementById('chefPassword')?.value || '';
 
   if (!name)               { errEl.textContent = 'Ism kiritilmagan';   errEl.style.display='block'; return; }
   if (!username)           { errEl.textContent = 'Login kiritilmagan'; errEl.style.display='block'; return; }
@@ -1126,7 +1126,7 @@ async function saveChef(empId) {
   var body = { name: name, phone: phone, username: username, position: 'Oshpaz', role: 'chef' };
   if (password) body.password = password;
 
-  var btn = document.getElementById('cSaveBtn');
+  var btn = document.getElementById('chefSaveBtn');
   if (btn) { btn.textContent = 'Saqlanmoqda...'; btn.disabled = true; }
 
   var url    = empId ? '/admin/employees/' + empId : '/admin/employees';

@@ -1,7 +1,8 @@
 // ===== CONFIG =====
-var API = window.location.hostname === 'localhost'
+var _cfg = window.__CONFIG__ || {};
+var API = _cfg.API_URL || (window.location.hostname === 'localhost'
   ? 'http://localhost:5000'
-  : window.location.origin;
+  : 'https://e-comerce-bot-main-production.up.railway.app');
 
 var token = localStorage.getItem('waiterToken');
 var waiterInfo = JSON.parse(localStorage.getItem('waiterInfo') || '{}');

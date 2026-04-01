@@ -740,8 +740,10 @@ async function renderUsers(main) {
       '<div id="usersTable" class="overflow-x-auto"><div class="p-5" style="color:#64748b">Yuklanmoqda...</div></div>' +
     '</div></div>';
 
-  var users = await apiFetch('/admin/users');
-  if (!users) return;
+  var res = await apiFetch('/admin/users');
+  if (!res) return;
+  var users = res.users || res;
+  if (!Array.isArray(users)) return;
   var rows = '';
   users.forEach(function(u, i) {
     rows += '<tr>' +

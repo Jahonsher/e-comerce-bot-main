@@ -406,7 +406,7 @@ function renderProfile() {
 // ===== CATEGORIES ==================================
 // ===================================================
 function loadCategories() {
-  fetch(API + "/categories?restaurantId=" + RESTAURANT_ID)
+  return fetch(API + "/categories?restaurantId=" + RESTAURANT_ID)
     .then(res => res.json())
     .then(cats => {
       const tabsContainer = document.getElementById("filterTabs");
@@ -430,7 +430,7 @@ function loadCategories() {
 // ===== PRODUCTS ====================================
 // ===================================================
 function loadProducts() {
-  fetch(API + "/products?restaurantId=" + RESTAURANT_ID)
+  return fetch(API + "/products?restaurantId=" + RESTAURANT_ID)
     .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
     .then(data => { products = data; renderProducts(products); })
     .catch(err => {
@@ -758,5 +758,5 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-loadCategories();
-loadProducts();
+// Parallel yuklash — tezroq
+Promise.all([loadCategories(), loadProducts()]);

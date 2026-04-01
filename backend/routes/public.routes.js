@@ -26,24 +26,51 @@ router.get("/check-block/:restaurantId", async (req, res) => {
   }
 });
 
-// ===== Mahsulotlar (public) =====
+// ===== CACHE (products va categories uchun) =====
+const cache = {};
+const CACHE_TTL = 60000; // 1 daqiqa
+
+function getCached(key) {
+  const entry = cache[key];
+  if (entry && Date.now() - entry.time < CACHE_TTL) return entry.data;
+  return null;
+}
+
+function setCache(key, data) {
+  cache[key] = { data, time: Date.now() };
+}
+
+// ===== Mahsulotlar (public, cached) =====
 router.get("/products", async (req, res) => {
   try {
     const rId = req.query.restaurantId;
     if (!rId) return res.status(400).json({ error: "restaurantId kerak" });
-    const products = await Product.find({ restaurantId: rId }).sort({ id: 1 });
+
+    const cacheKey = `products:${rId}`;
+    const cached = getCached(cacheKey);
+    if (cached) return res.json(cached);
+
+    const products = await Product.find({ restaurantId: rId }).sort({ id: 1 }).lean();
+    setCache(cacheKey, products);
     res.json(products);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-// ===== Kategoriyalar (public) =====
+// ===== Kategoriyalar (public, cached) =====
 router.get("/categories", async (req, res) => {
   try {
     const rId = req.query.restaurantId;
     if (!rId) return res.status(400).json({ error: "restaurantId kerak" });
-    res.json(await Category.find({ restaurantId: rId, active: true }).sort({ order: 1 }));
+
+    const cacheKey = `categories:${rId}`;
+    const cached = getCached(cacheKey);
+    if (cached) return res.json(cached);
+
+    const cats = await Category.find({ restaurantId: rId, active: true }).sort({ order: 1 }).lean();
+    setCache(cacheKey, cats);
+    res.json(cats);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

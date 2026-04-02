@@ -5,6 +5,7 @@ const restaurantSchema = new mongoose.Schema(
   {
     restaurantId: { type: String, required: true, unique: true },
     name: String,
+    businessType: { type: String, default: "restaurant" },
     blocked: { type: Boolean, default: false },
     blockReason: { type: String, default: "" },
   },

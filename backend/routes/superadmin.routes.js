@@ -16,6 +16,15 @@ const Category = require("../models/Category");
 const {
   Restaurant, AuditLog, Payment, SANotification,
 } = require("../models");
+const {
+  BUSINESS_TYPES,
+  getDefaultModules,
+  getAvailableModuleKeys,
+  isCoreModule,
+  isValidBusinessType,
+  getAllBusinessTypes,
+  getModuleDetails,
+} = require("../config/businessTypes");
 
 // ===== Audit log helper =====
 async function logAudit(action, actor, role, restaurantId, details, ip) {
@@ -27,10 +36,10 @@ async function logAudit(action, actor, role, restaurantId, details, ip) {
 }
 
 // ===== Restaurant helper =====
-async function ensureRestaurant(restaurantId, name) {
+async function ensureRestaurant(restaurantId, name, businessType) {
   const exists = await Restaurant.findOne({ restaurantId });
   if (!exists) {
-    await Restaurant.create({ restaurantId, name: name || restaurantId, blocked: false, blockReason: "" });
+    await Restaurant.create({ restaurantId, name: name || restaurantId, businessType: businessType || "restaurant", blocked: false, blockReason: "" });
   }
 }
 
@@ -85,10 +94,14 @@ router.get("/restaurants", superMiddleware, async (req, res) => {
 
 router.post("/restaurants", superMiddleware, async (req, res) => {
   try {
-    const { username, password, restaurantName, restaurantId, botToken, chefId, phone, address, webappUrl } = req.body;
+    const { username, password, restaurantName, restaurantId, botToken, chefId, phone, address, webappUrl, businessType } = req.body;
     if (!username || !password || !restaurantName || !restaurantId) {
       return res.status(400).json({ error: "username, password, restaurantName, restaurantId majburiy" });
     }
+
+    // Biznes turini tekshirish (default: restaurant)
+    const type = businessType && isValidBusinessType(businessType) ? businessType : "restaurant";
+    const defaultModules = getDefaultModules(type);
 
     const exists = await Admin.findOne({ $or: [{ username }, { restaurantId, role: "admin" }] });
     if (exists) return res.status(400).json({ error: "Bu username yoki RestaurantID allaqachon mavjud" });
@@ -99,13 +112,19 @@ router.post("/restaurants", superMiddleware, async (req, res) => {
       botToken: botToken || "", chefId: Number(chefId) || 0,
       phone: phone || "", address: address || "", webappUrl: webappUrl || "",
       role: "admin", active: true,
+      businessType: type,
+      modules: defaultModules,
     });
 
-    await ensureRestaurant(restaurantId, restaurantName);
-    await Category.insertMany([
-      { name: "Taom", name_ru: "Еда", emoji: "🍽", order: 1, restaurantId },
-      { name: "Ichimlik", name_ru: "Напитки", emoji: "🥤", order: 2, restaurantId },
-    ]);
+    await ensureRestaurant(restaurantId, restaurantName, type);
+
+    // Restoran turi uchun default kategoriyalar
+    if (type === "restaurant") {
+      await Category.insertMany([
+        { name: "Taom", name_ru: "Еда", emoji: "🍽", order: 1, restaurantId },
+        { name: "Ichimlik", name_ru: "Напитки", emoji: "🥤", order: 2, restaurantId },
+      ]);
+    }
 
     if (botToken) await botService.startBot(restaurantId, botToken, webappUrl, Number(chefId));
 
@@ -402,6 +421,207 @@ router.put("/change-password", superMiddleware, async (req, res) => {
     await admin.save();
     await logAudit("password_change", req.admin.username, "superadmin", "", "Parol o'zgartirildi");
     res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// =============================================
+// BUSINESS TYPES & MODULE MANAGEMENT
+// =============================================
+
+// Barcha biznes turlarini olish (dropdown uchun)
+router.get("/business-types", superMiddleware, async (req, res) => {
+  try {
+    res.json({ ok: true, types: getAllBusinessTypes() });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Biznes turi uchun mavjud modullar (to'liq detail)
+router.get("/business-types/:type/modules", superMiddleware, async (req, res) => {
+  try {
+    const { type } = req.params;
+    if (!isValidBusinessType(type)) {
+      return res.status(400).json({ error: `Noma'lum biznes turi: ${type}` });
+    }
+    res.json({
+      ok: true,
+      type,
+      label: BUSINESS_TYPES[type].label,
+      icon: BUSINESS_TYPES[type].icon,
+      modules: getModuleDetails(type),
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Biznes turini o'zgartirish (modullarni reset qiladi)
+router.put("/restaurants/:id/business-type", superMiddleware, async (req, res) => {
+  try {
+    const { businessType } = req.body;
+    if (!businessType || !isValidBusinessType(businessType)) {
+      return res.status(400).json({ error: `Noto'g'ri biznes turi: ${businessType}` });
+    }
+
+    const admin = await Admin.findById(req.params.id);
+    if (!admin) return res.status(404).json({ error: "Topilmadi" });
+
+    const oldType = admin.businessType || "restaurant";
+    const newModules = getDefaultModules(businessType);
+
+    admin.businessType = businessType;
+    admin.modules = newModules;
+    await admin.save();
+
+    // Restaurant modelini ham yangilash
+    await Restaurant.findOneAndUpdate(
+      { restaurantId: admin.restaurantId },
+      { businessType },
+      { upsert: true }
+    );
+
+    await logAudit(
+      "business_type_change",
+      req.admin.username,
+      "superadmin",
+      admin.restaurantId,
+      `Biznes turi: ${oldType} → ${businessType}`
+    );
+
+    res.json({
+      ok: true,
+      admin: {
+        _id: admin._id,
+        restaurantId: admin.restaurantId,
+        businessType: admin.businessType,
+        modules: admin.modules,
+      },
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Modullarni olish (bitta biznes uchun — hozirgi holati)
+router.get("/restaurants/:id/modules", superMiddleware, async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.params.id).select("restaurantId restaurantName businessType modules");
+    if (!admin) return res.status(404).json({ error: "Topilmadi" });
+
+    const type = admin.businessType || "restaurant";
+    const available = getModuleDetails(type);
+
+    // Har bir modul uchun hozirgi holat
+    const modulesWithState = available.map((mod) => ({
+      ...mod,
+      enabled: admin.modules?.[mod.key] === true,
+    }));
+
+    res.json({
+      ok: true,
+      restaurantId: admin.restaurantId,
+      restaurantName: admin.restaurantName,
+      businessType: type,
+      modules: modulesWithState,
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Modulni yoqish/o'chirish (toggle)
+router.put("/restaurants/:id/modules", superMiddleware, async (req, res) => {
+  try {
+    const { modules } = req.body; // { waiter: true, kitchen: false, ... }
+    if (!modules || typeof modules !== "object") {
+      return res.status(400).json({ error: "modules objekt kerak" });
+    }
+
+    const admin = await Admin.findById(req.params.id);
+    if (!admin) return res.status(404).json({ error: "Topilmadi" });
+
+    const type = admin.businessType || "restaurant";
+    const availableKeys = getAvailableModuleKeys(type);
+    const changes = [];
+
+    for (const [key, value] of Object.entries(modules)) {
+      // Faqat shu biznes turiga tegishli modullarni qabul qilish
+      if (!availableKeys.includes(key)) continue;
+
+      // Core modulni o'chirib bo'lmaydi
+      if (isCoreModule(type, key) && value === false) {
+        continue;
+      }
+
+      const oldValue = admin.modules?.[key];
+      if (oldValue !== !!value) {
+        admin.modules[key] = !!value;
+        changes.push(`${key}: ${oldValue ? "on" : "off"} → ${value ? "on" : "off"}`);
+      }
+    }
+
+    if (changes.length > 0) {
+      admin.markModified("modules");
+      await admin.save();
+      await logAudit(
+        "modules_update",
+        req.admin.username,
+        "superadmin",
+        admin.restaurantId,
+        changes.join(", ")
+      );
+    }
+
+    res.json({
+      ok: true,
+      modules: admin.modules,
+      changes,
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Bitta modulni toggle qilish (qulay shortcut)
+router.put("/restaurants/:id/modules/:moduleKey/toggle", superMiddleware, async (req, res) => {
+  try {
+    const { moduleKey } = req.params;
+
+    const admin = await Admin.findById(req.params.id);
+    if (!admin) return res.status(404).json({ error: "Topilmadi" });
+
+    const type = admin.businessType || "restaurant";
+    const availableKeys = getAvailableModuleKeys(type);
+
+    if (!availableKeys.includes(moduleKey)) {
+      return res.status(400).json({ error: `Bu biznes turida "${moduleKey}" moduli mavjud emas` });
+    }
+
+    if (isCoreModule(type, moduleKey)) {
+      return res.status(400).json({ error: `"${moduleKey}" core modul — o'chirib bo'lmaydi` });
+    }
+
+    const current = admin.modules?.[moduleKey] === true;
+    admin.modules[moduleKey] = !current;
+    admin.markModified("modules");
+    await admin.save();
+
+    await logAudit(
+      "module_toggle",
+      req.admin.username,
+      "superadmin",
+      admin.restaurantId,
+      `${moduleKey}: ${current ? "on → off" : "off → on"}`
+    );
+
+    res.json({
+      ok: true,
+      module: moduleKey,
+      enabled: !current,
+    });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

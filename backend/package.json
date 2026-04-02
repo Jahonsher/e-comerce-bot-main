@@ -1,7 +1,7 @@
 {
   "name": "servix-backend",
   "version": "2.0.0",
-  "description": "Servix — Multi-restoran SaaS platformasi",
+  "description": "ServiX — Universal biznes SaaS platformasi",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

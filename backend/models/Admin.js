@@ -17,6 +17,9 @@ const adminSchema = new mongoose.Schema(
     blockReason: { type: String, default: "" },
     subscriptionEnd: Date,
 
+    // ===== UNIVERSAL BUSINESS TYPE =====
+    businessType: { type: String, default: "restaurant" },
+
     // Site settings
     botUsername: String,
     adminTg: String,
@@ -50,6 +53,7 @@ const adminSchema = new mongoose.Schema(
       branches: { type: Boolean, default: true },
       broadcast: { type: Boolean, default: true },
       notifications: { type: Boolean, default: true },
+      inventory: { type: Boolean, default: false },
       waiter: { type: Boolean, default: false },
       kitchen: { type: Boolean, default: false },
     },

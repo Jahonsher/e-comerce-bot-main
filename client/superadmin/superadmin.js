@@ -9,6 +9,7 @@ var statsCache    = {};
 var currentTab    = null;
 var currentPeriod = 'week';
 var tabChart      = null;
+var businessTypesCache = null; // biznes turlari cache
 
 // ===== AUTH =====
 async function doLogin() {
@@ -448,11 +449,11 @@ async function renderRestaurants(main) {
   main.innerHTML =
     '<div class="page">' +
       '<div style="margin-bottom:24px">' +
-        '<h1 style="font-family:\'Playfair Display\',serif;font-size:28px;font-weight:700">Restoranlar</h1>' +
-        '<p style="font-size:13px;margin-top:4px;color:#64748b">Barcha ulangan restoranlar</p>' +
+        '<h1 style="font-family:\'Playfair Display\',serif;font-size:28px;font-weight:700">Bizneslar</h1>' +
+        '<p style="font-size:13px;margin-top:4px;color:#64748b">Barcha ulangan bizneslar</p>' +
       '</div>' +
       '<div style="display:flex;justify-content:flex-end;margin-bottom:16px">' +
-        '<button id="addRestBtn" style="padding:10px 20px;border-radius:12px;background:linear-gradient(135deg,#06b6d4,#8b5cf6);color:#fff;font-family:Manrope,sans-serif;font-size:13px;font-weight:700;border:none;cursor:pointer">+ Yangi restoran</button>' +
+        '<button id="addRestBtn" style="padding:10px 20px;border-radius:12px;background:linear-gradient(135deg,#06b6d4,#8b5cf6);color:#fff;font-family:Manrope,sans-serif;font-size:13px;font-weight:700;border:none;cursor:pointer">+ Yangi biznes</button>' +
       '</div>' +
       '<div id="restCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">' +
         '<div style="color:#64748b">Yuklanmoqda...</div>' +
@@ -470,7 +471,7 @@ async function loadRestCards() {
   if (!el) return;
 
   if (!rests.length) {
-    el.innerHTML = '<div style="color:#64748b;padding:20px">Hali restoran qoshilmagan</div>';
+    el.innerHTML = '<div style="color:#64748b;padding:20px">Hali biznes qoshilmagan</div>';
     return;
   }
 
@@ -487,7 +488,8 @@ async function loadRestCards() {
         '<div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#06b6d4,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🏪</div>' +
         '<div style="flex:1">' +
           '<div style="font-weight:700;font-size:14px">' + r.restaurantName + '</div>' +
-          '<div style="font-size:12px;color:#64748b;margin-top:2px">ID: ' + r.restaurantId + ' · @' + r.username + '</div>' +
+          '<div style="font-size:12px;color:#64748b;margin-top:2px">ID: ' + r.restaurantId + ' · @' + r.username +
+            ' · <span style="color:#8b5cf6">' + getBusinessTypeLabel(r.businessType) + '</span></div>' +
         '</div>' +
         '<span style="font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;' + (isActive ? 'background:rgba(16,185,129,0.15);color:#10b981' : 'background:rgba(239,68,68,0.15);color:#ef4444') + '">' + (isActive ? 'Faol' : 'Bloklangan') + '</span>' +
       '</div>' +
@@ -512,9 +514,9 @@ async function loadRestCards() {
         var modNames = {
           orders:'📦', menu:'🍽', categories:'🗂', ratings:'⭐', users:'👥',
           employees:'👷', attendance:'📋', empReport:'💰', branches:'🏢',
-          broadcast:'📢', notifications:'🔔', waiter:'🧑‍🍳', kitchen:'🍳'
+          broadcast:'📢', notifications:'🔔', inventory:'📦', waiter:'🧑‍🍳', kitchen:'🍳'
         };
-        var defaultFalse = ['waiter', 'kitchen'];
+        var defaultFalse = ['waiter', 'kitchen', 'inventory'];
         var badges = '';
         Object.keys(modNames).forEach(function(k) {
           var on = defaultFalse.indexOf(k) !== -1 ? mods[k] === true : mods[k] !== false;
@@ -560,7 +562,7 @@ async function loadRestCards() {
 
 // ===== MODAL =====
 function openRestModal(r) {
-  document.getElementById('restModalTitle').textContent = r ? 'Restoranni tahrirlash' : "Yangi restoran qoshish";
+  document.getElementById('restModalTitle').textContent = r ? 'Biznesni tahrirlash' : "Yangi biznes qoshish";
   document.getElementById('restEditId').value   = r ? r._id : '';
   document.getElementById('rName').value        = r ? (r.restaurantName || '') : '';
   document.getElementById('rId').value          = r ? (r.restaurantId   || '') : '';
@@ -574,17 +576,15 @@ function openRestModal(r) {
   document.getElementById('rId').disabled       = !!r;
   document.getElementById('rUsername').disabled = !!r;
 
-  // ===== MODULLAR — tahrirlashda hozirgi holatini yuklash =====
-  var mods = (r && r.modules) || {};
-  var defaultFalse = ['waiter', 'kitchen']; // bu modullar default holda o'chirilgan
-  document.querySelectorAll('#moduleToggles input[data-mod]').forEach(function(cb) {
-    var mod = cb.dataset.mod;
-    if (defaultFalse.indexOf(mod) !== -1) {
-      cb.checked = mods[mod] === true; // default false
-    } else {
-      cb.checked = mods[mod] !== false; // default true
-    }
-  });
+  // ===== BIZNES TURINI TANLASH =====
+  var btSelect = document.getElementById('rBusinessType');
+  var currentType = (r && r.businessType) || 'restaurant';
+  btSelect.value = currentType;
+  // Tahrirlashda biznes turini o'zgartirib bo'lmaydi (modullar resetlanadi)
+  btSelect.disabled = !!r;
+
+  // ===== MODULLARNI DYNAMIC YUKLASH =====
+  loadModuleToggles(currentType, r ? (r.modules || {}) : null);
 
   var modal = document.getElementById('restModal');
   modal.classList.remove('hidden');
@@ -621,9 +621,10 @@ async function saveRest() {
     botToken:       document.getElementById('rBotToken').value.trim(),
     chefId:         Number(document.getElementById('rChefId').value) || 0,
     webappUrl:      document.getElementById('rWebapp').value.trim(),
+    businessType:   document.getElementById('rBusinessType').value,
     modules:        modules
   };
-  if (!body.restaurantName) { alert('Restoran nomi majburiy'); saveBtn.textContent = 'Saqlash'; saveBtn.disabled = false; return; }
+  if (!body.restaurantName) { alert('Biznes nomi majburiy'); saveBtn.textContent = 'Saqlash'; saveBtn.disabled = false; return; }
   
   try {
     var result;
@@ -683,7 +684,7 @@ function showBlockModal(id, restName) {
   el.innerHTML = [
     '<div style="background:#141d2e;border:1px solid rgba(239,68,68,0.3);border-radius:16px;padding:24px;max-width:420px;width:100%">',
     '<div style="font-size:32px;text-align:center;margin-bottom:12px">🔒</div>',
-    '<div style="font-size:16px;font-weight:700;color:#f1f5f9;text-align:center;margin-bottom:6px">Restoranni bloklash</div>',
+    '<div style="font-size:16px;font-weight:700;color:#f1f5f9;text-align:center;margin-bottom:6px">Biznesni bloklash</div>',
     '<div style="font-size:13px;color:#64748b;text-align:center;margin-bottom:20px">' + restName + '</div>',
     '<div style="margin-bottom:16px">',
     '<label style="font-size:12px;color:#94a3b8;display:block;margin-bottom:6px">BLOKLASH SABABI</label>',
@@ -732,7 +733,7 @@ function showUnblockModal(id, restName) {
   el.innerHTML = [
     '<div style="background:#141d2e;border:1px solid rgba(34,197,94,0.3);border-radius:16px;padding:24px;max-width:420px;width:100%">',
     '<div style="font-size:32px;text-align:center;margin-bottom:12px">✅</div>',
-    '<div style="font-size:16px;font-weight:700;color:#f1f5f9;text-align:center;margin-bottom:6px">Restoranni faollashtirish</div>',
+    '<div style="font-size:16px;font-weight:700;color:#f1f5f9;text-align:center;margin-bottom:6px">Biznesni faollashtirish</div>',
     '<div style="font-size:13px;color:#64748b;text-align:center;margin-bottom:20px">' + restName + '</div>',
     '<div style="margin-bottom:16px">',
     '<label style="font-size:12px;color:#94a3b8;display:block;margin-bottom:6px">OBUNA NECHA KUNGA</label>',
@@ -1011,7 +1012,7 @@ async function renderSettings(main) {
       '<h3 class="text-sm font-bold text-cyan-400 mb-4">ℹ️ Tizim ma\'lumotlari</h3>' +
       '<div class="text-sm text-slate-500 mb-2">Username: <span class="text-slate-300 font-semibold">@' + (saInfo.username || '') + '</span></div>' +
       '<div class="text-sm text-slate-500 mb-2">Role: <span class="text-cyan-400 font-semibold">Superadmin</span></div>' +
-      '<div class="text-sm text-slate-500">Platform: <span class="text-slate-300 font-semibold">ServiX v2.0</span></div>' +
+      '<div class="text-sm text-slate-500">Platform: <span class="text-slate-300 font-semibold">ServiX v3.0 — Universal</span></div>' +
     '</div>' +
   '</div>';
 }
@@ -1030,3 +1031,101 @@ async function changePassword() {
   if (d && d.ok) { ok.textContent = '✅ Parol o\'zgartirildi!'; ok.style.display = 'block'; document.getElementById('setCurPass').value = ''; document.getElementById('setNewPass').value = ''; document.getElementById('setNewPass2').value = ''; }
   else { err.textContent = (d && d.error) || 'Xato'; err.style.display = 'block'; }
 }
+// =============================================
+// BUSINESS TYPES & DYNAMIC MODULE SYSTEM
+// =============================================
+
+// Biznes turlari ro'yxatini serverdan olish (cache bilan)
+async function loadBusinessTypes() {
+  if (businessTypesCache) return businessTypesCache;
+  var data = await api('/superadmin/business-types');
+  if (data && data.types) {
+    businessTypesCache = data.types;
+
+    // Dropdown ni yangilash
+    var sel = document.getElementById('rBusinessType');
+    if (sel) {
+      sel.innerHTML = data.types.map(function(t) {
+        return '<option value="' + t.key + '">' + t.icon + ' ' + t.label.uz + '</option>';
+      }).join('');
+    }
+  }
+  return businessTypesCache || [];
+}
+
+// Biznes turi labelini olish (kartochka uchun)
+function getBusinessTypeLabel(type) {
+  if (!type || type === 'restaurant') return '🍽️ Restoran';
+  if (businessTypesCache) {
+    var found = businessTypesCache.find(function(t) { return t.key === type; });
+    if (found) return found.icon + ' ' + found.label.uz;
+  }
+  return type;
+}
+
+// Biznes turiga qarab modullar toggleni dinamik yuklash
+async function loadModuleToggles(businessType, existingModules) {
+  var container = document.getElementById('moduleToggles');
+  if (!container) return;
+
+  container.innerHTML = '<div style="color:#64748b;font-size:12px;padding:8px">Yuklanmoqda...</div>';
+
+  var data = await api('/superadmin/business-types/' + (businessType || 'restaurant') + '/modules');
+  if (!data || !data.modules) {
+    container.innerHTML = '<div style="color:#ef4444;font-size:12px;padding:8px">Modullarni yuklab bolmadi</div>';
+    return;
+  }
+
+  // Description
+  var descEl = document.getElementById('bizTypeDesc');
+  if (descEl && data.label) {
+    descEl.textContent = data.icon + ' ' + (data.label.uz || '');
+  }
+
+  container.innerHTML = '';
+  data.modules.forEach(function(mod) {
+    var isChecked;
+    if (existingModules) {
+      // Tahrirlash — hozirgi holatdan olish
+      isChecked = existingModules[mod.key] === true;
+    } else {
+      // Yangi yaratish — default qiymat
+      isChecked = mod.default;
+    }
+
+    var isCore = mod.core;
+    var borderStyle = isCore
+      ? 'border-color:rgba(34,197,94,0.25)'
+      : (mod.default ? '' : 'border-color:rgba(245,158,11,0.25)');
+
+    var label = document.createElement('label');
+    label.className = 'mod-toggle';
+    if (borderStyle) label.style.cssText = borderStyle;
+    label.title = mod.description ? mod.description.uz : '';
+
+    label.innerHTML =
+      '<input type="checkbox" data-mod="' + mod.key + '"' +
+        (isChecked ? ' checked' : '') +
+        (isCore ? ' disabled' : '') +
+      '/>' +
+      '<span>' + mod.icon + ' ' + mod.label.uz +
+        (isCore ? ' <span style="font-size:9px;color:#22c55e;font-weight:700">CORE</span>' : '') +
+      '</span>';
+
+    container.appendChild(label);
+  });
+}
+
+// businessType dropdown o'zgarganda modullarni qayta yuklash
+document.getElementById('rBusinessType').addEventListener('change', function() {
+  loadModuleToggles(this.value, null);
+});
+
+// App boshlanganda businessTypes ni oldindan yuklash
+(function() {
+  var origStartApp = startApp;
+  startApp = function() {
+    origStartApp();
+    loadBusinessTypes();
+  };
+})();

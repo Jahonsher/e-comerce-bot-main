@@ -174,14 +174,17 @@ function filterSidebar() {
     orders:'orders', products:'menu', categories:'categories',
     ratings:'ratings', users:'users', branches:'branches',
     employees:'employees', attendance:'attendance', empReport:'empReport',
-    notifications:'notifications', waiters:'waiter', chefs:'kitchen'
+    notifications:'notifications', inventory:'inventory', waiters:'waiter', chefs:'kitchen'
   };
+  // Bu modullar default o'chiq — faqat true bo'lganda ko'rsatish
+  var defaultOff = ['waiter', 'kitchen', 'inventory'];
   document.querySelectorAll('.sidebar-item[data-page]').forEach(function(el) {
     var key = map[el.dataset.page];
-    if (key && mods[key] === false) {
-      el.style.display = 'none';
+    if (!key) return;
+    if (defaultOff.indexOf(key) !== -1) {
+      el.style.display = mods[key] === true ? '' : 'none';
     } else {
-      el.style.display = '';
+      el.style.display = mods[key] === false ? 'none' : '';
     }
   });
 }

@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const config = require("../config");
 const { isBotBlocked } = require("../middleware/auth");
+const { moduleGuard } = require("../middleware/moduleGuard");
 const { loginLimiter } = require("../middleware/rateLimit");
 const logger = require("../utils/logger");
 
@@ -66,7 +67,7 @@ router.post("/kitchen/login", loginLimiter, async (req, res) => {
 });
 
 // Oshpazga yuborilgan buyurtmalar
-router.get("/kitchen/orders", kitchenMiddleware, async (req, res) => {
+router.get("/kitchen/orders", kitchenMiddleware, moduleGuard("kitchen", "kitchen"), async (req, res) => {
   try {
     const shots = await Shot.find({
       restaurantId: req.chef.restaurantId,
@@ -94,7 +95,7 @@ router.get("/kitchen/orders", kitchenMiddleware, async (req, res) => {
 });
 
 // Oxirgi tayyor bo'lgan buyurtmalar (1 soat ichida)
-router.get("/kitchen/recent", kitchenMiddleware, async (req, res) => {
+router.get("/kitchen/recent", kitchenMiddleware, moduleGuard("kitchen", "kitchen"), async (req, res) => {
   try {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const shots = await Shot.find({
@@ -124,7 +125,7 @@ router.get("/kitchen/recent", kitchenMiddleware, async (req, res) => {
 });
 
 // Item statusini "cooking" ga o'zgartirish
-router.post("/kitchen/orders/:shotId/cooking", kitchenMiddleware, async (req, res) => {
+router.post("/kitchen/orders/:shotId/cooking", kitchenMiddleware, moduleGuard("kitchen", "kitchen"), async (req, res) => {
   try {
     const { itemIndexes } = req.body;
     const shot = await Shot.findById(req.params.shotId);
@@ -154,7 +155,7 @@ router.post("/kitchen/orders/:shotId/cooking", kitchenMiddleware, async (req, re
 });
 
 // Item(lar) tayyor
-router.post("/kitchen/orders/:shotId/ready", kitchenMiddleware, async (req, res) => {
+router.post("/kitchen/orders/:shotId/ready", kitchenMiddleware, moduleGuard("kitchen", "kitchen"), async (req, res) => {
   try {
     const { itemIndexes } = req.body;
     const shot = await Shot.findById(req.params.shotId);

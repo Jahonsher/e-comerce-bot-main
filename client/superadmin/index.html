@@ -90,7 +90,7 @@ tailwind.config = {
     </div>
     <nav class="py-3 flex-1">
       <div class="si active" data-page="dashboard"><span>📊</span> Dashboard</div>
-      <div class="si" data-page="restaurants"><span>🏪</span> Restoranlar</div>
+      <div class="si" data-page="restaurants"><span>🏢</span> Bizneslar</div>
       <div class="si" data-page="payments"><span>💰</span> To'lovlar</div>
       <div class="si" data-page="bots"><span>📱</span> Botlar</div>
       <div class="si" data-page="auditLog"><span>📋</span> Audit log</div>
@@ -107,11 +107,19 @@ tailwind.config = {
 <!-- RESTAURANT MODAL -->
 <div id="restModal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,0.8)">
   <div class="w-full max-w-lg mx-4 rounded-2xl p-7 border overflow-y-auto" style="background:#0d1220;border-color:rgba(6,182,212,0.2);max-height:90vh">
-    <h2 id="restModalTitle" class="text-xl font-bold mb-5" style="color:#22d3ee">Yangi restoran</h2>
+    <h2 id="restModalTitle" class="text-xl font-bold mb-5" style="color:#22d3ee">Yangi biznes</h2>
     <input type="hidden" id="restEditId"/>
     <div class="grid grid-cols-2 gap-3">
-      <div class="col-span-2"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Restoran nomi *</label><input class="inp" type="text" id="rName" placeholder="Samarqand Oshi"/></div>
-      <div><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Restoran ID *</label><input class="inp" type="text" id="rId" placeholder="samarqand"/></div>
+      <!-- BIZNES TURI -->
+      <div class="col-span-2" style="margin-bottom:4px">
+        <label class="block text-xs uppercase tracking-widest mb-2" style="color:#22d3ee;font-weight:700">Biznes turi</label>
+        <select class="inp" id="rBusinessType" style="cursor:pointer">
+          <option value="restaurant">🍽️ Restoran</option>
+        </select>
+        <p id="bizTypeDesc" class="text-xs mt-1" style="color:#475569"></p>
+      </div>
+      <div class="col-span-2"><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Biznes nomi *</label><input class="inp" type="text" id="rName" placeholder="Samarqand Oshi"/></div>
+      <div><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Biznes ID *</label><input class="inp" type="text" id="rId" placeholder="samarqand"/></div>
       <div><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Admin login *</label><input class="inp" type="text" id="rUsername" placeholder="samarqand_admin"/></div>
       <div><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Parol *</label><input class="inp" type="password" id="rPassword" placeholder="••••••••"/></div>
       <div><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Telefon</label><input class="inp" type="text" id="rPhone" placeholder="+998 90 000 00 00"/></div>
@@ -120,23 +128,11 @@ tailwind.config = {
       <div><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Chef Telegram ID</label><input class="inp" type="text" id="rChefId" placeholder="123456789"/></div>
       <div><label class="block text-xs uppercase tracking-widest mb-2" style="color:#64748b">Webapp URL</label><input class="inp" type="text" id="rWebapp" placeholder="https://..."/></div>
 
-      <!-- MODULLAR -->
+      <!-- MODULLAR (dinamik — businessType ga qarab yuklanadi) -->
       <div class="col-span-2" style="margin-top:8px;padding-top:12px;border-top:1px solid rgba(6,182,212,0.1)">
         <label class="block text-xs uppercase tracking-widest mb-3" style="color:#22d3ee;font-weight:700">Modullar (admin panelda ko'rinadigan bo'limlar)</label>
         <div class="grid grid-cols-2 gap-2" id="moduleToggles">
-          <label class="mod-toggle"><input type="checkbox" data-mod="orders" checked/><span>📦 Buyurtmalar</span></label>
-          <label class="mod-toggle"><input type="checkbox" data-mod="menu" checked/><span>🍽 Menyu</span></label>
-          <label class="mod-toggle"><input type="checkbox" data-mod="categories" checked/><span>🗂 Kategoriyalar</span></label>
-          <label class="mod-toggle"><input type="checkbox" data-mod="ratings" checked/><span>⭐ Reytinglar</span></label>
-          <label class="mod-toggle"><input type="checkbox" data-mod="users" checked/><span>👥 Foydalanuvchilar</span></label>
-          <label class="mod-toggle"><input type="checkbox" data-mod="employees" checked/><span>👷 Ishchilar</span></label>
-          <label class="mod-toggle"><input type="checkbox" data-mod="attendance" checked/><span>📋 Davomat</span></label>
-          <label class="mod-toggle"><input type="checkbox" data-mod="empReport" checked/><span>💰 Hisobot & Maosh</span></label>
-          <label class="mod-toggle"><input type="checkbox" data-mod="branches" checked/><span>🏢 Filiallar</span></label>
-          <label class="mod-toggle"><input type="checkbox" data-mod="notifications" checked/><span>🔔 Bildirishnomalar</span></label>
-          <label class="mod-toggle"><input type="checkbox" data-mod="broadcast" checked/><span>📢 Broadcast</span></label>
-          <label class="mod-toggle" style="border-color:rgba(245,158,11,0.25)"><input type="checkbox" data-mod="waiter"/><span>🧑‍🍳 Ofitsiant tizimi</span></label>
-          <label class="mod-toggle" style="border-color:rgba(249,115,22,0.25)"><input type="checkbox" data-mod="kitchen"/><span>🍳 Oshpaz paneli</span></label>
+          <!-- JS orqali dynamic yuklanadi -->
         </div>
       </div>
     </div>

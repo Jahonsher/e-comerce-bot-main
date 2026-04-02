@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const config = require("../config");
 const { waiterMiddleware, empMiddleware, isBotBlocked } = require("../middleware/auth");
+const { moduleGuard } = require("../middleware/moduleGuard");
 const { loginLimiter } = require("../middleware/rateLimit");
 const { compareFaces } = require("../services/faceid.service");
 const { minutesToTimeStr, timeStrToMinutes, calcWorkingDays } = require("../utils/helpers");
@@ -47,7 +48,7 @@ router.post("/waiter/login", loginLimiter, async (req, res) => {
   }
 });
 
-router.get("/waiter/shots", waiterMiddleware, async (req, res) => {
+router.get("/waiter/shots", waiterMiddleware, moduleGuard("waiter", "waiter"), async (req, res) => {
   try {
     res.json({ ok: true, shots: await Shot.find({ restaurantId: req.waiter.restaurantId, status: "open" }).sort({ openedAt: -1 }) });
   } catch (e) {
@@ -55,7 +56,7 @@ router.get("/waiter/shots", waiterMiddleware, async (req, res) => {
   }
 });
 
-router.get("/waiter/shots/:id", waiterMiddleware, async (req, res) => {
+router.get("/waiter/shots/:id", waiterMiddleware, moduleGuard("waiter", "waiter"), async (req, res) => {
   try {
     const shot = await Shot.findById(req.params.id);
     if (!shot) return res.status(404).json({ error: "Shot topilmadi" });
@@ -65,7 +66,7 @@ router.get("/waiter/shots/:id", waiterMiddleware, async (req, res) => {
   }
 });
 
-router.post("/waiter/shots/open", waiterMiddleware, async (req, res) => {
+router.post("/waiter/shots/open", waiterMiddleware, moduleGuard("waiter", "waiter"), async (req, res) => {
   try {
     const { tableNumber } = req.body;
     if (!tableNumber) return res.status(400).json({ error: "Stol raqami kerak" });
@@ -83,7 +84,7 @@ router.post("/waiter/shots/open", waiterMiddleware, async (req, res) => {
   }
 });
 
-router.post("/waiter/shots/:id/add-item", waiterMiddleware, async (req, res) => {
+router.post("/waiter/shots/:id/add-item", waiterMiddleware, moduleGuard("waiter", "waiter"), async (req, res) => {
   try {
     const { items } = req.body;
     if (!items?.length) return res.status(400).json({ error: "Mahsulot kerak" });
@@ -109,7 +110,7 @@ router.post("/waiter/shots/:id/add-item", waiterMiddleware, async (req, res) => 
   }
 });
 
-router.post("/waiter/shots/:id/to-kitchen", waiterMiddleware, async (req, res) => {
+router.post("/waiter/shots/:id/to-kitchen", waiterMiddleware, moduleGuard("waiter", "waiter"), async (req, res) => {
   try {
     const shot = await Shot.findById(req.params.id);
     if (!shot || shot.status !== "open") return res.status(400).json({ error: "Shot topilmadi yoki yopilgan" });
@@ -141,7 +142,7 @@ router.post("/waiter/shots/:id/to-kitchen", waiterMiddleware, async (req, res) =
   }
 });
 
-router.post("/waiter/shots/:id/close", waiterMiddleware, async (req, res) => {
+router.post("/waiter/shots/:id/close", waiterMiddleware, moduleGuard("waiter", "waiter"), async (req, res) => {
   try {
     const shot = await Shot.findById(req.params.id);
     if (!shot || shot.status !== "open") return res.status(400).json({ error: "Shot topilmadi yoki allaqachon yopilgan" });
@@ -162,7 +163,7 @@ router.post("/waiter/shots/:id/close", waiterMiddleware, async (req, res) => {
   }
 });
 
-router.get("/waiter/products", waiterMiddleware, async (req, res) => {
+router.get("/waiter/products", waiterMiddleware, moduleGuard("waiter", "waiter"), async (req, res) => {
   try {
     const [products, categories] = await Promise.all([
       Product.find({ restaurantId: req.waiter.restaurantId, active: true }).sort({ category: 1, name: 1 }),
@@ -174,7 +175,7 @@ router.get("/waiter/products", waiterMiddleware, async (req, res) => {
   }
 });
 
-router.get("/waiter/stats", waiterMiddleware, async (req, res) => {
+router.get("/waiter/stats", waiterMiddleware, moduleGuard("waiter", "waiter"), async (req, res) => {
   try {
     const month = req.query.month || new Date().toISOString().slice(0, 7);
     const [y, m] = month.split("-").map(Number);
@@ -230,7 +231,7 @@ router.post("/employee/login", loginLimiter, async (req, res) => {
   }
 });
 
-router.post("/employee/checkin", empMiddleware, async (req, res) => {
+router.post("/employee/checkin", empMiddleware, moduleGuard("attendance", "employee"), async (req, res) => {
   try {
     const { clientTimeMinutes, clientDate, photo, lat, lng } = req.body;
     const today = clientDate || new Date().toISOString().split("T")[0];
@@ -271,7 +272,7 @@ router.post("/employee/checkin", empMiddleware, async (req, res) => {
   }
 });
 
-router.post("/employee/checkout", empMiddleware, async (req, res) => {
+router.post("/employee/checkout", empMiddleware, moduleGuard("attendance", "employee"), async (req, res) => {
   try {
     const { clientTimeMinutes, clientDate, photo } = req.body;
     const today = clientDate || new Date().toISOString().split("T")[0];
@@ -305,7 +306,7 @@ router.post("/employee/checkout", empMiddleware, async (req, res) => {
   }
 });
 
-router.get("/employee/stats", empMiddleware, async (req, res) => {
+router.get("/employee/stats", empMiddleware, moduleGuard("attendance", "employee"), async (req, res) => {
   try {
     const prefix = req.query.month || new Date().toISOString().slice(0, 7);
     const [emp, records] = await Promise.all([
@@ -344,7 +345,7 @@ router.get("/employee/stats", empMiddleware, async (req, res) => {
 });
 
 // ===== Employee face descriptor =====
-router.get("/employee/face-descriptor", empMiddleware, async (req, res) => {
+router.get("/employee/face-descriptor", empMiddleware, moduleGuard("attendance", "employee"), async (req, res) => {
   try {
     const emp = await Employee.findById(req.employee.id).select("faceDescriptor photo");
     res.json({ ok: true, faceDescriptor: emp.faceDescriptor || [], hasPhoto: !!emp.photo });
@@ -354,7 +355,7 @@ router.get("/employee/face-descriptor", empMiddleware, async (req, res) => {
 });
 
 // ===== Employee today attendance =====
-router.get("/employee/today", empMiddleware, async (req, res) => {
+router.get("/employee/today", empMiddleware, moduleGuard("attendance", "employee"), async (req, res) => {
   try {
     const today = new Date().toISOString().split("T")[0];
     const [att, emp] = await Promise.all([

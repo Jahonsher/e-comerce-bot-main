@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const config = require("../config");
 const { authMiddleware } = require("../middleware/auth");
+const { moduleGuard } = require("../middleware/moduleGuard");
 const { loginLimiter, broadcastLimiter } = require("../middleware/rateLimit");
 const { validate, sanitize } = require("../middleware/validate");
 const { isBotBlocked } = require("../middleware/auth");
@@ -47,7 +48,7 @@ router.post("/login", loginLimiter, async (req, res) => {
 
     res.json({
       ok: true, token,
-      admin: { username: admin.username, restaurantName: admin.restaurantName, role: admin.role, restaurantId: admin.restaurantId, modules: admin.modules || {} },
+      admin: { username: admin.username, restaurantName: admin.restaurantName, role: admin.role, restaurantId: admin.restaurantId, businessType: admin.businessType || "restaurant", modules: admin.modules || {} },
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -57,7 +58,7 @@ router.post("/login", loginLimiter, async (req, res) => {
 // ===== ME =====
 router.get("/me", authMiddleware, async (req, res) => {
   try {
-    const admin = await Admin.findById(req.admin.id).select("username restaurantName role restaurantId modules");
+    const admin = await Admin.findById(req.admin.id).select("username restaurantName role restaurantId businessType modules");
     if (!admin) return res.status(404).json({ error: "Topilmadi" });
     res.json({ ok: true, admin });
   } catch (e) {
@@ -66,7 +67,7 @@ router.get("/me", authMiddleware, async (req, res) => {
 });
 
 // ===== PRODUCTS =====
-router.get("/products", authMiddleware, async (req, res) => {
+router.get("/products", authMiddleware, moduleGuard("menu"), async (req, res) => {
   try {
     res.json(await Product.find({ restaurantId: req.admin.restaurantId }).sort({ id: 1 }));
   } catch (e) {
@@ -74,7 +75,7 @@ router.get("/products", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/products", authMiddleware, async (req, res) => {
+router.post("/products", authMiddleware, moduleGuard("menu"), async (req, res) => {
   try {
     const rId = req.admin.restaurantId;
     const last = await Product.findOne({ restaurantId: rId }).sort({ id: -1 });
@@ -90,7 +91,7 @@ router.post("/products", authMiddleware, async (req, res) => {
   }
 });
 
-router.put("/products/:id", authMiddleware, async (req, res) => {
+router.put("/products/:id", authMiddleware, moduleGuard("menu"), async (req, res) => {
   try {
     const product = await Product.findOneAndUpdate(
       { id: Number(req.params.id), restaurantId: req.admin.restaurantId },
@@ -102,7 +103,7 @@ router.put("/products/:id", authMiddleware, async (req, res) => {
   }
 });
 
-router.delete("/products/:id", authMiddleware, async (req, res) => {
+router.delete("/products/:id", authMiddleware, moduleGuard("menu"), async (req, res) => {
   try {
     await Product.findOneAndDelete({ id: Number(req.params.id), restaurantId: req.admin.restaurantId });
     res.json({ ok: true });
@@ -112,7 +113,7 @@ router.delete("/products/:id", authMiddleware, async (req, res) => {
 });
 
 // ===== CATEGORIES =====
-router.get("/categories", authMiddleware, async (req, res) => {
+router.get("/categories", authMiddleware, moduleGuard("categories"), async (req, res) => {
   try {
     res.json(await Category.find({ restaurantId: req.admin.restaurantId }).sort({ order: 1 }));
   } catch (e) {
@@ -120,7 +121,7 @@ router.get("/categories", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/categories", authMiddleware, async (req, res) => {
+router.post("/categories", authMiddleware, moduleGuard("categories"), async (req, res) => {
   try {
     const rId = req.admin.restaurantId;
     const last = await Category.findOne({ restaurantId: rId }).sort({ order: -1 });
@@ -131,7 +132,7 @@ router.post("/categories", authMiddleware, async (req, res) => {
   }
 });
 
-router.put("/categories/:id", authMiddleware, async (req, res) => {
+router.put("/categories/:id", authMiddleware, moduleGuard("categories"), async (req, res) => {
   try {
     const cat = await Category.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json({ ok: true, cat });
@@ -140,7 +141,7 @@ router.put("/categories/:id", authMiddleware, async (req, res) => {
   }
 });
 
-router.delete("/categories/:id", authMiddleware, async (req, res) => {
+router.delete("/categories/:id", authMiddleware, moduleGuard("categories"), async (req, res) => {
   try {
     await Category.findByIdAndDelete(req.params.id);
     res.json({ ok: true });
@@ -149,7 +150,7 @@ router.delete("/categories/:id", authMiddleware, async (req, res) => {
   }
 });
 
-router.put("/categories/reorder/save", authMiddleware, async (req, res) => {
+router.put("/categories/reorder/save", authMiddleware, moduleGuard("categories"), async (req, res) => {
   try {
     await Promise.all(req.body.order.map((item) => Category.findByIdAndUpdate(item.id, { order: item.order })));
     res.json({ ok: true });
@@ -159,7 +160,7 @@ router.put("/categories/reorder/save", authMiddleware, async (req, res) => {
 });
 
 // ===== ORDERS =====
-router.get("/orders", authMiddleware, async (req, res) => {
+router.get("/orders", authMiddleware, moduleGuard("orders"), async (req, res) => {
   try {
     const { status, type, limit = 50, skip = 0 } = req.query;
     const filter = { restaurantId: req.admin.restaurantId };
@@ -172,7 +173,7 @@ router.get("/orders", authMiddleware, async (req, res) => {
   }
 });
 
-router.put("/orders/:id/status", authMiddleware, async (req, res) => {
+router.put("/orders/:id/status", authMiddleware, moduleGuard("orders"), async (req, res) => {
   try {
     const order = await Order.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true });
     res.json({ ok: true, order });
@@ -261,7 +262,7 @@ router.get("/stats", authMiddleware, async (req, res) => {
 });
 
 // ===== USERS =====
-router.get("/users", authMiddleware, async (req, res) => {
+router.get("/users", authMiddleware, moduleGuard("users"), async (req, res) => {
   try {
     const { page = 1, limit = 50 } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
@@ -277,7 +278,7 @@ router.get("/users", authMiddleware, async (req, res) => {
 });
 
 // ===== BROADCAST =====
-router.post("/broadcast", authMiddleware, broadcastLimiter, async (req, res) => {
+router.post("/broadcast", authMiddleware, moduleGuard("broadcast"), broadcastLimiter, async (req, res) => {
   try {
     const rId = req.admin.restaurantId;
     const { text, imageBase64 } = req.body;
@@ -311,7 +312,7 @@ router.post("/broadcast", authMiddleware, broadcastLimiter, async (req, res) => 
 });
 
 // ===== BRANCHES =====
-router.get("/branches", authMiddleware, async (req, res) => {
+router.get("/branches", authMiddleware, moduleGuard("branches"), async (req, res) => {
   try {
     res.json({ ok: true, branches: await Branch.find({ restaurantId: req.admin.restaurantId, active: true }).sort({ name: 1 }) });
   } catch (e) {
@@ -319,7 +320,7 @@ router.get("/branches", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/branches", authMiddleware, async (req, res) => {
+router.post("/branches", authMiddleware, moduleGuard("branches"), async (req, res) => {
   try {
     const { name, address, lat, lng, radius } = req.body;
     if (!name) return res.status(400).json({ error: "Filial nomi kerak" });
@@ -330,7 +331,7 @@ router.post("/branches", authMiddleware, async (req, res) => {
   }
 });
 
-router.put("/branches/:id", authMiddleware, async (req, res) => {
+router.put("/branches/:id", authMiddleware, moduleGuard("branches"), async (req, res) => {
   try {
     res.json({ ok: true, branch: await Branch.findByIdAndUpdate(req.params.id, req.body, { new: true }) });
   } catch (e) {
@@ -338,7 +339,7 @@ router.put("/branches/:id", authMiddleware, async (req, res) => {
   }
 });
 
-router.delete("/branches/:id", authMiddleware, async (req, res) => {
+router.delete("/branches/:id", authMiddleware, moduleGuard("branches"), async (req, res) => {
   try {
     await Branch.findByIdAndUpdate(req.params.id, { active: false });
     res.json({ ok: true });
@@ -348,7 +349,7 @@ router.delete("/branches/:id", authMiddleware, async (req, res) => {
 });
 
 // ===== EMPLOYEES =====
-router.get("/employees", authMiddleware, async (req, res) => {
+router.get("/employees", authMiddleware, moduleGuard("employees"), async (req, res) => {
   try {
     res.json(await Employee.find({ restaurantId: req.admin.restaurantId }).select("-password").sort({ name: 1 }));
   } catch (e) {
@@ -356,7 +357,7 @@ router.get("/employees", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/employees", authMiddleware, async (req, res) => {
+router.post("/employees", authMiddleware, moduleGuard("employees"), async (req, res) => {
   try {
     const { username, password, ...data } = req.body;
     if (!username || !password) return res.status(400).json({ error: "Login va parol kerak" });
@@ -372,7 +373,7 @@ router.post("/employees", authMiddleware, async (req, res) => {
   }
 });
 
-router.put("/employees/:id", authMiddleware, async (req, res) => {
+router.put("/employees/:id", authMiddleware, moduleGuard("employees"), async (req, res) => {
   try {
     const data = { ...req.body };
     if (data.password) data.password = await bcrypt.hash(data.password, 10);
@@ -383,7 +384,7 @@ router.put("/employees/:id", authMiddleware, async (req, res) => {
   }
 });
 
-router.delete("/employees/:id", authMiddleware, async (req, res) => {
+router.delete("/employees/:id", authMiddleware, moduleGuard("employees"), async (req, res) => {
   try {
     await Attendance.deleteMany({ employeeId: req.params.id });
     await Employee.findByIdAndDelete(req.params.id);
@@ -393,7 +394,7 @@ router.delete("/employees/:id", authMiddleware, async (req, res) => {
   }
 });
 
-router.get("/employees/:id/face", authMiddleware, async (req, res) => {
+router.get("/employees/:id/face", authMiddleware, moduleGuard("employees"), async (req, res) => {
   try {
     const emp = await Employee.findById(req.params.id).select("name photo faceDescriptor");
     if (!emp) return res.status(404).json({ error: "Topilmadi" });
@@ -403,7 +404,7 @@ router.get("/employees/:id/face", authMiddleware, async (req, res) => {
   }
 });
 
-router.put("/employees/:id/face", authMiddleware, async (req, res) => {
+router.put("/employees/:id/face", authMiddleware, moduleGuard("employees"), async (req, res) => {
   try {
     await Employee.findByIdAndUpdate(req.params.id, { photo: req.body.photo, faceDescriptor: req.body.faceDescriptor });
     res.json({ ok: true });
@@ -413,7 +414,7 @@ router.put("/employees/:id/face", authMiddleware, async (req, res) => {
 });
 
 // ===== ATTENDANCE =====
-router.get("/attendance/today", authMiddleware, async (req, res) => {
+router.get("/attendance/today", authMiddleware, moduleGuard("attendance"), async (req, res) => {
   try {
     const rId = req.admin.restaurantId;
     const { branchId, date } = req.query;
@@ -457,7 +458,7 @@ router.get("/attendance/today", authMiddleware, async (req, res) => {
   }
 });
 
-router.get("/attendance/report", authMiddleware, async (req, res) => {
+router.get("/attendance/report", authMiddleware, moduleGuard("empReport"), async (req, res) => {
   try {
     const rId = req.admin.restaurantId;
     const prefix = req.query.month || new Date().toISOString().slice(0, 7);
@@ -500,7 +501,7 @@ router.get("/attendance/report", authMiddleware, async (req, res) => {
 });
 
 // ===== INVENTORY =====
-router.get("/inventory", authMiddleware, async (req, res) => {
+router.get("/inventory", authMiddleware, moduleGuard("inventory"), async (req, res) => {
   try {
     res.json({ ok: true, items: await Inventory.find({ restaurantId: req.admin.restaurantId, active: true }).sort({ productName: 1 }) });
   } catch (e) {
@@ -508,7 +509,7 @@ router.get("/inventory", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/inventory", authMiddleware, async (req, res) => {
+router.post("/inventory", authMiddleware, moduleGuard("inventory"), async (req, res) => {
   try {
     const item = await Inventory.create({ ...req.body, restaurantId: req.admin.restaurantId });
     res.json({ ok: true, item });
@@ -518,7 +519,7 @@ router.post("/inventory", authMiddleware, async (req, res) => {
   }
 });
 
-router.put("/inventory/:id", authMiddleware, async (req, res) => {
+router.put("/inventory/:id", authMiddleware, moduleGuard("inventory"), async (req, res) => {
   try {
     res.json({ ok: true, item: await Inventory.findByIdAndUpdate(req.params.id, req.body, { new: true }) });
   } catch (e) {
@@ -526,7 +527,7 @@ router.put("/inventory/:id", authMiddleware, async (req, res) => {
   }
 });
 
-router.post("/inventory/:id/move", authMiddleware, async (req, res) => {
+router.post("/inventory/:id/move", authMiddleware, moduleGuard("inventory"), async (req, res) => {
   try {
     const { type, quantity, note } = req.body;
     if (!["in", "out", "adjust"].includes(type)) return res.status(400).json({ error: "type: in/out/adjust" });
@@ -563,7 +564,7 @@ router.post("/inventory/:id/move", authMiddleware, async (req, res) => {
   }
 });
 
-router.get("/inventory/:id/logs", authMiddleware, async (req, res) => {
+router.get("/inventory/:id/logs", authMiddleware, moduleGuard("inventory"), async (req, res) => {
   try {
     res.json({ ok: true, logs: await InventoryLog.find({ inventoryId: req.params.id }).sort({ createdAt: -1 }).limit(50) });
   } catch (e) {
@@ -571,7 +572,7 @@ router.get("/inventory/:id/logs", authMiddleware, async (req, res) => {
   }
 });
 
-router.get("/inventory/summary/all", authMiddleware, async (req, res) => {
+router.get("/inventory/summary/all", authMiddleware, moduleGuard("inventory"), async (req, res) => {
   try {
     const items = await Inventory.find({ restaurantId: req.admin.restaurantId, active: true });
     const totalValue = items.reduce((s, i) => s + i.currentStock * i.costPrice, 0);
@@ -588,7 +589,7 @@ router.get("/inventory/summary/all", authMiddleware, async (req, res) => {
 });
 
 // ===== NOTIFICATIONS =====
-router.get("/notifications", authMiddleware, async (req, res) => {
+router.get("/notifications", authMiddleware, moduleGuard("notifications"), async (req, res) => {
   try {
     const rId = req.admin.restaurantId;
     const { limit = 30, unreadOnly } = req.query;
@@ -604,7 +605,7 @@ router.get("/notifications", authMiddleware, async (req, res) => {
   }
 });
 
-router.put("/notifications/read-all", authMiddleware, async (req, res) => {
+router.put("/notifications/read-all", authMiddleware, moduleGuard("notifications"), async (req, res) => {
   try {
     await Notification.updateMany({ restaurantId: req.admin.restaurantId, targetRole: "admin", read: false }, { read: true });
     res.json({ ok: true });
@@ -613,7 +614,7 @@ router.put("/notifications/read-all", authMiddleware, async (req, res) => {
   }
 });
 
-router.put("/notifications/:id/read", authMiddleware, async (req, res) => {
+router.put("/notifications/:id/read", authMiddleware, moduleGuard("notifications"), async (req, res) => {
   try {
     await Notification.findByIdAndUpdate(req.params.id, { read: true });
     res.json({ ok: true });
@@ -622,7 +623,7 @@ router.put("/notifications/:id/read", authMiddleware, async (req, res) => {
   }
 });
 
-router.delete("/notifications/clear", authMiddleware, async (req, res) => {
+router.delete("/notifications/clear", authMiddleware, moduleGuard("notifications"), async (req, res) => {
   try {
     await Notification.deleteMany({ restaurantId: req.admin.restaurantId, targetRole: "admin", read: true });
     res.json({ ok: true });

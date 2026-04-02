@@ -1,548 +1,119 @@
-# ServiX — To'liq Platforma Hujjati
+# ServiX v3.0 — Universal Biznes Platforma
 
-## Umumiy ko'rinish
+## O'zgartirilgan/yaratilgan fayllar
 
-**ServiX** — restoran va bizneslar uchun multi-tenant SaaS platformasi. Telegram bot, web buyurtma, ofitsiant tizimi, oshxona paneli, ishchi boshqaruvi, davomat, inventar va boshqa ko'plab modullarni o'z ichiga oladi.
-
-**Texnologiyalar:** Node.js, Express, MongoDB (Mongoose), Socket.IO, Telegram Bot API, JWT, bcrypt, Face++ (yuz tanish), vanilla JS frontend
-
-**Hosting:** Backend — Railway, Frontend panellar — Vercel
-
----
-
-## Panellar va URL'lar
-
-| Panel | URL | Maqsad |
-|---|---|---|
-| **Admin** | https://servix-admin.vercel.app/ | Restoran egasi — menyu, buyurtmalar, ishchilar, statistika |
-| **Superadmin** | https://servi-x.vercel.app/ | Platforma boshqaruvi — restoranlar CRUD, obuna, modullar |
-| **Ishchi** | https://servix-imployee.vercel.app/ | Ishchi — davomat, check-in/out, yuz tanish |
-| **Ofitsiant** | https://servix-waiter.vercel.app/ | Ofitsiant — shotlar, buyurtma qo'shish, oshpazga yuborish |
-| **Oshxona** | https://servix-kitchen.vercel.app/ | Oshpaz — buyurtmalar oqimi, tayyorlash, tayyor qilish |
-| **Webapp** | Telegram bot orqali ochiladi | Mijoz — menyu ko'rish, buyurtma berish (online/dine-in) |
-
-**Backend API:** `https://e-comerce-bot-main-production.up.railway.app`
-
----
-
-## Loyiha fayl tuzilmasi
-
+### YANGI FAYLLAR (qo'shish kerak):
 ```
-SERVIX/
-├── backend/
-│   ├── config/
-│   │   ├── database.js      — DB ulanish konfiguratsiyasi
-│   │   └── index.js         — Config export
-│   │
-│   ├── middleware/
-│   │   ├── auth.js          — Auth middleware (JWT)
-│   │   ├── rateLimit.js     — So‘rov cheklash
-│   │   └── validate.js      — Validatsiya
-│   │
-│   ├── models/
-│   │   ├── Admin.js         — Admin modeli
-│   │   ├── Category.js      — Kategoriya modeli
-│   │   ├── Order.js         — Buyurtma modeli
-│   │   ├── Product.js       — Mahsulot modeli
-│   │   ├── User.js          — Foydalanuvchi modeli
-│   │   └── index.js         — Model export
-│   │
-│   ├── routes/
-│   │   ├── admin.routes.js            — Admin API
-│   │   ├── kitchen.routes.js          — Oshxona API
-│   │   ├── public.routes.js           — Public API
-│   │   ├── superadmin.routes.js       — Superadmin API
-│   │   └── waiter-employee.routes.js  — Ofitsiant/Ishchi API
-│   │
-│   ├── services/
-│   │   ├── bot.service.js        — Telegram bot logika
-│   │   ├── faceid.services.js    — FaceID (yuz tanish)
-│   │   └── notification.service.js — Notification tizimi
-│   │
-│   ├── utils/
-│   │   ├── helpers.js       — Yordamchi funksiyalar
-│   │   └── logger.js        — Log yozish
-│   │
-│   ├── .env                 — Muhit o‘zgaruvchilari
-│   ├── .gitignore
-│   ├── package-lock.json
-│   ├── package.json         — Dependencies (express, mongoose, socket.io, telegram, jwt...)
-│   └── server.js            — Asosiy server (API, Socket.IO, barcha logika)
-│
-├── client/
-│   ├── demos/
-│   │   ├── aqsotour/        — Landing page
-│   │   ├── gavali/          — Landing page
-│   │   └── imperial/        — Landing page
-│   │
-│   ├── services/
-│   │   ├── admin/           — Admin frontend
-│   │   ├── employee/        — Ishchi panel
-│   │   ├── kitchen/         — Oshxona panel
-│   │   └── waiter/          — Ofitsiant panel
-│   │
-│   └── shared/             — Umumiy komponent / util
-│
-├── superadmin/
-│   ├── index.html          — Superadmin panel UI
-│   └── superadmin.js       — Superadmin logika
-│
-└── README.md
+backend/config/businessTypes.js    ← Biznes turlari registry
+backend/middleware/moduleGuard.js  ← Route-level modul tekshirish
+```
+
+### O'ZGARTIRILGAN FAYLLAR (almashtirib qo'yish kerak):
+```
+backend/models/Admin.js            ← businessType field qo'shildi
+backend/models/index.js            ← Restaurant ga businessType qo'shildi
+backend/routes/superadmin.routes.js ← 7 ta yangi endpoint + businessType support
+backend/routes/admin.routes.js     ← moduleGuard barcha endpointlarga qo'yildi
+backend/routes/waiter-employee.routes.js ← moduleGuard qo'shildi
+backend/routes/kitchen.routes.js   ← moduleGuard qo'shildi
+backend/package.json               ← description yangilandi
+client/superadmin/index.html       ← businessType dropdown, dynamic modullar
+client/superadmin/superadmin.js    ← biznes turi tanlash, dynamic modul toggle
+client/services/admin/admin.js     ← filterSidebar tuzatildi (inventory, defaultOff)
 ```
 
 ---
 
-## Ma'lumotlar modeli (MongoDB)
+## Yangi API Endpointlar
 
-### User
-```
-telegramId, first_name, last_name, username, phone, restaurantId
-Index: { telegramId + restaurantId } unique
-```
-
-### Order
-```
-telegramId, items[], total, userInfo, orderType (online/dine_in),
-tableNumber, status (Yangi/Qabul/Rad), rating, ratingComment, restaurantId
-```
-
-### Product
-```
-id, name, name_ru, price, category, image, active, restaurantId
-Index: { id + restaurantId } unique
-```
-
-### Category
-```
-name, name_ru, emoji, order, active, restaurantId
-```
-
-### Restaurant
-```
-restaurantId (unique), name, blocked, blockReason
-```
-
-### Admin
-```
-username (unique), password (hashed), restaurantName, restaurantId,
-botToken, chefId, phone, address, webappUrl, role (admin/superadmin),
-active, blockReason, subscriptionEnd,
-— Sayt sozlamalari: botUsername, adminTg, metro, workHours, heroImage, theme...
-— Modullar: modules { orders, menu, categories, ratings, users, employees,
-             attendance, empReport, branches, broadcast, notifications,
-             waiter, kitchen }
-```
-
-### Employee
-```
-name, phone, position, username (unique), password (hashed),
-restaurantId, role (employee/waiter/chef), tables[] (ofitsiant uchun),
-workStart, workEnd, salary, telegramId, branchId, weeklyOff,
-photo (base64), faceDescriptor[], active
-```
-
-### Shot (Ofitsiant tizimi)
-```
-restaurantId, tableNumber, waiterId (→Employee), waiterName,
-status (open/closed),
-items: [{ name, name_ru, price, quantity, addedBy (customer/waiter),
-          sentToKitchen, kitchenStatus (pending/cooking/ready), addedAt }],
-total, customerTelegramId, openedAt, closedAt
-Index: { restaurantId + status }, { restaurantId + tableNumber + status }
-```
-
-### Branch
-```
-name, restaurantId, address, lat, lng, radius, active
-```
-
-### Attendance
-```
-employeeId (→Employee), restaurantId, date, checkIn, checkOut,
-checkInPhoto, checkInLat, checkInLng, lateMinutes, totalMinutes,
-status, isWeeklyOff, overtimeMinutes, note
-```
-
-### Inventory
-```
-productId (→Product), restaurantId, productName, unit, currentStock,
-minStock, maxStock, costPrice, lastRestocked, active
-```
-
-### InventoryLog
-```
-inventoryId (→Inventory), restaurantId, type (in/out/adjust), quantity, note, createdBy
-```
-
-### Notification
-```
-restaurantId, type, title, message, icon, read, targetRole, targetId, data
-```
-
-### AuditLog
-```
-action, actor, actorRole, restaurantId, details, ip
-```
-
-### Payment
-```
-restaurantId, amount, type (subscription/custom/refund), method, days, note, createdBy
-```
-
-### SANotification (superadmin uchun)
-```
-type, title, message, icon, read, data
-```
+| Method | URL | Tavsif |
+|--------|-----|--------|
+| GET | `/superadmin/business-types` | Barcha biznes turlari ro'yxati |
+| GET | `/superadmin/business-types/:type/modules` | Biznes turi uchun mavjud modullar |
+| PUT | `/superadmin/restaurants/:id/business-type` | Biznes turini o'zgartirish |
+| GET | `/superadmin/restaurants/:id/modules` | Biznes modullarini olish (hozirgi holat) |
+| PUT | `/superadmin/restaurants/:id/modules` | Modullarni bulk yangilash |
+| PUT | `/superadmin/restaurants/:id/modules/:key/toggle` | Bitta modulni toggle |
 
 ---
 
-## Autentifikatsiya tizimi
+## Arxitektura
 
-Barcha panellar **JWT** token ishlatadi. Token `Authorization: Bearer <token>` header orqali yuboriladi.
+### businessTypes.js — Markaziy registr
+Har bir biznes turi quyidagilarni aniqlaydi:
+- `label` (uz/ru), `icon`, `description`
+- `modules` — har bir modul uchun:
+  - `key` — ichki nom (Admin.modules dagi field)
+  - `label` (uz/ru), `icon`
+  - `default` — yangi biznes yaratilganda yoqilganmi
+  - `core` — o'chirib bo'lmaydigan modul (masalan: menyu, buyurtmalar)
+  - `description` (uz/ru)
 
-| Panel | Login endpoint | Middleware | Token payload |
-|---|---|---|---|
-| Admin | `POST /admin/login` | `authMiddleware` | id, username, role, restaurantName, restaurantId |
-| Superadmin | `POST /superadmin/login` | `superMiddleware` | id, username, role:"superadmin" |
-| Ishchi | `POST /employee/login` | `empMiddleware` | id, restaurantId, name |
-| Ofitsiant | `POST /waiter/login` | `waiterMiddleware` | id, restaurantId, name, role:"waiter" |
-| Oshpaz | `POST /kitchen/login` | `kitchenMiddleware` | id, restaurantId, name, role:"chef" |
-
-**Muhim qoidalar:**
-- Bitta login/parol — employee, waiter va chef barchasi Employee jadvalida saqlanadi
-- `role` farqlaydi: `employee` (oddiy ishchi), `waiter` (ofitsiant), `chef` (oshpaz)
-- Ofitsiant login qilganda `modules.waiter === true` tekshiriladi
-- Oshpaz login qilganda `modules.kitchen === true` tekshiriladi
-- Restoran bloklangan bo'lsa — barcha panellar bloklanadi
-
----
-
-## Socket.IO real-time tizimi
-
-### Server sozlash
+### moduleGuard middleware
 ```javascript
-const httpServer = http.createServer(app);
-const io = new Server(httpServer, { cors: { origin: "*" }, transports: ["websocket", "polling"] });
+// Foydalanish:
+router.get("/products", authMiddleware, moduleGuard("menu"), handler);
+router.post("/waiter/shots/open", waiterMiddleware, moduleGuard("waiter", "waiter"), handler);
+router.get("/kitchen/orders", kitchenMiddleware, moduleGuard("kitchen", "kitchen"), handler);
 ```
+- Modul o'chirilgan bo'lsa → 403 `MODULE_DISABLED`
+- Superadmin har joyga kira oladi
+- Source: "admin" | "waiter" | "kitchen" | "employee"
 
-### Room tuzilmasi
-Har bir restoran + panel = alohida room: `{restaurantId}:{panel}`
+### Admin.modules — Kengaytirilgan
+Yangi modullar:
+- `inventory: false` (default o'chiq)
 
-Masalan: `imperial:waiter`, `imperial:kitchen`, `imperial:customer`
+Yangi field:
+- `businessType: "restaurant"` (default)
 
-### Ulanish jarayoni
-1. Client `io(API)` bilan ulanadi
-2. `socket.emit("join", { token, panel })` yuboradi
-3. Server token ni verify qiladi → `socket.join(restaurantId + ":" + panel)`
-
-### Eventlar
-
-| Event | Kim yuboradi | Kim oladi | Ma'lumot |
-|---|---|---|---|
-| `new-order` | Server (mijoz buyurtma bersa) | Waiter, Kitchen | Shot object |
-| `shot-updated` | Server | Waiter, Kitchen, Customer | Yangilangan shot |
-| `to-kitchen` | Server (ofitsiant yuborsa) | Kitchen | { shotId, tableNumber, items, sentAt } |
-| `kitchen-ready` | Server (oshpaz tayyor desa) | Waiter | { shotId, tableNumber, items } |
-| `shot-closed` | Server (ofitsiant yopsa) | Waiter, Kitchen, Customer | Yopilgan shot |
-| `new-shot` | Server (yangi stol ochilsa) | Waiter | Shot object |
+### Restaurant model
+- `businessType: "restaurant"` (default)
 
 ---
 
-## API Endpointlar
+## Yangi biznes turi qo'shish qo'llanmasi
 
-### Umumiy (autentifikatsiyasiz)
-```
-GET  /                              — Server status
-GET  /products?restaurantId=xxx     — Mahsulotlar ro'yxati
-GET  /categories?restaurantId=xxx   — Kategoriyalar
-POST /auth                          — Telegram user ro'yxatdan o'tishi
-GET  /user/:telegramId              — Foydalanuvchi ma'lumoti
-GET  /orders/user/:telegramId       — Buyurtmalar tarixi
-POST /order                         — Yangi buyurtma (online yoki dine_in)
-GET  /check-block/:restaurantId     — Restoran bloklangan-bloqlanmaganini tekshirish
-GET  /site/:restaurantId            — Sayt sozlamalari (public)
-POST /wh/:restaurantId/:token       — Telegram webhook
-```
-
-### Admin panel
-```
-POST /admin/login                   — Admin kirish
-GET  /admin/me                      — Joriy admin ma'lumoti + modullar
-GET  /admin/stats/fast              — Tezkor statistika (dashboard)
-GET  /admin/stats                   — To'liq oylik statistika
-
-— Mahsulotlar
-GET    /admin/products              — Ro'yxat
-POST   /admin/products              — Qo'shish
-PUT    /admin/products/:id          — Tahrirlash
-DELETE /admin/products/:id          — O'chirish
-
-— Kategoriyalar
-GET    /admin/categories
-POST   /admin/categories
-PUT    /admin/categories/:id
-DELETE /admin/categories/:id
-PUT    /admin/categories/reorder/save — Tartibni saqlash (drag & drop)
-
-— Buyurtmalar
-GET    /admin/orders                — Ro'yxat (filter: status)
-PUT    /admin/orders/:id/status     — Statusni o'zgartirish
-
-— Foydalanuvchilar
-GET    /admin/users
-
-— Filiallar
-GET    /admin/branches
-POST   /admin/branches
-PUT    /admin/branches/:id
-DELETE /admin/branches/:id
-
-— Ishchilar (employee, waiter, chef barchasi)
-GET    /admin/employees             — Barcha ishchilar
-POST   /admin/employees             — Yangi ishchi (role: employee/waiter/chef)
-PUT    /admin/employees/:id         — Tahrirlash (role, tables va boshqalar)
-DELETE /admin/employees/:id         — O'chirish
-GET    /admin/employees/:id/face    — Yuz rasmi
-PUT    /admin/employees/:id/face    — Yuz rasmi yangilash
-
-— Davomat
-GET    /admin/attendance/today      — Bugungi davomat
-GET    /admin/attendance/report     — Oylik hisobot
-POST   /admin/attendance/manual     — Qo'lda yozish
-GET    /admin/attendance/branches-summary — Filiallar bo'yicha
-
-— Inventar
-GET    /admin/inventory
-POST   /admin/inventory
-PUT    /admin/inventory/:id
-DELETE /admin/inventory/:id
-POST   /admin/inventory/:id/stock   — Zaxira qo'shish/chiqarish
-GET    /admin/inventory/:id/logs    — Tarix
-GET    /admin/inventory/summary/all — Umumiy holat
-
-— Bildirishnomalar
-GET    /admin/notifications
-PUT    /admin/notifications/read-all
-PUT    /admin/notifications/:id/read
-DELETE /admin/notifications/clear
-
-— Sayt sozlamalari
-GET    /admin/site-settings
-PUT    /admin/site-settings
-
-— Broadcast
-POST   /admin/broadcast             — Barcha foydalanuvchilarga xabar
-
-— Analitika
-GET    /admin/analytics/advanced    — Kengaytirilgan analitika
-
-— Superadminga xabar
-POST   /admin/send-to-superadmin
+1. `backend/config/businessTypes.js` ga yangi tur qo'shing:
+```javascript
+salon: {
+  label: { uz: "Salon", ru: "Салон" },
+  icon: "💇",
+  description: { uz: "Go'zallik saloni", ru: "Салон красоты" },
+  modules: {
+    services: { label: { uz: "Xizmatlar" }, icon: "✂️", default: true, core: true },
+    booking:  { label: { uz: "Bron" },      icon: "📅", default: true, core: true },
+    // ... shared modullar ham qo'shish mumkin (employees, attendance, ...)
+  },
+}
 ```
 
-### Superadmin panel
-```
-POST /superadmin/login
-GET  /superadmin/restaurants        — Barcha restoranlar
-POST /superadmin/restaurants        — Yangi restoran + admin yaratish
-PUT  /superadmin/restaurants/:id    — Tahrirlash (modules, botToken, ...)
-DELETE /superadmin/restaurants/:id  — O'chirish
-POST /superadmin/block/:restaurantId — Bloklash/faollashtirish
-GET  /superadmin/stats              — Umumiy statistika
-GET  /superadmin/analytics          — Kengaytirilgan analitika
-GET  /superadmin/audit-log          — Audit log
-GET  /superadmin/payments           — To'lovlar tarixi
-POST /superadmin/payments           — Yangi to'lov yozish
-GET  /superadmin/notifications
-PUT  /superadmin/notifications/read-all
-POST /superadmin/send-message       — Restoranga xabar
-GET  /superadmin/bots               — Bot holatlari
-POST /superadmin/bots/:id/restart   — Botni qayta ishga tushirish
-POST /superadmin/bots/:id/stop      — Botni to'xtatish
-PUT  /superadmin/change-password    — Parolni o'zgartirish
+2. Kerakli modellar yarating: `backend/models/Booking.js` va h.k.
+
+3. Route yarating: `backend/routes/salon.routes.js`
+   - Barcha endpointlarga `moduleGuard("booking")` qo'ying
+
+4. `server.js` ga route ulang:
+```javascript
+const salonRoutes = require("./routes/salon.routes");
+app.use("/", salonRoutes);
 ```
 
-### Ishchi panel
-```
-POST /employee/login
-GET  /employee/face-descriptor      — Yuz deskriptori
-GET  /employee/today                — Bugungi davomat holati
-POST /employee/checkin              — Ishga kelish (yuz + lokatsiya)
-POST /employee/checkout             — Ishdan ketish
-GET  /employee/stats                — Oylik statistika
-```
-
-### Ofitsiant panel
-```
-POST /waiter/login
-GET  /waiter/shots                  — Ochiq shotlar ro'yxati
-GET  /waiter/shots/:id              — Bitta shot tafsiloti
-POST /waiter/shots/open             — Yangi stol ochish
-POST /waiter/shots/:id/add-item     — Mahsulot qo'shish
-POST /waiter/shots/:id/to-kitchen   — Oshpazga yuborish
-POST /waiter/shots/:id/close        — Shot yopish (to'lov)
-GET  /waiter/products               — Mahsulotlar + kategoriyalar
-GET  /waiter/stats?month=2026-03    — Oylik hisobot
-```
-
-### Oshxona panel
-```
-POST /kitchen/login
-GET  /kitchen/orders                — Faol buyurtmalar (pending + cooking)
-GET  /kitchen/recent                — Tayyor buyurtmalar (oxirgi 1 soat)
-POST /kitchen/orders/:shotId/cooking — "Tayyorlash" — pending → cooking
-POST /kitchen/orders/:shotId/ready   — "Tayyor" — cooking → ready
-```
-
----
-
-## Ofitsiant + Oshxona tizimi (Shot lifecycle)
-
-### Asosiy oqim
-
-```
-Mijoz (Telegram)          Ofitsiant                  Oshpaz
-      │                       │                         │
-      │ Buyurtma beradi       │                         │
-      │ POST /order           │                         │
-      │──────────────────────►│ new-order event          │
-      │                       │◄────────────────────────│
-      │                       │                         │
-      │                       │ Mahsulot qo'shadi       │
-      │                       │ POST /shots/:id/add-item│
-      │                       │                         │
-      │                       │ Oshpazga yuboradi       │
-      │                       │ POST /shots/:id/to-kitchen
-      │                       │────────────────────────►│
-      │                       │         to-kitchen event │
-      │                       │                         │
-      │                       │                         │ "Tayyorlash" bosadi
-      │                       │                         │ POST /cooking
-      │                       │◄────────────────────────│
-      │                       │                         │
-      │                       │                         │ "Tayyor" bosadi
-      │                       │ kitchen-ready event      │ POST /ready
-      │                       │◄────────────────────────│
-      │                       │                         │
-      │                       │ Shot yopadi (to'lov)    │
-      │                       │ POST /shots/:id/close   │
-      │◄──────────────────────│ shot-closed event       │
-```
-
-### Muhim qoidalar
-
-1. **Bitta stol = bitta ochiq shot** — yangi buyurtma kelsa avvalgiga qo'shiladi
-2. **Shot yopilgandan keyin** — shu stoldan yangi buyurtma kelsa yangi shot ochiladi
-3. **Online buyurtma** — shotga tushmaydi, eski tizimda ishlaydi (Telegram xabar)
-4. **Ofitsiant topish** — avval stolga biriktirilgan, keyin eng kam band, aks holda ofitsiantsiz
-5. **Item statuslari:** `pending` → `cooking` → `ready` (har biri alohida)
-6. **Shot yopish** — barcha itemlarning yakuniy narxi hisoblanadi
-
----
-
-## Modullar tizimi
-
-Superadmin har bir restoran uchun modullarni yoqadi/o'chiradi. Admin panelda faqat yoqilgan bo'limlar ko'rinadi.
-
-| Modul | Default | Tasvirlanishi |
-|---|---|---|
-| `orders` | ✅ | Buyurtmalar boshqaruvi |
-| `menu` | ✅ | Menyu (mahsulotlar) |
-| `categories` | ✅ | Kategoriyalar |
-| `ratings` | ✅ | Reytinglar |
-| `users` | ✅ | Foydalanuvchilar ro'yxati |
-| `employees` | ✅ | Ishchilar boshqaruvi |
-| `attendance` | ✅ | Davomat tizimi |
-| `empReport` | ✅ | Hisobot & Maosh |
-| `branches` | ✅ | Filiallar |
-| `broadcast` | ✅ | Ommaviy xabar |
-| `notifications` | ✅ | Bildirishnomalar |
-| `waiter` | ❌ | Ofitsiant tizimi (shotlar) |
-| `kitchen` | ❌ | Oshxona paneli |
-
-**Waiter va Kitchen** default o'chirilgan — superadmin yoqishi kerak.
-
----
-
-## Admin panelda ofitsiant/oshpaz boshqaruvi
-
-`modules.waiter === true` bo'lganda admin panelda **"🧑‍🍳 Ofitsiantlar"** bo'limi paydo bo'ladi:
-- Ofitsiant qo'shish (ism, telefon, login, parol, **stollar biriktiruvi**)
-- Ofitsiantni tahrirlash/o'chirish
-- Stollar vergul bilan kiritiladi: `1, 2, 3, 4, 5`
-
-`modules.kitchen === true` bo'lganda **"🍳 Oshpazlar"** bo'limi paydo bo'ladi:
-- Oshpaz qo'shish (ism, telefon, login, parol)
-- Oshpazni tahrirlash/o'chirish
-
-Ikkalasi ham Employee jadvalida saqlanadi, faqat `role` farqlanadi.
-
----
-
-## Telegram Bot tizimi
-
-### Multi-bot arxitektura
-Har bir restoranning o'z Telegram boti bor. Server ishga tushganda barcha faol restoranlarning botlarini webhook rejimida ishga tushiradi.
-
-```
-Webhook URL: https://{DOMAIN}/wh/{restaurantId}/{botToken}
-```
-
-### Bot funksiyalari
-- `/start` — foydalanuvchi ro'yxatdan o'tadi, WebApp tugmasi ko'rinadi
-- Buyurtma qabul/rad — inline keyboard orqali admin (chefId) ga xabar boradi
-- Broadcast — admin barcha foydalanuvchilarga xabar yuboradi
-
----
-
-## Davomat tizimi (Employee panel)
-
-### Check-in jarayoni
-1. Ishchi employee panelga kiradi
-2. **Yuz tanish** — Face++ API orqali rasmni solishtiradi
-3. **Geolokatsiya** — filial koordinatalaridan masofa tekshiriladi
-4. Kechikish avtomatik hisoblanadi (`workStart` bilan solishtirish)
-
-### Check-out jarayoni
-- Umumiy ishlagan vaqt hisoblanadi
-- Overtime — belgilangan `workEnd` dan keyin ishlagan daqiqalar
+5. Client yarating: `client/services/salon/`
 
 ---
 
 ## Deploy qilish
 
-### Backend (Railway)
-```bash
-cd backend
-# Environment variables:
-# MONGO_URI, BOT_TOKEN, CHEF_ID, WEBAPP_URL, RESTAURANT_ID,
-# RESTAURANT_NAME, JWT_SECRET, RAILWAY_PUBLIC_DOMAIN,
-# FACEPP_API_KEY, FACEPP_API_SECRET, SUPER_USERNAME, SUPER_PASSWORD
+1. Fayllarni repo ga qo'ying (yuqoridagi ro'yxat bo'yicha)
+2. `git add . && git commit -m "v3.0: Universal business platform" && git push`
+3. Railway avtomatik deploy qiladi
+4. MongoDB da eski adminlar uchun: `businessType` field avtomatik `"restaurant"` default oladi
+5. Eski `modules` ham saqlanib qoladi — hech narsa buzilmaydi
 
-npm install   # socket.io avtomatik o'rnatiladi
-npm start     # node server.js
-```
-
-### Frontend panellar (Vercel)
-Har bir panel alohida Vercel proyekt sifatida deploy qilinadi. API URL `window.__CONFIG__` yoki `window.location.origin` orqali aniqlanadi.
-
----
-
-## Xavfsizlik
-
-- Parollar **bcrypt** bilan hash qilinadi (salt rounds: 10)
-- JWT tokenlar **7 kun** (admin/superadmin) yoki **30 kun** (employee/waiter/chef) amal qiladi
-- Restoran bloklanganda — barcha panellar (admin, employee, waiter, kitchen) bloklanadi
-- Face++ API orqali yuz tanish — threshold 73% dan past bo'lsa rad etiladi
-- Geofencing — filial radiusidan tashqarida check-in qilish mumkin emas
-- CORS — `origin: "*"` (hozircha ochiq)
-
----
-
-## Rivojlantirish rejalari
-
-- [ ] Webapp da "Mening shotim" bo'limi (mijoz o'z shotini ko'radi, qo'shimcha buyurtma beradi)
-- [ ] Admin panelda ofitsiant hisoboti (nechta shot, qancha summa, kunlik breakdown)
-- [ ] Webapp Socket.IO client (real-time shot yangilanishi)
-- [ ] Oshpaz panelda ovqat kategoriyalari bo'yicha filter
-- [ ] Push notification (Service Worker)
+## Backward Compatibility
+- Barcha eski endpointlar avvalgidek ishlaydi
+- `Restaurant` model va `restaurantId` field nomlari saqlanib qoldi
+- Eski adminlar `businessType: "restaurant"` default oladi
+- `modules` da yangi `inventory` field — eski adminlarda `undefined` → `false` deb hisoblanadi
+- Superadmin eski funksional to'liq saqlanib qoldi (CRUD, block, payment, bots, audit)

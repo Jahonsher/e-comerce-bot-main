@@ -204,7 +204,7 @@ async function askAI(restaurantId, adminId, adminUsername, question) {
       {
         headers: {
           "x-api-key": config.anthropicApiKey,
-          "anthropic-version": "2024-10-22",
+          "anthropic-version": "2023-06-01",
           "content-type": "application/json",
         },
         timeout: 30000,

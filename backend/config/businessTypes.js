@@ -130,6 +130,13 @@ const BUSINESS_TYPES = {
         core: false,
         description: { uz: "Oshpaz uchun buyurtma paneli", ru: "Панель заказов для повара" },
       },
+      aiAgent: {
+        label: { uz: "AI Yordamchi", ru: "AI Помощник" },
+        icon: "🤖",
+        default: false,
+        core: false,
+        description: { uz: "Sun'iy intellekt yordamchisi — statistika, tahlil, prognoz", ru: "AI помощник — статистика, анализ, прогнозы" },
+      },
     },
   },
 

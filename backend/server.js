@@ -24,6 +24,7 @@ const adminRoutes = require("./routes/admin.routes");
 const superadminRoutes = require("./routes/superadmin.routes");
 const waiterEmployeeRoutes = require("./routes/waiter-employee.routes");
 const kitchenRoutes = require("./routes/kitchen.routes");
+const aiRoutes = require("./routes/ai.routes");
 
 // ===== APP SETUP =====
 const app = express();
@@ -67,6 +68,7 @@ app.use("/admin", adminRoutes);
 app.use("/superadmin", superadminRoutes);
 app.use("/", waiterEmployeeRoutes);
 app.use("/", kitchenRoutes);
+app.use("/admin/ai", aiRoutes);
 
 // ===== GRACEFUL SHUTDOWN =====
 process.on("SIGTERM", () => {

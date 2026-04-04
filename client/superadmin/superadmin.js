@@ -145,6 +145,7 @@ function showPage(page) {
   if (page === 'payments')      renderPayments(main);
   if (page === 'bots')          renderBots(main);
   if (page === 'auditLog')      renderAuditLog(main);
+  if (page === 'aiMonitor')     renderAiMonitor(main);
   if (page === 'notifications') renderSANotifications(main);
   if (page === 'settings')      renderSettings(main);
 }
@@ -1129,3 +1130,137 @@ document.getElementById('rBusinessType').addEventListener('change', function() {
     loadBusinessTypes();
   };
 })();
+// =============================================
+// AI MONITOR PAGE (Superadmin)
+// =============================================
+async function renderAiMonitor(main) {
+  main.innerHTML =
+    '<div class="page">' +
+      '<div style="margin-bottom:24px">' +
+        '<h1 style="font-family:\'Playfair Display\',serif;font-size:28px;font-weight:700">🤖 AI Monitor</h1>' +
+        '<p style="font-size:13px;margin-top:4px;color:#64748b">Barcha bizneslarning AI yordamchi statistikasi</p>' +
+      '</div>' +
+      '<div id="aiMonitorContent" style="color:#64748b;padding:20px">Yuklanmoqda...</div>' +
+    '</div>';
+
+  var d = await api('/superadmin/ai/stats');
+  if (!d || !d.ok) {
+    document.getElementById('aiMonitorContent').innerHTML = '<div style="color:#f87171">Yuklab bo\'lmadi</div>';
+    return;
+  }
+
+  var t = d.totals;
+  var costUsd = t.totalCost.toFixed(4);
+  var costSom = Math.round(t.totalCost * 12800);
+
+  var summaryHtml =
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:24px">' +
+      aiStatCard('📨', 'Jami surovlar', t.totalRequests, 'Bu oy') +
+      aiStatCard('🔤', 'Jami tokenlar', t.totalTokens.toLocaleString(), 'input+output') +
+      aiStatCard('💵', 'Xarajat', '$' + costUsd, costSom.toLocaleString() + ' so\'m') +
+      aiStatCard('🏢', 'Faol bizneslar', t.activeBusinesses + '/' + t.totalBusinesses, 'AI ishlatyapti') +
+    '</div>';
+
+  // Per-restaurant table
+  var rows = d.perRestaurant.map(function(r) {
+    var pct = r.aiLimit > 0 ? Math.round((r.used / r.aiLimit) * 100) : 0;
+    var barColor = pct >= 90 ? '#ef4444' : pct >= 60 ? '#f59e0b' : '#22c55e';
+    return '<tr style="border-bottom:1px solid rgba(6,182,212,0.06)">' +
+      '<td style="padding:12px 10px"><div style="font-weight:600;font-size:13px">' + r.restaurantName + '</div><div style="font-size:11px;color:#64748b">' + r.restaurantId + '</div></td>' +
+      '<td style="padding:12px 10px;text-align:center"><span style="font-size:11px;padding:3px 8px;border-radius:99px;' + (r.aiEnabled ? 'background:rgba(34,197,94,0.15);color:#22c55e' : 'background:rgba(239,68,68,0.15);color:#ef4444') + '">' + (r.aiEnabled ? 'Yoqilgan' : 'O\'chiq') + '</span></td>' +
+      '<td style="padding:12px 10px;text-align:center;font-weight:600;color:#22d3ee">' + r.used + '</td>' +
+      '<td style="padding:12px 10px">' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+          '<div style="flex:1;height:6px;background:#1a2235;border-radius:3px"><div style="height:100%;width:' + Math.min(100, pct) + '%;background:' + barColor + ';border-radius:3px"></div></div>' +
+          '<span style="font-size:11px;color:#64748b;min-width:36px">' + r.used + '/' + r.aiLimit + '</span>' +
+        '</div>' +
+      '</td>' +
+      '<td style="padding:12px 10px;text-align:center;font-size:12px;color:#64748b">' + r.totalTokens.toLocaleString() + '</td>' +
+      '<td style="padding:12px 10px;text-align:center;font-size:12px;color:#22c55e">$' + r.totalCost.toFixed(4) + '</td>' +
+      '<td style="padding:12px 10px;text-align:center">' +
+        '<div style="display:flex;gap:4px;justify-content:center">' +
+          '<input type="number" value="' + r.aiLimit + '" min="0" max="10000" style="width:60px;padding:4px 6px;background:#1a2235;border:1px solid rgba(6,182,212,0.15);border-radius:6px;color:#f1f5f9;font-size:12px;text-align:center" onchange="updateAiLimit(\'' + r.restaurantId + '\',this.value)"/>' +
+          '<button onclick="viewAiHistory(\'' + r.restaurantId + '\',\'' + r.restaurantName + '\')" style="padding:4px 8px;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:#a78bfa;border-radius:6px;font-size:11px;cursor:pointer">📜</button>' +
+        '</div>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+
+  var tableHtml =
+    '<div style="' + border12('overflow:hidden') + '">' +
+      '<div style="padding:14px 18px;border-bottom:1px solid rgba(6,182,212,0.1);display:flex;justify-content:space-between;align-items:center">' +
+        '<span style="font-size:14px;font-weight:700">Bizneslar bo\'yicha AI statistika</span>' +
+      '</div>' +
+      '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">' +
+        '<thead><tr style="background:rgba(6,182,212,0.04)">' +
+          '<th style="padding:10px;text-align:left;font-size:11px;color:#64748b;font-weight:600">BIZNES</th>' +
+          '<th style="padding:10px;text-align:center;font-size:11px;color:#64748b;font-weight:600">HOLAT</th>' +
+          '<th style="padding:10px;text-align:center;font-size:11px;color:#64748b;font-weight:600">SUROVLAR</th>' +
+          '<th style="padding:10px;text-align:left;font-size:11px;color:#64748b;font-weight:600">LIMIT</th>' +
+          '<th style="padding:10px;text-align:center;font-size:11px;color:#64748b;font-weight:600">TOKENLAR</th>' +
+          '<th style="padding:10px;text-align:center;font-size:11px;color:#64748b;font-weight:600">XARAJAT</th>' +
+          '<th style="padding:10px;text-align:center;font-size:11px;color:#64748b;font-weight:600">AMALLAR</th>' +
+        '</tr></thead>' +
+        '<tbody>' + (rows || '<tr><td colspan="7" style="text-align:center;padding:30px;color:#475569">Hali AI surov yo\'q</td></tr>') + '</tbody>' +
+      '</table></div>' +
+    '</div>';
+
+  document.getElementById('aiMonitorContent').innerHTML = summaryHtml + tableHtml;
+}
+
+function aiStatCard(icon, label, value, sub) {
+  return '<div style="' + border12('padding:16px') + '">' +
+    '<div style="font-size:22px;margin-bottom:8px">' + icon + '</div>' +
+    '<div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">' + label + '</div>' +
+    '<div style="font-size:22px;font-weight:700;color:#f1f5f9">' + value + '</div>' +
+    '<div style="font-size:11px;color:#64748b;margin-top:2px">' + sub + '</div>' +
+  '</div>';
+}
+
+async function updateAiLimit(restaurantId, limit) {
+  var d = await api('/superadmin/ai/limit/' + restaurantId, {
+    method: 'PUT',
+    body: JSON.stringify({ limit: Number(limit) })
+  });
+  if (d && d.ok) {
+    alert('✅ AI limit yangilandi: ' + limit);
+  } else {
+    alert('Xato: ' + (d?.error || 'Server xatosi'));
+  }
+}
+
+async function viewAiHistory(restaurantId, name) {
+  var d = await api('/superadmin/ai/history/' + restaurantId + '?limit=30');
+  if (!d || !d.ok || !d.chats.length) {
+    alert('Bu biznesda AI surov tarixi yo\'q');
+    return;
+  }
+
+  var html = d.chats.map(function(c) {
+    return '<div style="margin-bottom:12px;padding:12px;background:#0f1828;border:1px solid rgba(139,92,246,0.1);border-radius:10px">' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
+        '<span style="font-size:11px;color:#a78bfa;font-weight:600">' + (c.adminUsername || 'admin') + '</span>' +
+        '<span style="font-size:10px;color:#475569">' + new Date(c.createdAt).toLocaleString('uz-UZ') + '</span>' +
+      '</div>' +
+      '<div style="font-size:13px;color:#22d3ee;margin-bottom:4px">❓ ' + (c.question || '').substring(0, 100) + '</div>' +
+      '<div style="font-size:12px;color:#94a3b8;line-height:1.5">🤖 ' + (c.answer || '').substring(0, 200) + (c.answer && c.answer.length > 200 ? '...' : '') + '</div>' +
+    '</div>';
+  }).join('');
+
+  var old = document.getElementById('aiHistoryModal');
+  if (old) old.remove();
+
+  var modal = document.createElement('div');
+  modal.id = 'aiHistoryModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px';
+  modal.innerHTML =
+    '<div style="background:#0d1220;border:1px solid rgba(139,92,246,0.2);border-radius:16px;width:100%;max-width:600px;max-height:85vh;display:flex;flex-direction:column">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid rgba(139,92,246,0.15)">' +
+        '<div style="font-size:16px;font-weight:700;color:#c4b5fd">🤖 AI Tarix — ' + name + '</div>' +
+        '<button onclick="document.getElementById(\'aiHistoryModal\').remove()" style="background:none;border:none;color:#64748b;font-size:20px;cursor:pointer">✕</button>' +
+      '</div>' +
+      '<div style="padding:16px 20px;overflow-y:auto;flex:1">' + html + '</div>' +
+    '</div>';
+  modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+  document.body.appendChild(modal);
+}

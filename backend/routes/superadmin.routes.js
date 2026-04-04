@@ -627,6 +627,114 @@ router.put("/restaurants/:id/modules/:moduleKey/toggle", superMiddleware, async 
   }
 });
 
+// =============================================
+// AI AGENT MONITORING (superadmin)
+// =============================================
+
+// Barcha bizneslar AI statistikasi
+router.get("/ai/stats", superMiddleware, async (req, res) => {
+  try {
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const { AIChat } = require("../models");
+
+    // Har bir restoran bo'yicha
+    const perRestaurant = await AIChat.aggregate([
+      { $match: { createdAt: { $gte: monthStart } } },
+      {
+        $group: {
+          _id: "$restaurantId",
+          count: { $sum: 1 },
+          totalTokens: { $sum: "$totalTokens" },
+          totalCost: { $sum: "$cost" },
+          avgResponseTime: { $avg: "$responseTime" },
+        },
+      },
+      { $sort: { count: -1 } },
+    ]);
+
+    // Adminlar bilan birlashtirish
+    const admins = await Admin.find({ role: "admin" }).select("restaurantId restaurantName aiLimit modules.aiAgent").lean();
+    const result = perRestaurant.map((r) => {
+      const admin = admins.find((a) => a.restaurantId === r._id);
+      return {
+        restaurantId: r._id,
+        restaurantName: admin?.restaurantName || r._id,
+        aiEnabled: admin?.modules?.aiAgent || false,
+        aiLimit: admin?.aiLimit || 50,
+        used: r.count,
+        remaining: Math.max(0, (admin?.aiLimit || 50) - r.count),
+        totalTokens: r.totalTokens,
+        totalCost: Math.round(r.totalCost * 10000) / 10000,
+        avgResponseTime: Math.round(r.avgResponseTime),
+      };
+    });
+
+    // AI yoqilgan lekin hali surov bermagan bizneslar
+    admins.forEach((a) => {
+      if (a.modules?.aiAgent && !result.find((r) => r.restaurantId === a.restaurantId)) {
+        result.push({
+          restaurantId: a.restaurantId,
+          restaurantName: a.restaurantName,
+          aiEnabled: true,
+          aiLimit: a.aiLimit || 50,
+          used: 0,
+          remaining: a.aiLimit || 50,
+          totalTokens: 0,
+          totalCost: 0,
+          avgResponseTime: 0,
+        });
+      }
+    });
+
+    // Umumiy
+    const totals = {
+      totalRequests: perRestaurant.reduce((s, r) => s + r.count, 0),
+      totalTokens: perRestaurant.reduce((s, r) => s + r.totalTokens, 0),
+      totalCost: Math.round(perRestaurant.reduce((s, r) => s + r.totalCost, 0) * 10000) / 10000,
+      activeBusinesses: result.filter((r) => r.used > 0).length,
+      totalBusinesses: result.length,
+    };
+
+    res.json({ ok: true, totals, perRestaurant: result });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Bitta biznesning AI tarixi (superadmin ko'rish uchun)
+router.get("/ai/history/:restaurantId", superMiddleware, async (req, res) => {
+  try {
+    const { AIChat } = require("../models");
+    const { limit = 50 } = req.query;
+    const chats = await AIChat.find({ restaurantId: req.params.restaurantId })
+      .sort({ createdAt: -1 })
+      .limit(Number(limit))
+      .lean();
+    res.json({ ok: true, chats });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// AI limitni o'zgartirish
+router.put("/ai/limit/:restaurantId", superMiddleware, async (req, res) => {
+  try {
+    const { limit } = req.body;
+    if (!limit || limit < 0) return res.status(400).json({ error: "limit musbat raqam bo'lishi kerak" });
+    await Admin.findOneAndUpdate(
+      { restaurantId: req.params.restaurantId, role: "admin" },
+      { aiLimit: Number(limit) }
+    );
+    await logAudit("ai_limit_change", req.admin.username, "superadmin", req.params.restaurantId, `AI limit: ${limit}`);
+    res.json({ ok: true, limit: Number(limit) });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Eksport (bootstrap uchun kerak)
 router.ensureRestaurant = ensureRestaurant;
 

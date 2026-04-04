@@ -43,6 +43,9 @@ const config = {
   cache: {
     statsTTL: 30000, // 30 sekund
   },
+
+  // AI Agent
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY || "",
 };
 
 // ===== VALIDATION =====

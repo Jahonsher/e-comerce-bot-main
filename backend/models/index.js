@@ -222,6 +222,28 @@ const saNotifSchema = new mongoose.Schema(
 );
 const SANotification = mongoose.model("SANotification", saNotifSchema);
 
+// ===== AI CHAT LOG =====
+const aiChatSchema = new mongoose.Schema(
+  {
+    restaurantId: { type: String, required: true },
+    adminId: { type: String, required: true },
+    adminUsername: String,
+    question: { type: String, required: true },
+    answer: String,
+    inputTokens: { type: Number, default: 0 },
+    outputTokens: { type: Number, default: 0 },
+    totalTokens: { type: Number, default: 0 },
+    cost: { type: Number, default: 0 },
+    model: { type: String, default: "claude-haiku-4-5-20251001" },
+    responseTime: { type: Number, default: 0 },
+    category: { type: String, default: "general" },
+  },
+  { timestamps: true }
+);
+aiChatSchema.index({ restaurantId: 1, createdAt: -1 });
+aiChatSchema.index({ adminId: 1, createdAt: -1 });
+const AIChat = mongoose.model("AIChat", aiChatSchema);
+
 module.exports = {
   Restaurant,
   Branch,
@@ -234,4 +256,5 @@ module.exports = {
   AuditLog,
   Payment,
   SANotification,
+  AIChat,
 };

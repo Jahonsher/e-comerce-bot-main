@@ -56,7 +56,11 @@ const adminSchema = new mongoose.Schema(
       inventory: { type: Boolean, default: false },
       waiter: { type: Boolean, default: false },
       kitchen: { type: Boolean, default: false },
+      aiAgent: { type: Boolean, default: false },
     },
+
+    // AI Agent limits
+    aiLimit: { type: Number, default: 50 },
   },
   { timestamps: true }
 );

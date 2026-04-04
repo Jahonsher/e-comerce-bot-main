@@ -176,7 +176,6 @@ function filterSidebar() {
     employees:'employees', attendance:'attendance', empReport:'empReport',
     notifications:'notifications', inventory:'inventory', waiters:'waiter', chefs:'kitchen'
   };
-  // Bu modullar default o'chiq — faqat true bo'lganda ko'rsatish
   var defaultOff = ['waiter', 'kitchen', 'inventory'];
   document.querySelectorAll('.sidebar-item[data-page]').forEach(function(el) {
     var key = map[el.dataset.page];
@@ -187,6 +186,9 @@ function filterSidebar() {
       el.style.display = mods[key] === false ? 'none' : '';
     }
   });
+  // AI Chat button
+  var aiBtn = document.getElementById('aiChatToggle');
+  if (aiBtn) aiBtn.style.display = mods.aiAgent === true ? '' : 'none';
 }
 
 if (token) {
@@ -2241,4 +2243,108 @@ async function saveSiteSettings() {
   var d = await apiFetch('/admin/site-settings', { method: 'PUT', body: JSON.stringify(body) });
   if (d.ok) { alert('✅ Saqlandi!'); renderSiteSettings(document.getElementById('mainContent')); }
   else alert('Xato: ' + (d.error || ''));
+}
+// =============================================
+// AI CHAT FUNCTIONS
+// =============================================
+
+// Toggle chat panel
+function toggleAiChat() {
+  var panel = document.getElementById('aiChatPanel');
+  if (!panel) return;
+  var isOpen = panel.style.display === 'flex';
+  panel.style.display = isOpen ? 'none' : 'flex';
+  if (!isOpen) {
+    document.getElementById('aiInput').focus();
+    loadAiUsage();
+  }
+}
+
+// AI Chat toggle button event
+document.getElementById('aiChatToggle').addEventListener('click', toggleAiChat);
+
+// Send message
+async function sendAiMessage() {
+  var input = document.getElementById('aiInput');
+  var question = input.value.trim();
+  if (!question) return;
+
+  var messages = document.getElementById('aiMessages');
+  var sendBtn = document.getElementById('aiSendBtn');
+
+  // Foydalanuvchi xabari
+  messages.innerHTML += '<div style="align-self:flex-end;background:rgba(6,182,212,0.12);border:1px solid rgba(6,182,212,0.2);border-radius:12px;padding:10px 14px;font-size:13px;color:#22d3ee;max-width:85%;word-break:break-word">' + escapeHtml(question) + '</div>';
+
+  // Loading
+  var loadingId = 'ai-loading-' + Date.now();
+  messages.innerHTML += '<div id="' + loadingId + '" style="display:flex;align-items:center;gap:8px;max-width:85%"><div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#8b5cf6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">🤖</div><div style="background:#1a2235;border-radius:12px;padding:10px 14px;font-size:13px;color:#94a3b8"><span class="skel" style="display:inline-block;width:120px;height:14px;border-radius:4px"></span></div></div>';
+  messages.scrollTop = messages.scrollHeight;
+
+  input.value = '';
+  sendBtn.disabled = true;
+  sendBtn.textContent = '...';
+
+  try {
+    var d = await apiFetch('/admin/ai/chat', {
+      method: 'POST',
+      body: JSON.stringify({ question: question })
+    });
+
+    var loadEl = document.getElementById(loadingId);
+    if (loadEl) loadEl.remove();
+
+    if (!d || d.error) {
+      var errMsg = d?.message || d?.error || 'Xatolik yuz berdi';
+      messages.innerHTML += '<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:10px 14px;font-size:13px;color:#f87171;max-width:85%">' + errMsg + '</div>';
+    } else {
+      // AI javobi — markdown-like formatting
+      var answer = d.answer || '';
+      var formatted = formatAiAnswer(answer);
+      messages.innerHTML += '<div style="display:flex;gap:8px;max-width:90%"><div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#8b5cf6,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">🤖</div><div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.12);border-radius:12px;padding:12px 14px;font-size:13px;color:#e2e8f0;line-height:1.7;word-break:break-word">' + formatted + '</div></div>';
+
+      // Usage info
+      if (d.usage) {
+        document.getElementById('aiUsageInfo').textContent = d.usage.remaining + ' ta surov qoldi (oylik)';
+      }
+    }
+  } catch (e) {
+    var loadEl2 = document.getElementById(loadingId);
+    if (loadEl2) loadEl2.remove();
+    messages.innerHTML += '<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:10px 14px;font-size:13px;color:#f87171;max-width:85%">Server bilan aloqa uzildi</div>';
+  }
+
+  sendBtn.disabled = false;
+  sendBtn.textContent = 'Yuborish';
+  messages.scrollTop = messages.scrollHeight;
+}
+
+// AI javobni formatlash
+function formatAiAnswer(text) {
+  return text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:#c4b5fd">$1</strong>')
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>')
+    .replace(/(\d{1,3}(,\d{3})*)\s*so'm/g, '<span style="color:#22d3ee;font-weight:600">$1 so\'m</span>');
+}
+
+function escapeHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Chatni tozalash
+function clearAiChat() {
+  var messages = document.getElementById('aiMessages');
+  if (messages) {
+    messages.innerHTML = '<div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.15);border-radius:12px;padding:12px 14px;font-size:13px;color:#c4b5fd;line-height:1.6;max-width:90%">Chat tozalandi. Yangi savol bering!</div>';
+  }
+}
+
+// Usage ma'lumotini yuklash
+async function loadAiUsage() {
+  var d = await apiFetch('/admin/ai/usage');
+  if (d && d.ok) {
+    var info = document.getElementById('aiUsageInfo');
+    if (info) info.textContent = d.remaining + '/' + d.limit + ' surov qoldi';
+  }
 }

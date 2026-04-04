@@ -60,7 +60,7 @@ const adminSchema = new mongoose.Schema(
     },
 
     // AI Agent limits
-    aiLimit: { type: Number, default: 50 },
+    aiLimit: { type: Number, default: 500 },
   },
   { timestamps: true }
 );

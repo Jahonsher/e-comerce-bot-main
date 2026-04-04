@@ -2348,3 +2348,43 @@ async function loadAiUsage() {
     if (info) info.textContent = d.remaining + '/' + d.limit + ' surov qoldi';
   }
 }
+
+// Chat oynasini kengaytirish/kichraytirish
+var _aiExpanded = false;
+function expandAiChat() {
+  var panel = document.getElementById('aiChatPanel');
+  var btn = document.getElementById('aiExpandBtn');
+  if (!panel) return;
+  _aiExpanded = !_aiExpanded;
+  if (_aiExpanded) {
+    panel.style.width = '700px';
+    panel.style.height = 'calc(100vh - 40px)';
+    panel.style.maxWidth = 'calc(100vw - 40px)';
+    panel.style.bottom = '20px';
+    panel.style.right = '20px';
+    btn.textContent = '⊡';
+    btn.title = 'Kichraytirish';
+  } else {
+    panel.style.width = '420px';
+    panel.style.height = '600px';
+    btn.textContent = '⛶';
+    btn.title = 'Kengaytirish';
+  }
+  var messages = document.getElementById('aiMessages');
+  if (messages) messages.scrollTop = messages.scrollHeight;
+}
+
+// Excel hisobot yuklab olish
+function downloadReport() {
+  var link = document.createElement('a');
+  link.href = API + '/admin/ai/export';
+  link.setAttribute('download', '');
+  // Token qo'shish
+  var t = localStorage.getItem('adminToken');
+  if (t) {
+    link.href += '?token=' + encodeURIComponent(t);
+  }
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}

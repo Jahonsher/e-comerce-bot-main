@@ -140,14 +140,77 @@ router.get("/usage", authMiddleware, moduleGuard("aiAgent"), async (req, res) =>
     res.json({
       ok: true,
       used: monthStats?.count || 0,
-      limit: admin?.aiLimit || 50,
-      remaining: Math.max(0, (admin?.aiLimit || 50) - (monthStats?.count || 0)),
+      limit: admin?.aiLimit || 500,
+      remaining: Math.max(0, (admin?.aiLimit || 500) - (monthStats?.count || 0)),
       totalTokens: monthStats?.totalTokens || 0,
       totalCost: monthStats?.totalCost || 0,
       avgResponseTime: Math.round(monthStats?.avgResponseTime || 0),
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+// ===== HISOBOT EKSPORT (Excel) =====
+router.get("/export", authMiddleware, moduleGuard("aiAgent"), async (req, res) => {
+  try {
+    const { collectAllData } = require("../services/ai.service");
+    const data = await collectAllData(req.admin.restaurantId);
+    const admin = await Admin.findOne({ restaurantId: req.admin.restaurantId, role: "admin" }).select("restaurantName");
+    const name = admin?.restaurantName || req.admin.restaurantId;
+    const sana = new Date().toLocaleDateString("uz-UZ");
+
+    // CSV format (Excel da ochiladi)
+    let csv = "\uFEFF"; // BOM — Excel da o'zbek harflar to'g'ri ko'rinishi uchun
+    csv += `ServiX Hisobot — ${name}\n`;
+    csv += `Sana: ${sana}\n\n`;
+
+    // Bugungi statistika
+    csv += "=== BUGUNGI STATISTIKA ===\n";
+    csv += `Buyurtmalar,${data.bugun.buyurtmalar}\n`;
+    csv += `Daromad,${data.bugun.daromad} so'm\n`;
+    csv += `Online,${data.bugun.online}\n`;
+    csv += `Restoranda,${data.bugun.restoranda}\n\n`;
+
+    // Oylik
+    csv += "=== OYLIK STATISTIKA ===\n";
+    csv += `Buyurtmalar,${data.oylik.buyurtmalar}\n`;
+    csv += `Daromad,${data.oylik.daromad} so'm\n\n`;
+
+    // Kunlik trend
+    csv += "=== KUNLIK TREND (7 kun) ===\n";
+    csv += "Sana,Buyurtmalar,Daromad\n";
+    data.kunlik_trend.forEach((d) => { csv += `${d.sana},${d.buyurtmalar},${d.daromad}\n`; });
+    csv += "\n";
+
+    // Top mahsulotlar
+    csv += "=== TOP MAHSULOTLAR ===\n";
+    csv += "Nomi,Sotilgan soni,Summa\n";
+    data.top_mahsulotlar.forEach((p) => { csv += `${p.nom},${p.soni},${p.summa}\n`; });
+    csv += "\n";
+
+    // Xodimlar
+    csv += "=== XODIMLAR ===\n";
+    csv += "Ism,Lavozim,Maosh,Bugungi holat,Kechikish (daq)\n";
+    data.xodimlar.forEach((x) => { csv += `${x.ism},${x.lavozim},${x.maosh},${x.bugungi_holat},${x.kechikish}\n`; });
+    csv += "\n";
+
+    // Ombor
+    if (data.ombor.length) {
+      csv += "=== OMBOR ===\n";
+      csv += "Nomi,Qoldiq,Birlik,Min stock,Holat\n";
+      data.ombor.forEach((o) => { csv += `${o.nomi},${o.qoldiq},${o.birlik},${o.min},${o.holat}\n`; });
+    }
+
+    csv += `\n— ServiX AI hisobot | ${sana}\n`;
+
+    const fileName = `ServiX_${name.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.csv`;
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+    res.send(csv);
+  } catch (e) {
+    logger.error("Export error:", e.message);
+    res.status(500).json({ error: "Hisobotni yuklab bo'lmadi" });
   }
 });
 

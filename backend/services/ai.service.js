@@ -1,24 +1,27 @@
+/**
+ * ServiX AI Service
+ * 
+ * MUHIM: Bu service admin routes dagi stats/fast va analytics/advanced
+ * endpointlari bilan AYNAN BIR XIL querylarni ishlatadi.
+ * Agar Dashboard da data ko'rinsa — AI da ham ko'rinadi.
+ */
+
 var config = require("../config");
 var logger = require("../utils/logger");
+
+// ===== MODEL IMPORTS — admin.routes.js dagi bilan bir xil =====
 var Order = require("../models/Order");
 var User = require("../models/User");
 var Admin = require("../models/Admin");
 var Product = require("../models/Product");
 var Category = require("../models/Category");
-var models = require("../models");
-var Employee = models.Employee;
-var Attendance = models.Attendance;
-var Inventory = models.Inventory;
-var Branch = models.Branch;
-var Shot = models.Shot;
+var models = require("../models/index");
 
 var ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
 var AI_MODEL = "claude-haiku-4-5-20251001";
-var PRICING_IN = 1.0;
-var PRICING_OUT = 5.0;
 
 function calcCost(inp, out) {
-  return (inp * PRICING_IN + out * PRICING_OUT) / 1000000;
+  return (inp * 1.0 + out * 5.0) / 1000000;
 }
 
 var BLOCKED = [
@@ -32,186 +35,272 @@ function isBlocked(t) {
   return false;
 }
 
-// ===== BARCHA DATA — admin panel bilan BIR XIL =====
-async function collectAllData(restaurantId) {
-  logger.info("AI: data yigish boshlandi [" + restaurantId + "]");
+/**
+ * BARCHA DATA YIGISH
+ * admin.routes.js dagi stats/fast + analytics/advanced + orders + products
+ * endpointlari bilan BIR XIL query. 
+ * Agar Dashboard da ko'rinsa — bu yerda ham ko'rinadi.
+ */
+async function collectAllData(rId) {
+  logger.info("[AI] collectAllData: " + rId);
 
   var now = new Date();
-  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  var monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  var prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  var today = new Date();
+  today.setHours(0, 0, 0, 0);
+  var month = new Date(today.getFullYear(), today.getMonth(), 1);
+  var prevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
 
-  // ===== DB dan BARCHA datani olish =====
-  var allOrders = [];
-  var allProducts2 = [];
-  var allCategories2 = [];
-  var allEmployees = [];
-  var allAttendance = [];
-  var allInventory = [];
-  var allBranches = [];
-  var userCount = 0;
+  // ===== stats/fast bilan BIR XIL query =====
+  var todayOrders, monthOrders, ratedOrders, totalUsers, recentOrders;
+  try {
+    var r = await Promise.all([
+      Order.find({ restaurantId: rId, createdAt: { $gte: today } }).lean(),
+      Order.find({ restaurantId: rId, createdAt: { $gte: month } }).lean(),
+      Order.find({ restaurantId: rId, rating: { $ne: null } }).select("rating").lean(),
+      User.countDocuments({ restaurantId: rId }),
+      Order.find({ restaurantId: rId }).sort({ createdAt: -1 }).limit(20).lean(),
+    ]);
+    todayOrders = r[0];
+    monthOrders = r[1];
+    ratedOrders = r[2];
+    totalUsers = r[3];
+    recentOrders = r[4];
+  } catch (e) {
+    logger.error("[AI] orders query error: " + e.message);
+    todayOrders = []; monthOrders = []; ratedOrders = []; totalUsers = 0; recentOrders = [];
+  }
+
+  // O'tgan oy buyurtmalari
+  var prevMonthOrders = [];
+  try {
+    prevMonthOrders = await Order.find({ restaurantId: rId, createdAt: { $gte: prevMonth, $lt: month } }).lean();
+  } catch (e) { logger.error("[AI] prevMonth err: " + e.message); }
+
+  // Menyu — Product va Category
+  var products = [];
+  var categories = [];
+  try {
+    products = await Product.find({ restaurantId: rId }).lean();
+    categories = await Category.find({ restaurantId: rId }).lean();
+  } catch (e) { logger.error("[AI] products/cats err: " + e.message); }
+
+  // Xodimlar va davomat
+  var employees = [];
+  var todayAtt = [];
+  var monthAtt = [];
+  try {
+    employees = await models.Employee.find({ restaurantId: rId, active: true })
+      .select("name position salary workStart workEnd weeklyOff role").lean();
+  } catch (e) { logger.error("[AI] employees err: " + e.message); }
+  try {
+    todayAtt = await models.Attendance.find({ restaurantId: rId, date: today.toISOString().split("T")[0] }).lean();
+  } catch (e) { logger.error("[AI] todayAtt err: " + e.message); }
+  try {
+    monthAtt = await models.Attendance.find({ restaurantId: rId, date: { $regex: "^" + now.toISOString().slice(0, 7) } }).lean();
+  } catch (e) { logger.error("[AI] monthAtt err: " + e.message); }
+
+  // Ombor
+  var inventory = [];
+  try {
+    inventory = await models.Inventory.find({ restaurantId: rId, active: true }).lean();
+  } catch (e) { logger.error("[AI] inventory err: " + e.message); }
+
+  // Filiallar
+  var branches = [];
+  try {
+    branches = await models.Branch.find({ restaurantId: rId, active: true }).lean();
+  } catch (e) { logger.error("[AI] branches err: " + e.message); }
+
+  // Admin info
   var adminDoc = null;
-  var allShots = [];
+  try {
+    adminDoc = await Admin.findOne({ restaurantId: rId, role: "admin" })
+      .select("restaurantName phone address workStart workEnd").lean();
+  } catch (e) { logger.error("[AI] admin err: " + e.message); }
 
-  try { allOrders = await Order.find({ restaurantId: restaurantId, createdAt: { $gte: prevMonthStart } }).lean(); } catch(e) { logger.error("AI orders err: " + e.message); }
-  try { allProducts2 = await Product.find({ restaurantId: restaurantId }).lean(); } catch(e) { logger.error("AI products err: " + e.message); }
-  try { allCategories2 = await Category.find({ restaurantId: restaurantId }).lean(); } catch(e) { logger.error("AI cats err: " + e.message); }
-  try { allEmployees = await Employee.find({ restaurantId: restaurantId, active: true }).select("-password -faceDescriptor -photo").lean(); } catch(e) { logger.error("AI emps err: " + e.message); }
-  try { allAttendance = await Attendance.find({ restaurantId: restaurantId, date: { $regex: "^" + now.toISOString().slice(0, 7) } }).lean(); } catch(e) { logger.error("AI att err: " + e.message); }
-  try { allInventory = await Inventory.find({ restaurantId: restaurantId, active: true }).lean(); } catch(e) { logger.error("AI inv err: " + e.message); }
-  try { allBranches = await Branch.find({ restaurantId: restaurantId, active: true }).lean(); } catch(e) { logger.error("AI branch err: " + e.message); }
-  try { userCount = await User.countDocuments({ restaurantId: restaurantId }); } catch(e) { logger.error("AI users err: " + e.message); }
-  try { adminDoc = await Admin.findOne({ restaurantId: restaurantId, role: "admin" }).select("restaurantName phone address workStart workEnd subscriptionEnd").lean(); } catch(e) { logger.error("AI admin err: " + e.message); }
-  try { allShots = await Shot.find({ restaurantId: restaurantId, status: "open" }).lean(); } catch(e) { logger.error("AI shots err: " + e.message); }
+  logger.info("[AI] DATA: orders_today=" + todayOrders.length +
+    " orders_month=" + monthOrders.length +
+    " products=" + products.length +
+    " cats=" + categories.length +
+    " emps=" + employees.length +
+    " inv=" + inventory.length +
+    " users=" + totalUsers);
 
-  logger.info("AI DATA [" + restaurantId + "]: orders=" + allOrders.length + " products=" + allProducts2.length + " cats=" + allCategories2.length + " emps=" + allEmployees.length + " att=" + allAttendance.length + " inv=" + allInventory.length + " users=" + userCount);
+  // ===== HISOBLASHLAR — stats/fast bilan bir xil =====
 
-  // ===== BUYURTMALAR — har bir kun uchun alohida =====
-  var monthOrders = allOrders.filter(function(o) { return new Date(o.createdAt) >= monthStart; });
-  var prevMonthOrders = allOrders.filter(function(o) { return new Date(o.createdAt) < monthStart; });
-
-  // Kunlik breakdown — SHU OYNING BARCHA KUNLARI
-  var kunlikHisobot = [];
-  var kunSoni = now.getDate();
-  for (var i = 0; i < kunSoni; i++) {
-    var kun = new Date(monthStart);
-    kun.setDate(kun.getDate() + i);
-    var kunEnd = new Date(kun);
-    kunEnd.setDate(kunEnd.getDate() + 1);
-    var kunOrders = monthOrders.filter(function(o) { var d = new Date(o.createdAt); return d >= kun && d < kunEnd; });
-    var kunDaromad = kunOrders.reduce(function(s, o) { return s + (o.total || 0); }, 0);
-
-    // Shu kundagi mahsulotlar
-    var kunMahsulot = {};
-    kunOrders.forEach(function(o) {
-      (o.items || []).forEach(function(item) {
-        var key = item.name || "?";
-        if (!kunMahsulot[key]) kunMahsulot[key] = { soni: 0, summa: 0 };
-        kunMahsulot[key].soni += item.quantity || 1;
-        kunMahsulot[key].summa += (item.price || 0) * (item.quantity || 1);
-      });
+  // Haftalik trend (stats/fast bilan aynan bir xil)
+  var weeklyData = [];
+  for (var i = 6; i >= 0; i--) {
+    var d = new Date(today);
+    d.setDate(d.getDate() - i);
+    var dn = new Date(d);
+    dn.setDate(dn.getDate() + 1);
+    var dayOrders = monthOrders.filter(function (o) {
+      var ct = new Date(o.createdAt);
+      return ct >= d && ct < dn;
     });
-    var kunMahsulotList = [];
-    for (var k in kunMahsulot) {
-      kunMahsulotList.push({ nom: k, soni: kunMahsulot[k].soni, summa: kunMahsulot[k].summa });
-    }
-    kunMahsulotList.sort(function(a, b) { return b.soni - a.soni; });
-
-    kunlikHisobot.push({
-      sana: kun.toLocaleDateString("uz-UZ", { day: "numeric", month: "long", year: "numeric" }),
-      sana_qisqa: kun.getDate() + "-" + (kun.toLocaleDateString("uz-UZ", { month: "short" })),
-      hafta_kuni: kun.toLocaleDateString("uz-UZ", { weekday: "long" }),
-      buyurtmalar: kunOrders.length,
-      daromad: kunDaromad,
-      online: kunOrders.filter(function(o) { return o.orderType === "online"; }).length,
-      restoranda: kunOrders.filter(function(o) { return o.orderType === "dine_in"; }).length,
-      mahsulotlar: kunMahsulotList,
+    weeklyData.push({
+      sana: d.toLocaleDateString("uz-UZ", { month: "short", day: "numeric" }),
+      hafta_kuni: d.toLocaleDateString("uz-UZ", { weekday: "long" }),
+      buyurtmalar: dayOrders.length,
+      daromad: dayOrders.reduce(function (s, o) { return s + (o.total || 0); }, 0),
     });
   }
 
-  // Oylik TOP mahsulotlar
-  var oylikMahsulot = {};
-  monthOrders.forEach(function(o) {
-    (o.items || []).forEach(function(item) {
-      var key = item.name || "?";
-      if (!oylikMahsulot[key]) oylikMahsulot[key] = { soni: 0, summa: 0 };
-      oylikMahsulot[key].soni += item.quantity || 1;
-      oylikMahsulot[key].summa += (item.price || 0) * (item.quantity || 1);
+  // Oyning HAR BIR KUNI (buxgalter uchun)
+  var kunlikHisobot = [];
+  var kunSoni = now.getDate();
+  for (var j = 0; j < kunSoni; j++) {
+    var kun = new Date(month);
+    kun.setDate(kun.getDate() + j);
+    var kunEnd = new Date(kun);
+    kunEnd.setDate(kunEnd.getDate() + 1);
+    var kunOrders = monthOrders.filter(function (o) {
+      var ct = new Date(o.createdAt);
+      return ct >= kun && ct < kunEnd;
+    });
+    var kunDaromad = kunOrders.reduce(function (s, o) { return s + (o.total || 0); }, 0);
+
+    // Shu kundagi mahsulotlar
+    var kunItems = {};
+    kunOrders.forEach(function (o) {
+      (o.items || []).forEach(function (item) {
+        var key = item.name || "?";
+        if (!kunItems[key]) kunItems[key] = { soni: 0, summa: 0 };
+        kunItems[key].soni += item.quantity || 1;
+        kunItems[key].summa += (item.price || 0) * (item.quantity || 1);
+      });
+    });
+    var kunItemsList = [];
+    for (var key in kunItems) {
+      kunItemsList.push({ nom: key, soni: kunItems[key].soni, summa: kunItems[key].summa });
+    }
+    kunItemsList.sort(function (a, b) { return b.soni - a.soni; });
+
+    kunlikHisobot.push({
+      sana: kun.getDate() + "-aprel",
+      buyurtmalar: kunOrders.length,
+      daromad: kunDaromad,
+      mahsulotlar: kunItemsList,
+    });
+  }
+
+  // Top mahsulotlar (stats/fast bilan bir xil)
+  var itemMap = {};
+  monthOrders.forEach(function (o) {
+    (o.items || []).forEach(function (item) {
+      if (!itemMap[item.name]) itemMap[item.name] = { soni: 0, summa: 0 };
+      itemMap[item.name].soni += item.quantity || 1;
+      itemMap[item.name].summa += (item.price || 0) * (item.quantity || 1);
     });
   });
   var topMahsulotlar = [];
-  for (var m in oylikMahsulot) {
-    topMahsulotlar.push({ nom: m, soni: oylikMahsulot[m].soni, summa: oylikMahsulot[m].summa });
+  for (var tm in itemMap) {
+    topMahsulotlar.push({ nom: tm, soni: itemMap[tm].soni, summa: itemMap[tm].summa });
   }
-  topMahsulotlar.sort(function(a, b) { return b.soni - a.soni; });
+  topMahsulotlar.sort(function (a, b) { return b.soni - a.soni; });
 
   // Daromadlar
-  var todayOrders = monthOrders.filter(function(o) { return new Date(o.createdAt) >= today; });
-  var todayDaromad = todayOrders.reduce(function(s, o) { return s + (o.total || 0); }, 0);
-  var oylikDaromad = monthOrders.reduce(function(s, o) { return s + (o.total || 0); }, 0);
-  var otganOyDaromad = prevMonthOrders.reduce(function(s, o) { return s + (o.total || 0); }, 0);
+  var todayRev = todayOrders.reduce(function (s, o) { return s + (o.total || 0); }, 0);
+  var monthRev = monthOrders.reduce(function (s, o) { return s + (o.total || 0); }, 0);
+  var prevRev = prevMonthOrders.reduce(function (s, o) { return s + (o.total || 0); }, 0);
 
   // Xodimlar + davomat
-  var xodimlar = allEmployees.map(function(e) {
-    var oylikAtt = allAttendance.filter(function(a) { return a.employeeId && a.employeeId.toString() === e._id.toString(); });
-    var bugunAtt = oylikAtt.find(function(a) { return a.date === today.toISOString().split("T")[0]; });
+  var xodimlarList = employees.map(function (e) {
+    var ba = todayAtt.find(function (a) { return a.employeeId && a.employeeId.toString() === e._id.toString(); });
+    var ma = monthAtt.filter(function (a) { return a.employeeId && a.employeeId.toString() === e._id.toString(); });
     return {
       ism: e.name,
       lavozim: e.position || "-",
-      rol: e.role,
       maosh: e.salary || 0,
-      ish_vaqti: (e.workStart || "09:00") + "-" + (e.workEnd || "18:00"),
-      bugun: bugunAtt ? bugunAtt.status : "malumot yoq",
-      bugun_kechikish: bugunAtt ? (bugunAtt.lateMinutes || 0) : 0,
-      oylik_kelgan: oylikAtt.filter(function(a) { return a.status === "keldi"; }).length,
-      oylik_kechikish: oylikAtt.filter(function(a) { return a.lateMinutes > 0; }).length,
+      bugun: ba ? ba.status : "kelgan emas",
+      bugun_kechikish: ba ? (ba.lateMinutes || 0) : 0,
+      oylik_kelgan_kun: ma.filter(function (a) { return a.status === "keldi"; }).length,
+      oylik_kechikishlar: ma.filter(function (a) { return (a.lateMinutes || 0) > 0; }).length,
     };
   });
 
   // Ombor
-  var ombor = allInventory.map(function(item) {
+  var omborList = inventory.map(function (it) {
     return {
-      nomi: item.productName,
-      qoldiq: item.currentStock,
-      birlik: item.unit,
-      min: item.minStock,
-      holat: item.currentStock <= 0 ? "TUGAGAN" : item.currentStock <= item.minStock ? "KAM" : "OK",
+      nomi: it.productName,
+      qoldiq: it.currentStock,
+      birlik: it.unit,
+      min: it.minStock,
+      holat: it.currentStock <= 0 ? "TUGAGAN" : it.currentStock <= it.minStock ? "KAM" : "OK",
     };
   });
 
   // Menyu
-  var menyuTaomlar = allProducts2.map(function(p) {
-    return { nomi: p.name, narxi: p.price || 0, kategoriya: p.category || "-", faol: p.active !== false };
+  var menyuList = products.map(function (p) {
+    return { nomi: p.name, narxi: p.price || 0, kategoriya: p.category || "-" };
   });
 
+  // Rating
+  var avgRating = ratedOrders.length > 0
+    ? (ratedOrders.reduce(function (s, o) { return s + o.rating; }, 0) / ratedOrders.length).toFixed(1)
+    : null;
+
   return {
-    biznes_nomi: adminDoc ? adminDoc.restaurantName : restaurantId,
+    biznes: adminDoc ? adminDoc.restaurantName : rId,
     sana: now.toLocaleDateString("uz-UZ", { year: "numeric", month: "long", day: "numeric", weekday: "long" }),
 
-    bugungi_buyurtmalar: todayOrders.length,
-    bugungi_daromad: todayDaromad,
-    oylik_buyurtmalar: monthOrders.length,
-    oylik_daromad: oylikDaromad,
-    otgan_oy_daromad: otganOyDaromad,
-    osish_foiz: otganOyDaromad > 0 ? Math.round(((oylikDaromad - otganOyDaromad) / otganOyDaromad) * 100) : 0,
-    ortacha_chek: monthOrders.length > 0 ? Math.round(oylikDaromad / monthOrders.length) : 0,
-    ochiq_shotlar: allShots.length,
+    bugun_buyurtmalar: todayOrders.length,
+    bugun_daromad: todayRev,
+    bugun_online: todayOrders.filter(function (o) { return o.orderType === "online"; }).length,
+    bugun_restoranda: todayOrders.filter(function (o) { return o.orderType === "dine_in"; }).length,
 
+    oylik_buyurtmalar: monthOrders.length,
+    oylik_daromad: monthRev,
+    otgan_oy_daromad: prevRev,
+    osish: prevRev > 0 ? Math.round(((monthRev - prevRev) / prevRev) * 100) + "%" : "birinchi oy",
+    ortacha_chek: monthOrders.length > 0 ? Math.round(monthRev / monthOrders.length) : 0,
+
+    reyting: avgRating,
+    reyting_soni: ratedOrders.length,
+    mijozlar: totalUsers,
+
+    haftalik_trend: weeklyData,
     kunlik_hisobot: kunlikHisobot,
     top_mahsulotlar: topMahsulotlar,
 
-    menyu_jami: allProducts2.length,
-    menyu_taomlar: menyuTaomlar,
-    kategoriyalar: allCategories2.map(function(c) { return c.name; }),
+    menyu_soni: products.length,
+    menyu: menyuList,
+    kategoriyalar: categories.map(function (c) { return c.name; }),
 
-    xodimlar: xodimlar,
-    xodimlar_soni: allEmployees.length,
-    jami_maosh: allEmployees.reduce(function(s, e) { return s + (e.salary || 0); }, 0),
+    xodimlar: xodimlarList,
+    xodimlar_soni: employees.length,
+    jami_maosh_fond: employees.reduce(function (s, e) { return s + (e.salary || 0); }, 0),
 
-    ombor: ombor,
-    ombor_tugagan: ombor.filter(function(o) { return o.holat === "TUGAGAN"; }).length,
-    ombor_kam: ombor.filter(function(o) { return o.holat === "KAM"; }).length,
+    ombor: omborList,
+    ombor_kam: omborList.filter(function (o) { return o.holat === "KAM" || o.holat === "TUGAGAN"; }).length,
 
-    mijozlar_soni: userCount,
-    filiallar: allBranches.map(function(b) { return b.name; }),
+    filiallar: branches.map(function (b) { return b.name; }),
   };
 }
 
 // ===== SYSTEM PROMPT =====
 function buildPrompt(name) {
   var sana = new Date().toLocaleDateString("uz-UZ", { year: "numeric", month: "long", day: "numeric" });
-  return 'Sen "' + name + '" biznesining buxgalteri va tahlilchisisisan. Nominging ServiX AI.\n\n' +
-    'Senga shu biznesning BARCHA malumotlari beriladi: kunlik buyurtmalar (har bir kun alohida), menyu, xodimlar, ombor, mijozlar.\n' +
-    'kunlik_hisobot ichida OYNING HAR BIR KUNI uchun: buyurtmalar soni, daromad, qaysi mahsulot nechta sotilgani bor.\n\n' +
+  return 'Sen "' + name + '" biznesining buxgalterisan. Noming ServiX AI.\n\n' +
+    'Senga shu biznesning BARCHA malumotlari berilgan:\n' +
+    '- bugun_buyurtmalar, bugun_daromad — bugungi\n' +
+    '- oylik_buyurtmalar, oylik_daromad — shu oy\n' +
+    '- kunlik_hisobot — OYNING HAR BIR KUNI alohida: buyurtmalar, daromad, qaysi mahsulot nechta sotilgan\n' +
+    '- top_mahsulotlar — eng kop sotilgan mahsulotlar\n' +
+    '- menyu — barcha taomlar royxati va narxi\n' +
+    '- xodimlar — ism, lavozim, maosh, davomat\n' +
+    '- ombor — qoldiq, holat\n' +
+    '- reyting, mijozlar soni\n\n' +
     'QOIDALAR:\n' +
-    '1. Foydalanuvchi nima sorasa FAQAT SHUNI javob ber. "5-aprel" desa kunlik_hisobot dan 5-aprelni top va FAQAT shuni kursat.\n' +
-    '2. Ortiqcha malumot QUSHMA.\n' +
-    '3. Har bir javob oxirida 1-2 qator MASLAHAT ber.\n' +
-    '4. Jadval ishlatish — markdown table.\n' +
+    '1. Faqat soralganni javob ber. "5-aprel" desa — kunlik_hisobot dan 5-aprelni top.\n' +
+    '2. Ortiqcha malumot qushma.\n' +
+    '3. Har javob oxirida 1 qator MASLAHAT ber.\n' +
+    '4. Jadval — markdown table ishlatish.\n' +
     '5. Pul: 1,250,000 som.\n' +
-    '6. Malumot 0 bolsa — aniq "0 ta buyurtma, 0 som daromad" deb yoz. "Malumot yoq" DEMA agar raqam 0 bolsa.\n' +
+    '6. Raqam 0 bolsa — "0 ta buyurtma, 0 som" yoz, "malumot yoq" dema.\n' +
     '7. Foydalanuvchi tilida javob ber.\n' +
-    '8. Siyosat, din, dasturlash haqida GAPLASHMA.\n' +
+    '8. Siyosat, din, kod yozish haqida gapirma.\n' +
     '9. Javob oxiri: — ServiX AI | ' + sana;
 }
 
@@ -219,20 +308,24 @@ function buildPrompt(name) {
 async function askAI(restaurantId, adminId, adminUsername, question) {
   var startTime = Date.now();
 
-  var admin = await Admin.findOne({ restaurantId: restaurantId, role: "admin" }).select("restaurantName businessType modules aiLimit");
+  var admin = await Admin.findOne({ restaurantId: restaurantId, role: "admin" })
+    .select("restaurantName businessType modules aiLimit");
   if (!admin) throw new Error("Biznes topilmadi");
   if (!admin.modules || !admin.modules.aiAgent) throw new Error("AI Agent moduli yoqilmagan");
   if (!config.anthropicApiKey) throw new Error("AI xizmati sozlanmagan");
 
   if (isBlocked(question)) {
-    return { answer: "Bu savol mening vakolatimdan tashqarida.\n\n— ServiX AI", inputTokens: 0, outputTokens: 0, totalTokens: 0, cost: 0, filtered: true };
+    return {
+      answer: "Bu savol mening vakolatimdan tashqarida.\n\n— ServiX AI",
+      inputTokens: 0, outputTokens: 0, totalTokens: 0, cost: 0, filtered: true
+    };
   }
 
   var data = await collectAllData(restaurantId);
   var systemPrompt = buildPrompt(admin.restaurantName);
-  var userMessage = "BIZNES MALUMOTLARI:\n" + JSON.stringify(data, null, 2) + "\n\nSAVOL: " + question;
+  var userMessage = "MALUMOTLAR:\n" + JSON.stringify(data, null, 2) + "\n\nSAVOL: " + question;
 
-  logger.info("AI -> Anthropic [" + restaurantId + "]: " + question.substring(0, 80));
+  logger.info("[AI] -> Anthropic: " + restaurantId + " | " + question.substring(0, 60));
 
   var axios = require("axios");
   var response;
@@ -243,21 +336,25 @@ async function askAI(restaurantId, adminId, adminUsername, question) {
       system: systemPrompt,
       messages: [{ role: "user", content: userMessage }],
     }, {
-      headers: { "x-api-key": config.anthropicApiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      headers: {
+        "x-api-key": config.anthropicApiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
       timeout: 60000,
     });
   } catch (err) {
-    var errData = err.response ? (err.response.status + " " + JSON.stringify(err.response.data)) : err.message;
-    logger.error("Anthropic API error: " + errData);
+    var ed = err.response ? (err.response.status + " " + JSON.stringify(err.response.data)) : err.message;
+    logger.error("[AI] Anthropic error: " + ed);
     throw err;
   }
 
-  var r = response.data;
-  var answer = (r.content && r.content[0] && r.content[0].text) ? r.content[0].text : "Javob olib bolmadi";
-  var inp = (r.usage && r.usage.input_tokens) ? r.usage.input_tokens : 0;
-  var out = (r.usage && r.usage.output_tokens) ? r.usage.output_tokens : 0;
+  var result = response.data;
+  var answer = (result.content && result.content[0]) ? result.content[0].text : "Javob olib bolmadi";
+  var inp = result.usage ? result.usage.input_tokens : 0;
+  var out = result.usage ? result.usage.output_tokens : 0;
 
-  logger.info("AI OK [" + restaurantId + "]: tokens=" + (inp + out) + " time=" + (Date.now() - startTime) + "ms");
+  logger.info("[AI] OK: tokens=" + (inp + out) + " cost=$" + calcCost(inp, out).toFixed(5) + " time=" + (Date.now() - startTime) + "ms");
 
   return {
     answer: answer,
@@ -271,8 +368,8 @@ async function askAI(restaurantId, adminId, adminUsername, question) {
   };
 }
 
-async function collectExportData(restaurantId) {
-  return await collectAllData(restaurantId);
+async function collectExportData(rId) {
+  return await collectAllData(rId);
 }
 
 module.exports = {

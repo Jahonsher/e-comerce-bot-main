@@ -7,18 +7,25 @@ const Admin = require("../models/Admin");
 const { AIChat } = require("../models");
 const { askAI, collectAllData } = require("../services/ai.service");
 
-// ===== DEBUG — data tekshirish (keyinchalik o'chiriladi) =====
+// ===== DEBUG — data tekshirish =====
 router.get("/debug", authMiddleware, async (req, res) => {
   try {
     var data = await collectAllData(req.admin.restaurantId);
     res.json({
       restaurantId: req.admin.restaurantId,
-      menyu_soni: data.menyu ? data.menyu.jami_taomlar : "menyu yo'q",
-      buyurtmalar_oylik: data.buyurtmalar ? data.buyurtmalar.oylik : "buyurtmalar yo'q",
+      biznes: data.biznes,
+      menyu_soni: data.menyu_soni,
+      menyu_taomlar: data.menyu ? data.menyu.length : 0,
+      oylik_buyurtmalar: data.oylik_buyurtmalar,
+      oylik_daromad: data.oylik_daromad,
+      bugun_buyurtmalar: data.bugun_buyurtmalar,
+      bugun_daromad: data.bugun_daromad,
       xodimlar_soni: data.xodimlar_soni,
-      moliya_oylik: data.moliya ? data.moliya.oylik_daromad : "moliya yo'q",
-      mijozlar: data.mijozlar_soni,
-      raw_keys: Object.keys(data),
+      mijozlar: data.mijozlar,
+      top_mahsulotlar: data.top_mahsulotlar ? data.top_mahsulotlar.length : 0,
+      kunlik_hisobot_kunlar: data.kunlik_hisobot ? data.kunlik_hisobot.length : 0,
+      ombor_kam: data.ombor_kam,
+      all_keys: Object.keys(data),
     });
   } catch (e) {
     res.status(500).json({ error: e.message, stack: e.stack });

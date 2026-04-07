@@ -156,12 +156,20 @@ async function collectAllData(restaurantId) {
   // O'rtacha chek
   const avgCheck = monthOrders.length > 0 ? Math.round(monthRevenue / monthOrders.length) : 0;
 
-  // Menyu
+  // Menyu — to'liq ma'lumot
   const menyu = {
     jami_taomlar: allProducts.length,
     faol: allProducts.filter((p) => p.active !== false).length,
     yashirin: allProducts.filter((p) => p.active === false).length,
-    kategoriyalar: allCategories.length,
+    kategoriyalar_soni: allCategories.length,
+    kategoriyalar: allCategories.map((c) => ({ nomi: c.name, nomi_ru: c.name_ru || "—", emoji: c.emoji || "" })),
+    taomlar: allProducts.map((p) => ({
+      nomi: p.name,
+      nomi_ru: p.name_ru || "—",
+      narxi: p.price || 0,
+      kategoriya: p.category || "—",
+      faol: p.active !== false,
+    })),
   };
 
   return {
@@ -254,6 +262,9 @@ async function askAI(restaurantId, adminId, adminUsername, question) {
 
   // BARCHA ma'lumotlarni olish
   const data = await collectAllData(restaurantId);
+
+  logger.info(`AI data [${restaurantId}]: menyu=${data.menyu?.jami_taomlar || 0}, orders=${data.buyurtmalar?.oylik || 0}, emps=${data.xodimlar_umumiy?.jami || 0}, ombor=${data.ombor_umumiy?.jami_mahsulot || 0}`);
+
   const systemPrompt = buildPrompt(admin.restaurantName, admin.businessType);
   const userMessage = `BIZNES MA'LUMOTLARI:\n${JSON.stringify(data, null, 2)}\n\nFOYDALANUVCHI SAVOLI: ${question}`;
 

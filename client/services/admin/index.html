@@ -86,7 +86,64 @@ tailwind.config = {
   .skel-card { border:1px solid rgba(6,182,212,0.08);border-radius:12px;padding:16px;background:#131c2e; }
 
   /* Responsive */
-  @media(max-width:768px) { .sidebar{transform:translateX(-100%)} .sidebar.open{transform:translateX(0)} .main-wrap{margin-left:0!important} }
+  @media(max-width:768px) {
+    .sidebar{transform:translateX(-100%)}
+    .sidebar.open{transform:translateX(0)}
+    .main-wrap{margin-left:0!important;padding:16px!important}
+
+    /* Stat kartochkalar — 2 ustun */
+    #dashContent .grid { grid-template-columns:repeat(2,1fr)!important; gap:8px!important; }
+
+    /* Kichik kartochkalar */
+    #dashContent .rounded-xl { padding:12px!important; }
+    #dashContent .text-3xl { font-size:20px!important; }
+    #dashContent .text-xs { font-size:10px!important; }
+
+    /* Filter bar — scroll */
+    .dash-filter-bar { overflow-x:auto; -webkit-overflow-scrolling:touch; flex-wrap:nowrap!important; padding-bottom:8px; }
+    .dash-filter-bar::-webkit-scrollbar { height:0; }
+
+    /* Jadvallar — horizontal scroll */
+    table { font-size:12px!important; }
+    th, td { padding:8px 10px!important; white-space:nowrap; }
+
+    /* Page header */
+    .page h1 { font-size:22px!important; }
+
+    /* Grafiklar */
+    canvas { max-height:180px!important; }
+
+    /* Cards grid */
+    .grid[style*="auto-fill"] { grid-template-columns:repeat(2,1fr)!important; }
+
+    /* Modal to'liq ekran */
+    #productModal > div,
+    #catModal > div { width:95%!important; max-height:90vh; margin:auto; }
+
+    /* AI Chat panel — mobilda to'liq ekran */
+    #aiChatPanel {
+      width:100%!important;
+      max-width:100%!important;
+      height:100%!important;
+      max-height:100%!important;
+      bottom:0!important;
+      right:0!important;
+      border-radius:0!important;
+    }
+  }
+
+  @media(max-width:400px) {
+    #dashContent .grid { grid-template-columns:1fr!important; }
+    .dash-period-btn { padding:6px 8px!important; font-size:10px!important; }
+    .main-wrap { padding:10px!important; }
+  }
+
+  /* Filter tugmalari active holati */
+  .dash-period-btn.active {
+    background:rgba(6,182,212,0.2)!important;
+    border-color:#06b6d4!important;
+    color:#22d3ee!important;
+  }
 </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

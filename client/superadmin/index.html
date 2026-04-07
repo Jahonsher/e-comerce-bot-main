@@ -46,7 +46,42 @@ tailwind.config = {
   .sx-name b { background:var(--sx-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
   @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
   .page { animation:fadeIn .22s ease; }
-  @media(max-width:768px) { .sidebar{transform:translateX(-100%)} .sidebar.open{transform:translateX(0)} .mw{margin-left:0!important} }
+  @media(max-width:768px) {
+    .sidebar{transform:translateX(-100%)}
+    .sidebar.open{transform:translateX(0)}
+    .mw{margin-left:0!important;padding:16px!important}
+
+    /* Grid — 2 ustun yoki 1 ustun */
+    .grid[style*="auto-fill"] { grid-template-columns:repeat(2,1fr)!important; gap:8px!important; }
+
+    /* Kichik kartochkalar */
+    .smc { padding:10px 12px!important; }
+
+    /* Page header */
+    .page h1 { font-size:22px!important; }
+
+    /* Jadvallar */
+    table { font-size:12px!important; }
+    th, td { padding:8px 10px!important; white-space:nowrap; }
+
+    /* Tab tugmalari — horizontal scroll */
+    .tab-btn { padding:6px 12px!important; font-size:11px!important; }
+
+    /* Rank row */
+    .rank-row { padding:10px 12px!important; gap:10px!important; }
+
+    /* Modal — to'liq ekran */
+    .fixed > div[style*="max-width"] { width:95%!important; max-height:90vh!important; }
+
+    /* AI history modal */
+    #aiHistoryModal > div { width:95%!important; max-height:90vh!important; }
+  }
+
+  @media(max-width:400px) {
+    .grid[style*="auto-fill"] { grid-template-columns:1fr!important; }
+    .mw { padding:10px!important; }
+    .tab-btn { padding:5px 8px!important; font-size:10px!important; }
+  }
   @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
 </style>
 </head>

@@ -460,7 +460,7 @@ async function renderDashboard(main) {
   main.innerHTML = '<div class="page">' +
     pageHeader('Dashboard', 'Bugungi holat va statistika') +
     // FILTER BAR
-    '<div class="rounded-xl border p-4 mb-5 flex flex-wrap gap-2 items-center" style="background:#131c2e;border-color:rgba(6,182,212,0.12)">' +
+    '<div class="dash-filter-bar rounded-xl border p-4 mb-5 flex gap-2 items-center" style="background:#131c2e;border-color:rgba(6,182,212,0.12);overflow-x:auto">' +
       '<span class="text-xs uppercase tracking-wider mr-2" style="color:#64748b">Davr:</span>' +
       '<button class="dash-period-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition-all" data-period="today" style="border-color:rgba(6,182,212,0.12);color:#64748b">Bugun</button>' +
       '<button class="dash-period-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition-all" data-period="yesterday" style="border-color:rgba(6,182,212,0.12);color:#64748b">Kecha</button>' +

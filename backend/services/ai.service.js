@@ -3,7 +3,9 @@ const logger = require("../utils/logger");
 const Order = require("../models/Order");
 const User = require("../models/User");
 const Admin = require("../models/Admin");
-const { Employee, Attendance, Inventory, Branch } = require("../models");
+const Product = require("../models/Product");
+const Category = require("../models/Category");
+const { Employee, Attendance, Inventory, InventoryLog, Branch, Shot } = require("../models");
 
 const ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
 const AI_MODEL = "claude-haiku-4-5-20251001";
@@ -19,125 +21,223 @@ const BLOCKED = [
 ];
 function isBlocked(t) { return BLOCKED.some((p) => p.test(t)); }
 
-// ===== AQLLI DATA COLLECTOR — faqat kerakli datani oladi =====
-async function collectData(restaurantId, question) {
+// ===== BARCHA MA'LUMOTLARNI TO'LIQ YIGISH =====
+async function collectAllData(restaurantId) {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const q = question.toLowerCase();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+  const weekStart = new Date(today); weekStart.setDate(weekStart.getDate() - 7);
+  const kecha = new Date(today); kecha.setDate(kecha.getDate() - 1);
 
-  // Qaysi vaqt oraligi kerak
-  const need7 = /7\s*kun|hafta|weekly|oxirgi.*kun/i.test(q);
-  const need30 = /30\s*kun|oy|oylik|month|mart|aprel|fevral|yanvar|may|iyun|iyul|avg|sent|okt|noy|dek/i.test(q);
-  const needToday = /bugun|today|hozir/i.test(q);
-  const needKecha = /kecha|yesterday|o'tgan\s*kun/i.test(q);
+  // BARCHA datani parallel olish
+  const [
+    todayOrders, monthOrders, prevMonthOrders,
+    allProducts, allCategories,
+    employees, todayAttendance, monthAttendance,
+    inventory, branches, totalUsers,
+    admin, openShots
+  ] = await Promise.all([
+    Order.find({ restaurantId, createdAt: { $gte: today } }).lean(),
+    Order.find({ restaurantId, createdAt: { $gte: monthStart } }).lean(),
+    Order.find({ restaurantId, createdAt: { $gte: prevMonthStart, $lt: monthStart } }).lean(),
+    Product.find({ restaurantId }).lean(),
+    Category.find({ restaurantId }).lean(),
+    Employee.find({ restaurantId, active: true }).select("-password -faceDescriptor -photo").lean(),
+    Attendance.find({ restaurantId, date: today.toISOString().split("T")[0] }).lean(),
+    Attendance.find({ restaurantId, date: { $regex: `^${now.toISOString().slice(0, 7)}` } }).lean(),
+    Inventory.find({ restaurantId, active: true }).lean(),
+    Branch.find({ restaurantId, active: true }).lean(),
+    User.countDocuments({ restaurantId }),
+    Admin.findOne({ restaurantId, role: "admin" }).select("restaurantName phone address workStart workEnd subscriptionEnd").lean(),
+    Shot.find({ restaurantId, status: "open" }).lean(),
+  ]);
 
-  // Qaysi data turi kerak
-  const needProducts = /mahsulot|product|taom|menyu|sotuv|sotil|top|mashxur|ommabop/i.test(q);
-  const needRevenue = /daromad|tushum|revenue|pul|foyda|sotuv|savdo|hisobot|report|moliya|buxgalter/i.test(q);
-  const needOrders = /buyurtma|order|zakaz|dona|soni/i.test(q);
-  const needEmployees = /ishchi|xodim|hodim|kechik|davomat|maosh|salary|keldi|kelmadi|ishla|shtraf/i.test(q);
-  const needInventory = /ombor|mahsulot|stock|zaxira|tugay|kam\s*qol|go'sht|un\b|yog'|ingredient/i.test(q);
-  const needAll = /umumiy|barchasi|all|tuliq|to'liq|hisobot|report|buxgalter/i.test(q);
+  // Hisoblashlar
+  const weekOrders = monthOrders.filter((o) => new Date(o.createdAt) >= weekStart);
+  const kechaOrders = monthOrders.filter((o) => { const d = new Date(o.createdAt); return d >= kecha && d < today; });
 
-  // Vaqt oralig'ini hisoblash
-  let startDate = new Date(today);
-  if (need30) { startDate = new Date(now.getFullYear(), now.getMonth(), 1); }
-  else if (need7) { startDate.setDate(startDate.getDate() - 7); }
-  else if (needKecha) { startDate.setDate(startDate.getDate() - 1); }
-  // default: bugun
+  const todayRevenue = todayOrders.reduce((s, o) => s + (o.total || 0), 0);
+  const monthRevenue = monthOrders.reduce((s, o) => s + (o.total || 0), 0);
+  const prevMonthRevenue = prevMonthOrders.reduce((s, o) => s + (o.total || 0), 0);
+  const weekRevenue = weekOrders.reduce((s, o) => s + (o.total || 0), 0);
+  const kechaRevenue = kechaOrders.reduce((s, o) => s + (o.total || 0), 0);
 
-  const endDate = needKecha ? today : new Date(now.getTime() + 86400000);
+  // O'sish foizi
+  const revenueGrowth = prevMonthRevenue > 0 ? Math.round(((monthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100) : 0;
+  const ordersGrowth = prevMonthOrders.length > 0 ? Math.round(((monthOrders.length - prevMonthOrders.length) / prevMonthOrders.length) * 100) : 0;
 
-  const data = {};
-  data._davr = need30 ? "Oylik" : need7 ? "7 kunlik" : needKecha ? "Kechagi" : "Bugungi";
-  data._sana = now.toLocaleDateString("uz-UZ", { year: "numeric", month: "long", day: "numeric" });
+  // Mahsulotlar statistikasi
+  const itemMap = {};
+  monthOrders.forEach((o) => (o.items || []).forEach((item) => {
+    const key = item.name || "Noma'lum";
+    if (!itemMap[key]) itemMap[key] = { soni: 0, summa: 0, kategoriya: item.category || "—" };
+    itemMap[key].soni += item.quantity || 1;
+    itemMap[key].summa += (item.price || 0) * (item.quantity || 1);
+  }));
+  const mahsulotlarStat = Object.entries(itemMap)
+    .map(([nom, d]) => ({ nom, ...d, ortacha_narx: d.soni > 0 ? Math.round(d.summa / d.soni) : 0 }))
+    .sort((a, b) => b.soni - a.soni);
 
-  // Buyurtmalar (daromad, mahsulot, order uchun kerak)
-  if (needProducts || needRevenue || needOrders || needAll) {
-    const orders = await Order.find({ restaurantId, createdAt: { $gte: startDate, $lt: endDate } }).lean();
-    data.buyurtmalar_soni = orders.length;
-    data.jami_daromad = orders.reduce((s, o) => s + (o.total || 0), 0);
-    data.online = orders.filter((o) => o.orderType === "online").length;
-    data.restoranda = orders.filter((o) => o.orderType === "dine_in").length;
-
-    if (needProducts || needAll) {
-      const itemMap = {};
-      orders.forEach((o) => (o.items || []).forEach((item) => {
-        if (!itemMap[item.name]) itemMap[item.name] = { soni: 0, summa: 0 };
-        itemMap[item.name].soni += item.quantity || 1;
-        itemMap[item.name].summa += (item.price || 0) * (item.quantity || 1);
-      }));
-      data.mahsulotlar = Object.entries(itemMap)
-        .map(([nom, d]) => ({ nom, ...d }))
-        .sort((a, b) => b.soni - a.soni);
+  // Kunlik trend (30 kun)
+  const kunlikTrend = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const dn = new Date(d); dn.setDate(dn.getDate() + 1);
+    const dayO = [...monthOrders, ...prevMonthOrders].filter((o) => { const ct = new Date(o.createdAt); return ct >= d && ct < dn; });
+    if (dayO.length > 0 || i < 7) {
+      kunlikTrend.push({
+        sana: d.toLocaleDateString("uz-UZ", { day: "numeric", month: "short" }),
+        hafta_kuni: d.toLocaleDateString("uz-UZ", { weekday: "short" }),
+        buyurtmalar: dayO.length,
+        daromad: dayO.reduce((s, o) => s + (o.total || 0), 0),
+      });
     }
-
-    // Kunlik breakdown (7 yoki 30 kunlik uchun)
-    if (need7 || need30) {
-      const days = need30 ? 30 : 7;
-      const trend = [];
-      for (let i = days - 1; i >= 0; i--) {
-        const d = new Date(today); d.setDate(d.getDate() - i);
-        const dn = new Date(d); dn.setDate(dn.getDate() + 1);
-        const dayO = orders.filter((o) => { const ct = new Date(o.createdAt); return ct >= d && ct < dn; });
-        if (dayO.length > 0) {
-          trend.push({ sana: d.toLocaleDateString("uz-UZ", { day: "numeric", month: "short" }), buyurtmalar: dayO.length, daromad: dayO.reduce((s, o) => s + (o.total || 0), 0) });
-        }
-      }
-      data.kunlik_breakdown = trend;
-    }
   }
 
-  if (needEmployees || needAll) {
-    const [emps, att] = await Promise.all([
-      Employee.find({ restaurantId, active: true }).select("name position salary workStart workEnd role").lean(),
-      Attendance.find({ restaurantId, date: today.toISOString().split("T")[0] }).lean(),
-    ]);
-    data.xodimlar = emps.map((e) => {
-      const a = att.find((x) => x.employeeId?.toString() === e._id.toString());
-      return { ism: e.name, lavozim: e.position || "—", maosh: e.salary || 0, holat: a ? a.status : "—", kechikish: a?.lateMinutes || 0 };
-    });
+  // Soatlik taqsimot (bugun)
+  const soatlik = [];
+  for (let h = 0; h < 24; h++) {
+    const cnt = todayOrders.filter((o) => new Date(o.createdAt).getHours() === h).length;
+    if (cnt > 0) soatlik.push({ soat: h + ":00", buyurtmalar: cnt });
   }
 
-  if (needInventory || needAll) {
-    const inv = await Inventory.find({ restaurantId, active: true }).lean();
-    data.ombor = inv.map((i) => ({
-      nomi: i.productName, qoldiq: i.currentStock, birlik: i.unit, min: i.minStock,
-      holat: i.currentStock <= 0 ? "TUGAGAN" : i.currentStock <= i.minStock ? "KAM" : "OK",
-    }));
-  }
+  // Xodimlar + oylik davomat
+  const xodimlar = employees.map((e) => {
+    const bugunAtt = todayAttendance.find((a) => a.employeeId?.toString() === e._id.toString());
+    const oylikAtt = monthAttendance.filter((a) => a.employeeId?.toString() === e._id.toString());
+    const kelganKunlar = oylikAtt.filter((a) => a.status === "keldi").length;
+    const kechikishlar = oylikAtt.filter((a) => a.lateMinutes > 0).length;
+    const jamiDaqiqa = oylikAtt.reduce((s, a) => s + (a.totalMinutes || 0), 0);
 
-  return data;
-}
+    return {
+      ism: e.name,
+      lavozim: e.position || "—",
+      rol: e.role,
+      maosh: e.salary || 0,
+      ish_vaqti: (e.workStart || "09:00") + "—" + (e.workEnd || "18:00"),
+      dam_kuni: e.weeklyOff || "yakshanba",
+      bugun: bugunAtt ? bugunAtt.status : "ma'lumot yo'q",
+      bugun_kelgan: bugunAtt?.checkIn || "—",
+      bugun_ketgan: bugunAtt?.checkOut || "—",
+      bugun_kechikish: bugunAtt?.lateMinutes || 0,
+      oylik_kelgan_kunlar: kelganKunlar,
+      oylik_kechikishlar: kechikishlar,
+      oylik_jami_daqiqa: jamiDaqiqa,
+      oylik_jami_soat: Math.round(jamiDaqiqa / 60 * 10) / 10,
+    };
+  });
 
-// ===== EXPORT uchun to'liq data =====
-async function collectExportData(restaurantId, question) {
-  const q = question || "oylik to'liq hisobot";
-  return await collectData(restaurantId, q);
+  // Ombor
+  const ombor = inventory.map((i) => ({
+    nomi: i.productName,
+    qoldiq: i.currentStock,
+    birlik: i.unit,
+    min_stock: i.minStock,
+    max_stock: i.maxStock,
+    tannarx: i.costPrice || 0,
+    qiymati: (i.currentStock || 0) * (i.costPrice || 0),
+    holat: i.currentStock <= 0 ? "TUGAGAN" : i.currentStock <= i.minStock ? "KAM QOLDI" : "Yetarli",
+    oxirgi_tolov: i.lastRestocked ? new Date(i.lastRestocked).toLocaleDateString("uz-UZ") : "—",
+  }));
+
+  const omborJami = {
+    jami_mahsulot: ombor.length,
+    tugagan: ombor.filter((o) => o.holat === "TUGAGAN").length,
+    kam_qolgan: ombor.filter((o) => o.holat === "KAM QOLDI").length,
+    ombor_qiymati: ombor.reduce((s, o) => s + o.qiymati, 0),
+  };
+
+  // Buyurtma turlari
+  const onlineCount = monthOrders.filter((o) => o.orderType === "online").length;
+  const dineInCount = monthOrders.filter((o) => o.orderType === "dine_in").length;
+
+  // O'rtacha chek
+  const avgCheck = monthOrders.length > 0 ? Math.round(monthRevenue / monthOrders.length) : 0;
+
+  // Menyu
+  const menyu = {
+    jami_taomlar: allProducts.length,
+    faol: allProducts.filter((p) => p.active !== false).length,
+    yashirin: allProducts.filter((p) => p.active === false).length,
+    kategoriyalar: allCategories.length,
+  };
+
+  return {
+    biznes: {
+      nomi: admin?.restaurantName || restaurantId,
+      telefon: admin?.phone || "—",
+      manzil: admin?.address || "—",
+      ish_vaqti: (admin?.workStart || 10) + ":00 — " + (admin?.workEnd || 23) + ":00",
+      obuna_tugaydi: admin?.subscriptionEnd ? new Date(admin.subscriptionEnd).toLocaleDateString("uz-UZ") : "—",
+      filiallar_soni: branches.length,
+      filiallar: branches.map((b) => b.name),
+    },
+    moliya: {
+      bugungi_daromad: todayRevenue,
+      kechagi_daromad: kechaRevenue,
+      haftalik_daromad: weekRevenue,
+      oylik_daromad: monthRevenue,
+      otgan_oy_daromad: prevMonthRevenue,
+      osish_foiz: revenueGrowth,
+      ortacha_chek: avgCheck,
+    },
+    buyurtmalar: {
+      bugun: todayOrders.length,
+      kecha: kechaOrders.length,
+      haftalik: weekOrders.length,
+      oylik: monthOrders.length,
+      otgan_oy: prevMonthOrders.length,
+      osish_foiz: ordersGrowth,
+      online: onlineCount,
+      restoranda: dineInCount,
+      ochiq_shotlar: openShots.length,
+    },
+    bugungi_soatlik: soatlik,
+    kunlik_trend_30: kunlikTrend,
+    mahsulotlar_statistikasi: mahsulotlarStat,
+    menyu: menyu,
+    xodimlar: xodimlar,
+    xodimlar_umumiy: {
+      jami: employees.length,
+      bugun_kelgan: todayAttendance.filter((a) => a.status === "keldi").length,
+      bugun_kelmagan: employees.length - todayAttendance.filter((a) => a.status === "keldi").length,
+      jami_maosh: employees.reduce((s, e) => s + (e.salary || 0), 0),
+    },
+    ombor: ombor,
+    ombor_umumiy: omborJami,
+    mijozlar: { jami: totalUsers },
+    sana: now.toLocaleDateString("uz-UZ", { year: "numeric", month: "long", day: "numeric", weekday: "long" }),
+  };
 }
 
 // ===== SYSTEM PROMPT =====
 function buildPrompt(name, type) {
   const sana = new Date().toLocaleDateString("uz-UZ", { year: "numeric", month: "long", day: "numeric" });
-  return `Sen "${name}" biznesining buxgalteri va tahlilchisisisan. Nominging ServiX AI.
+  return `Sen "${name}" biznesining shaxsiy buxgalteri va tahlilchisisisan. Nominging ServiX AI.
 
-SEN NIMA QILASAN:
-- Foydalanuvchi nima so'rasa FAQAT SHUNI javob ber. Ortiqcha ma'lumot QUSHMA.
-- "7 kunlik product" desa — faqat 7 kunlik mahsulot statistikasi ber, boshqa hech narsa.
-- "oylik daromad" desa — faqat oylik daromad raqami ber.
-- "xodimlar hisoboti" desa — faqat xodimlar jadvali ber.
-- Sen buxgaltersan — aniq raqamlar, jadvallar, professional hisobot ber.
+SENGA SHU BIZNESNING BARCHA MA'LUMOTLARI BERILADI:
+- Moliya: bugungi, kechagi, haftalik, oylik daromad, o'tgan oy bilan qiyoslash
+- Buyurtmalar: soni, turlari, soatlik taqsimot, 30 kunlik trend
+- Mahsulotlar: qaysi taom nechta sotildi, summasi, kategoriyasi
+- Xodimlar: ism, lavozim, maosh, bugungi davomat, oylik kelgan kunlar, kechikishlar
+- Ombor: qoldiq, min stock, holat, ombor qiymati
+- Menyu: taomlar soni, kategoriyalar
+- Mijozlar: jami foydalanuvchilar soni
+- Biznes: filiallar, telefon, ish vaqti
 
-FORMATLASH:
-- Jadvallarni chiroyli formatlash — ustun nomlar, raqamlar tekislangan.
-- Pul: 1,250,000 so'm format.
-- Foizlar: ↑12% yoki ↓5% ko'rinishda.
-- So'ralgan tilda javob ber.
-- Ma'lumot yo'q — "Ma'lumot yo'q" de, o'ylab topma.
-- Excel so'rasa — "Tayyor! Pastdagi tugmadan yuklab oling" de.
-
-TAQIQ: siyosat, din, dasturlash, boshqa biznes haqida gapirma.
-Javob oxiri: — ServiX AI | ${sana}`;
+SENING VAZIFANG:
+1. Foydalanuvchi nima so'rasa FAQAT SHUNI javob ber. "7 kunlik product" desa — faqat 7 kunlik mahsulot stat ber. "oylik daromad" desa — faqat oylik daromad.
+2. Ortiqcha ma'lumot QUSHMA. Faqat so'ralganni ber.
+3. Har bir javob oxirida 1-2 qatorlik MASLAHAT ber. Masalan: "💡 Maslahat: Osh eng ko'p sotilmoqda, narxini 5% oshirish mumkin" yoki "⚠️ Diqqat: Bugun 3 ta xodim kelmagan, o'rinbosarlarni chaqiring".
+4. Jadval ko'rinishida chiroyli formatlash — markdown table ishlatish.
+5. Pul: 1,250,000 so'm. Foiz: ↑12% yoki ↓5%.
+6. Ma'lumot 0 bo'lsa — "Hozircha ma'lumot yo'q" de, o'ylab topma.
+7. Foydalanuvchi tilida javob ber (o'zbek, rus, ingliz).
+8. Siyosat, din, dasturlash, boshqa biznes haqida GAPLASHMA.
+9. Excel/fayl so'rasa — "Tayyor! Pastdagi tugmadan yuklab oling" de va hisobotni jadval shaklida ham yoz.
+10. Javob oxiri: — ServiX AI | ${sana}`;
 }
 
 // ===== API CALL =====
@@ -152,10 +252,10 @@ async function askAI(restaurantId, adminId, adminUsername, question) {
     return { answer: "Bu savol mening vakolatimdan tashqarida.\n\n— ServiX AI", inputTokens: 0, outputTokens: 0, totalTokens: 0, cost: 0, filtered: true };
   }
 
-  // Faqat kerakli datani olish
-  const data = await collectData(restaurantId, question);
+  // BARCHA ma'lumotlarni olish
+  const data = await collectAllData(restaurantId);
   const systemPrompt = buildPrompt(admin.restaurantName, admin.businessType);
-  const userMessage = `Ma'lumotlar:\n${JSON.stringify(data, null, 2)}\n\nSavol: ${question}`;
+  const userMessage = `BIZNES MA'LUMOTLARI:\n${JSON.stringify(data, null, 2)}\n\nFOYDALANUVCHI SAVOLI: ${question}`;
 
   const axios = require("axios");
   let response;
@@ -179,4 +279,9 @@ async function askAI(restaurantId, adminId, adminUsername, question) {
   return { answer, inputTokens: inp, outputTokens: out, totalTokens: inp + out, cost: calcCost(inp, out), model: AI_MODEL, responseTime: Date.now() - startTime, filtered: false };
 }
 
-module.exports = { askAI, isBlocked, collectData, collectExportData, calcCost, AI_MODEL };
+// Export uchun
+async function collectExportData(restaurantId, question) {
+  return await collectAllData(restaurantId);
+}
+
+module.exports = { askAI, isBlocked, collectAllData, collectExportData, calcCost, AI_MODEL };

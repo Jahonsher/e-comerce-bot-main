@@ -519,40 +519,67 @@ async function loadDashboardData() {
   if (!container) return;
   container.innerHTML = skelStats(5) + '<div class="grid gap-4 mb-5" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))"><div class="skel-card"><div class="skel h-52 rounded-lg"></div></div><div class="skel-card"><div class="skel h-52 rounded-lg"></div></div></div>';
 
-  var url = '/admin/stats/filter?period=' + _dashPeriod;
-  if (_dashPeriod === 'custom' && _dashFrom && _dashTo) {
-    url = '/admin/stats/filter?from=' + _dashFrom + '&to=' + _dashTo;
+  var d = null;
+
+  // Avval stats/filter sinab ko'rish (yangi endpoint)
+  if (_dashPeriod !== 'month' || _dashFrom) {
+    var url = '/admin/stats/filter?period=' + _dashPeriod;
+    if (_dashPeriod === 'custom' && _dashFrom && _dashTo) {
+      url = '/admin/stats/filter?from=' + _dashFrom + '&to=' + _dashTo;
+    }
+    d = await apiFetch(url);
+    // Agar stats/filter ishlasa — uni ishlatamiz
+    if (d && d.summary) {
+      var s = d.summary;
+      var periodLabel = _dashPeriod === 'today' ? t('dash_today') : _dashPeriod === 'yesterday' ? t('dash_yesterday') : _dashPeriod === 'week' ? t('dash_week') : _dashPeriod === 'month' ? t('dash_month') : _dashPeriod === 'prevMonth' ? t('dash_prevMonth') : (d.from + ' — ' + d.to);
+      renderDashContent(container, s.orders, s.revenue, s.online, s.dineIn, s.avgCheck, d.rating, d.totalUsers, d.daily, d.topProducts, d.recentOrders, periodLabel);
+      return;
+    }
   }
-  var d = await apiFetch(url);
-  if (!d) { container.innerHTML = '<p style="color:#f87171">Yuklab bo\'lmadi</p>'; return; }
 
-  var s = d.summary || {};
-  var periodLabel = _dashPeriod === 'today' ? 'Bugun' : _dashPeriod === 'yesterday' ? 'Kecha' : _dashPeriod === 'week' ? 'Haftalik' : _dashPeriod === 'month' ? 'Oylik' : _dashPeriod === 'prevMonth' ? 'O\'tgan oy' : (d.from + ' — ' + d.to);
+  // Fallback: stats/fast (eski endpoint — har doim ishlaydi)
+  d = await apiFetch('/admin/stats/fast');
+  if (!d || d.error) { container.innerHTML = '<p style="color:#f87171">' + t('no_data') + '</p>'; return; }
 
+  renderDashContent(container,
+    d.today ? d.today.orders : 0,
+    d.today ? d.today.revenue : 0,
+    d.today ? d.today.online : 0,
+    d.today ? d.today.dineIn : 0,
+    d.month && d.month.orders > 0 ? Math.round((d.month.revenue || 0) / d.month.orders) : 0,
+    d.rating || { avg: null, count: 0 },
+    d.totalUsers || 0,
+    d.weekly ? d.weekly.map(function(w) { return { date: w.date, orders: w.orders, revenue: w.revenue }; }) : [],
+    d.topProducts || [],
+    d.recentOrders || [],
+    t('dash_month') + ' (' + t('dash_today') + ': ' + (d.today ? d.today.orders : 0) + ', ' + t('dash_month') + ': ' + (d.month ? d.month.orders : 0) + ')'
+  );
+}
+
+function renderDashContent(container, orders, revenue, online, dineIn, avgCheck, rating, totalUsers, daily, topProducts, recentOrders, periodLabel) {
   container.innerHTML =
     '<div class="grid gap-4 mb-6" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">' +
-      statCard('📦', t('dash_orders'), s.orders || 0, periodLabel) +
-      statCard('💰', t('dash_revenue'), Number(s.revenue || 0).toLocaleString() + " " + t('som'), periodLabel) +
-      statCard('🌐', t('dash_online'), (s.online || 0) + ' / ' + (s.dineIn || 0), periodLabel) +
-      statCard('🧾', t('dash_avg'), Number(s.avgCheck || 0).toLocaleString() + " " + t('som'), periodLabel) +
-      statCard('⭐', t('dash_rating'), (d.rating && d.rating.avg) || '—', (d.rating ? d.rating.count : 0) + ' ' + t('ta')) +
-      statCard('👥', t('dash_users'), d.totalUsers || 0, t('total')) +
+      statCard('📦', t('dash_orders'), orders || 0, periodLabel) +
+      statCard('💰', t('dash_revenue'), Number(revenue || 0).toLocaleString() + " " + t('som'), periodLabel) +
+      statCard('🌐', t('dash_online'), (online || 0) + ' / ' + (dineIn || 0), periodLabel) +
+      statCard('🧾', t('dash_avg'), Number(avgCheck || 0).toLocaleString() + " " + t('som'), periodLabel) +
+      statCard('⭐', t('dash_rating'), (rating && rating.avg) || '—', (rating ? rating.count : 0) + ' ' + t('ta')) +
+      statCard('👥', t('dash_users'), totalUsers || 0, t('total')) +
     '</div>' +
     '<div class="grid gap-4 mb-5" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">' +
       '<div class="rounded-xl border p-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)"><div class="text-sm font-semibold mb-4">📈 ' + t('dash_trend') + '</div><div style="position:relative;height:220px"><canvas id="weeklyChart"></canvas></div></div>' +
       '<div class="rounded-xl border p-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)"><div class="text-sm font-semibold mb-4">🔵 ' + t('dash_type') + '</div><div style="position:relative;height:220px"><canvas id="typeChart"></canvas></div></div>' +
     '</div>' +
     '<div class="rounded-xl border p-5 mb-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)"><div class="text-sm font-semibold mb-4">🏆 ' + t('dash_top') + '</div><div id="topChart"></div></div>' +
-    '<div class="rounded-xl border overflow-hidden mb-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)"><div class="px-5 py-4 border-b" style="border-color:rgba(6,182,212,0.12)"><span class="text-sm font-semibold">' + t('dash_recent') + '</span></div><div id="recentOrders" class="overflow-x:auto"></div></div>';
+    '<div class="rounded-xl border overflow-hidden mb-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)"><div class="px-5 py-4 border-b" style="border-color:rgba(6,182,212,0.12)"><span class="text-sm font-semibold">' + t('dash_recent') + '</span></div><div id="recentOrders" class="overflow-x-auto"></div></div>';
 
   // Grafiklar
   if (weeklyChart) weeklyChart.destroy();
-  var daily = d.daily || [];
   var wc = document.getElementById('weeklyChart');
-  if (wc && daily.length) weeklyChart = new Chart(wc.getContext('2d'), {
+  if (wc && daily && daily.length) weeklyChart = new Chart(wc.getContext('2d'), {
     type: 'bar',
     data: { labels: daily.map(function(x){return x.date;}), datasets: [
-      { label:'Buyurtmalar', data: daily.map(function(x){return x.orders;}), backgroundColor:'rgba(6,182,212,0.6)', borderColor:'#06b6d4', borderRadius:6, borderWidth:1 },
+      { label: t('dash_orders'), data: daily.map(function(x){return x.orders;}), backgroundColor:'rgba(6,182,212,0.6)', borderColor:'#06b6d4', borderRadius:6, borderWidth:1 },
     ]},
     options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#64748b',maxRotation:45},grid:{color:'rgba(6,182,212,0.06)'}}, y:{ticks:{color:'#64748b'},grid:{color:'rgba(6,182,212,0.06)'}} } }
   });
@@ -561,30 +588,32 @@ async function loadDashboardData() {
   var tc = document.getElementById('typeChart');
   if (tc) typeChart = new Chart(tc.getContext('2d'), {
     type: 'doughnut',
-    data: { labels:['Online','Restoranda'], datasets:[{ data:[s.online||0, s.dineIn||0], backgroundColor:['rgba(139,92,246,0.7)','rgba(245,158,11,0.7)'], borderColor:['#8b5cf6','#f59e0b'], borderWidth:2 }] },
+    data: { labels:[t('ord_online'), t('ord_dinein')], datasets:[{ data:[online||0, dineIn||0], backgroundColor:['rgba(139,92,246,0.7)','rgba(245,158,11,0.7)'], borderColor:['#8b5cf6','#f59e0b'], borderWidth:2 }] },
     options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:12}}}}, cutout:'65%' }
   });
 
   // Top mahsulotlar
   var topEl = document.getElementById('topChart');
-  if (topEl && d.topProducts && d.topProducts.length) {
-    var maxQ = d.topProducts[0].quantity;
+  if (topEl && topProducts && topProducts.length) {
+    var maxQ = topProducts[0].quantity || topProducts[0].totalQty || 1;
     var html = '';
-    d.topProducts.forEach(function(p, i) {
-      var pct = Math.round(p.quantity / maxQ * 100);
+    topProducts.forEach(function(p, i) {
+      var qty = p.quantity || p.totalQty || 0;
+      var tot = p.total || p.totalRevenue || 0;
+      var pct = Math.round(qty / maxQ * 100);
       html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">' +
         '<div style="width:24px;height:24px;border-radius:50%;background:var(--sx-cyan, #06b6d4);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">' + (i+1) + '</div>' +
-        '<div style="flex:1"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:13px;font-weight:600">' + p._id + '</span><span style="font-size:12px;color:#22d3ee">' + p.quantity + ' ta &middot; ' + Number(p.total).toLocaleString() + " so'm</span></div>" +
+        '<div style="flex:1"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:13px;font-weight:600">' + p._id + '</span><span style="font-size:12px;color:#22d3ee">' + qty + ' ' + t('ta') + ' · ' + Number(tot).toLocaleString() + ' ' + t('som') + '</span></div>' +
           '<div style="height:6px;background:#1a2235;border-radius:3px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#06b6d4,#f59e0b);border-radius:3px"></div></div></div></div>';
     });
     topEl.innerHTML = html;
-  } else if (topEl) { topEl.innerHTML = '<p class="text-sm" style="color:#64748b">Ma\'lumot yo\'q</p>'; }
+  } else if (topEl) { topEl.innerHTML = '<p class="text-sm" style="color:#64748b">' + t('no_data') + '</p>'; }
 
   // Oxirgi buyurtmalar
   var recentEl = document.getElementById('recentOrders');
-  if (recentEl && d.recentOrders && d.recentOrders.length) {
+  if (recentEl && recentOrders && recentOrders.length) {
     var rows = '';
-    d.recentOrders.forEach(function(o) {
+    recentOrders.forEach(function(o) {
       var name = ((o.userInfo&&o.userInfo.first_name)||'') + ' ' + ((o.userInfo&&o.userInfo.last_name)||'');
       var phone = (o.userInfo&&o.userInfo.phone)||'';
       rows += '<tr><td style="' + tdStyle + '">' + name.trim() + '<br><small style="color:#64748b">' + phone + '</small></td>' +

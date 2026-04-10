@@ -658,7 +658,7 @@ async function renderOrders(main, filter) {
         '<span class="text-sm font-semibold">Royxat</span>' +
         '<div id="orderFilters" class="flex gap-2 flex-wrap">' +
           ['all','Yangi','Qabul qilindi','Bekor qilindi'].map(function(f) {
-            return '<button class="filter-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ' + (filter===f?'active':'') + '" data-filter="' + f + '" style="border-color:rgba(6,182,212,0.12);color:#64748b">' + (f==='all'?'Barchasi':f) + '</button>';
+            return '<button class="filter-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ' + (filter===f?'active':'') + '" data-filter="' + f + '" style="border-color:rgba(6,182,212,0.12);color:#64748b">' + (f==='all'?t('all'):f) + '</button>';
           }).join('') +
         '</div>' +
       '</div>' +
@@ -685,12 +685,12 @@ async function renderOrders(main, filter) {
       '<td style="' + tdStyle + ';font-size:12px;max-width:160px">' + o.items.map(function(x){return x.name+'x'+x.quantity;}).join(', ') + '</td>' +
       '<td style="' + tdStyle + ';color:#22d3ee;font-weight:600">' + Number(o.total).toLocaleString() + '</td>' +
       '<td style="' + tdStyle + ';color:#64748b">' + (o.tableNumber||'—') + '</td>' +
-      '<td style="' + tdStyle + '"><span class="badge ' + (o.orderType==='online'?'badge-online':'badge-dinein') + '">' + (o.orderType==='online'?'Online':'Restoran') + '</span></td>' +
+      '<td style="' + tdStyle + '"><span class="badge ' + (o.orderType==='online'?'badge-online':'badge-dinein') + '">' + (o.orderType==='online'?t('ord_online'):t('ord_dinein')) + '</span></td>' +
       '<td style="' + tdStyle + '">' + statusBadge(o.status) + '</td>' +
       '<td style="' + tdStyle + ';color:#64748b;font-size:12px">' + fmtDate(o.createdAt) + '</td>' +
       '<td style="' + tdStyle + '">' +
         '<select data-id="' + o._id + '" class="order-status-sel" style="background:#1a2235;border:1px solid rgba(6,182,212,0.12);color:#f1f5f9;padding:4px 8px;border-radius:6px;font-size:12px;cursor:pointer">' +
-          '<option value="">O\'zgartir</option>' +
+          '<option value="">' + t('ord_change') + '</option>' +
           ['Yangi','Qabul qilindi','Tayyorlanmoqda','Tayyor','Bekor qilindi'].map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join('') +
         '</select>' +
       '</td>' +
@@ -701,7 +701,7 @@ async function renderOrders(main, filter) {
   document.getElementById('ordersTable').innerHTML =
     '<table class="w-full border-collapse">' +
       '<thead><tr>' +
-        ['#','Mijoz','Mahsulotlar','Jami','Stol','Tur','Status','Vaqt','Amal'].map(function(h){ return '<th style="'+thStyle+'">'+h+'</th>'; }).join('') +
+        ['#',t('ord_client'),t('ord_products'),t('ord_total'),t('ord_table'),t('ord_type'),t('ord_status'),t('ord_time'),t('ord_action')].map(function(h){ return '<th style="'+thStyle+'">'+h+'</th>'; }).join('') +
       '</tr></thead>' +
       '<tbody>' + rows + '</tbody>' +
     '</table>';
@@ -721,7 +721,7 @@ async function renderProducts(main) {
   for (var s = 0; s < 6; s++) skelGrid += '<div class="skel-card"><div class="skel h-36 rounded-lg mb-3"></div><div class="skel h-4 w-3/4 mb-2"></div><div class="skel h-3 w-1/2 mb-2"></div><div class="skel h-8 rounded-lg mt-3"></div></div>';
   main.innerHTML = '<div class="page">' +
     pageHeader(t('page_menu'), t('page_menu_sub')) +
-    '<div class="flex justify-end mb-4"><button id="addProductBtn" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white" style="background:var(--sx-cyan, #06b6d4)">+ Taom qo\'shish</button></div>' +
+    '<div class="flex justify-end mb-4"><button id="addProductBtn" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white" style="background:var(--sx-cyan, #06b6d4)">' + t('prod_add') + '</button></div>' +
     '<div id="productsGrid" class="grid gap-4" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">' + skelGrid + '</div>' +
   '</div>';
   document.getElementById('addProductBtn').addEventListener('click', function() { openProductModal(null); });
@@ -747,10 +747,10 @@ async function loadProductsGrid() {
       '<div class="p-4">' +
         '<div class="font-semibold text-base">' + p.name + '</div>' +
         (p.name_ru ? '<div class="text-xs mt-0.5" style="color:#64748b">'+p.name_ru+'</div>' : '') +
-        '<div class="font-medium mt-1" style="color:#22d3ee">' + Number(p.price).toLocaleString() + " so'm</div>" +
-        '<div class="text-xs uppercase tracking-wide mt-1 mb-3" style="color:#64748b">' + p.category + (p.active===false?' · Yashirilgan':'') + '</div>' +
+        '<div class="font-medium mt-1" style="color:#22d3ee">' + Number(p.price).toLocaleString() + " + t('som') + '</div>" +
+        '<div class="text-xs uppercase tracking-wide mt-1 mb-3" style="color:#64748b">' + p.category + (p.active===false?' · '+t('prod_hidden'):''") + '</div>' +
         '<div class="flex gap-2">' +
-          '<button class="edit-btn flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all" style="background:rgba(6,182,212,0.12);border-color:rgba(6,182,212,0.3);color:#22d3ee">✏️ Tahrirlash</button>' +
+          '<button class="edit-btn flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all" style="background:rgba(6,182,212,0.12);border-color:rgba(6,182,212,0.3);color:#22d3ee">✏️ ' + t('edit') + '</button>' +
           '<button class="del-btn py-1.5 px-2.5 rounded-lg text-xs border transition-all" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.2);color:#ef4444">🗑</button>' +
         '</div>' +
       '</div>';
@@ -778,7 +778,7 @@ async function loadCategoryOptions() {
 }
 
 function openProductModal(p) {
-  document.getElementById('modalTitle').textContent = p ? 'Taomni tahrirlash' : "Yangi taom qo'shish";
+  document.getElementById('modalTitle').textContent = p ? t('prod_edit_title') : t('prod_new');
   document.getElementById('productEditId').value = p ? p.id : '';
   document.getElementById('pName').value   = p ? (p.name||'') : '';
   document.getElementById('pNameRu').value = p ? (p.name_ru||'') : '';
@@ -807,18 +807,18 @@ async function saveProduct() {
     image:    document.getElementById('pImage').value.trim(),
     active:   document.getElementById('pActive').value === 'true'
   };
-  if (!body.name || !body.price) { alert('Nom va narx majburiy'); return; }
+  if (!body.name || !body.price) { alert(t('prod_name_price_required')); return; }
   var btn = document.getElementById('productModalSave');
-  btn.textContent = 'Saqlanmoqda...'; btn.disabled = true;
+  btn.textContent = t('saving'); btn.disabled = true;
   if (id) await apiFetch('/admin/products/' + id, { method:'PUT', body:JSON.stringify(body) });
   else    await apiFetch('/admin/products',        { method:'POST', body:JSON.stringify(body) });
-  btn.textContent = 'Saqlash'; btn.disabled = false;
+  btn.textContent = t('save'); btn.disabled = false;
   closeProductModal();
   loadProductsGrid();
 }
 
 async function deleteProduct(id) {
-  if (!confirm("O'chirilsinmi?")) return;
+  if (!confirm(t('confirm_delete'))) return;
   await apiFetch('/admin/products/' + id, { method:'DELETE' });
   loadProductsGrid();
 }
@@ -826,12 +826,12 @@ async function deleteProduct(id) {
 // ===== CATEGORIES =====
 async function renderCategories(main) {
   main.innerHTML = '<div class="page">' +
-    pageHeader('Kategoriyalar', 'Menyu filtr tugmalarini boshqaring') +
-    '<div class="flex justify-end mb-4"><button id="addCatBtn" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white" style="background:var(--sx-cyan, #06b6d4)">+ Kategoriya qo\'shish</button></div>' +
+    pageHeader(t('page_categories'), t('page_categories_sub')) +
+    '<div class="flex justify-end mb-4"><button id="addCatBtn" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white" style="background:var(--sx-cyan, #06b6d4)">' + t('cat_add') + '</button></div>' +
     '<div class="rounded-xl border overflow-hidden" style="background:#131c2e;border-color:rgba(6,182,212,0.12)">' +
       '<div class="px-5 py-4 border-b" style="border-color:rgba(6,182,212,0.12)">' +
         '<span class="text-sm font-semibold">Royxat</span> ' +
-        '<span class="text-xs" style="color:#64748b">— tartibini ozgartirish uchun sudrang</span>' +
+        '<span class="text-xs" style="color:#64748b">— ' + t('cat_drag_hint') + '</span>' +
       '</div>' +
       '<div id="catList"></div>' +
     '</div>' +
@@ -857,9 +857,9 @@ async function loadCatList() {
       '<span class="text-2xl">' + (cat.emoji||'🍽') + '</span>' +
       '<div class="flex-1">' +
         '<div class="text-sm font-semibold">' + cat.name + (cat.name_ru ? ' <span style="color:#64748b;font-size:12px">/ ' + cat.name_ru + '</span>' : '') + '</div>' +
-        '<div class="text-xs mt-0.5" style="color:#64748b">Tartib: ' + cat.order + '</div>' +
+        '<div class="text-xs mt-0.5" style="color:#64748b">' + t('cat_order') + ': ' + cat.order + '</div>' +
       '</div>' +
-      '<span class="badge ' + (cat.active!==false?'badge-accepted':'badge-rejected') + '">' + (cat.active!==false?"Ko'rinadi":'Yashirilgan') + '</span>' +
+      '<span class="badge ' + (cat.active!==false?'badge-accepted':'badge-rejected') + '">' + (cat.active!==false?t('cat_visible'):t('prod_hidden')) + '</span>' +
       '<button class="edit-cat py-1.5 px-3 rounded-lg text-xs border transition-all" style="background:rgba(6,182,212,0.12);border-color:rgba(6,182,212,0.3);color:#22d3ee">✏️</button>' +
       '<button class="del-cat py-1.5 px-2.5 rounded-lg text-xs border ml-1" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.2);color:#ef4444">🗑</button>';
     row.querySelector('.edit-cat').addEventListener('click', function() { openCatModal(cat); });
@@ -886,7 +886,7 @@ async function loadCatList() {
 }
 
 function openCatModal(cat) {
-  document.getElementById('catModalTitle').textContent = cat ? 'Kategoriyani tahrirlash' : "Yangi kategoriya";
+  document.getElementById('catModalTitle').textContent = cat ? t('cat_edit') : t('cat_new');
   document.getElementById('catEditId').value  = cat ? (cat._id||'') : '';
   document.getElementById('cName').value      = cat ? (cat.name||'') : '';
   document.getElementById('cNameRu').value    = cat ? (cat.name_ru||'') : '';
@@ -909,7 +909,7 @@ async function saveCat() {
     emoji:   document.getElementById('cEmoji').value.trim() || '🍽',
     active:  document.getElementById('cActive').value === 'true'
   };
-  if (!body.name) { alert('Nom majburiy'); return; }
+  if (!body.name) { alert(t('name_required')); return; }
   if (id) await apiFetch('/admin/categories/' + id, { method:'PUT', body:JSON.stringify(body) });
   else    await apiFetch('/admin/categories',        { method:'POST', body:JSON.stringify(body) });
   closeCatModal();
@@ -918,14 +918,14 @@ async function saveCat() {
 }
 
 async function deleteCat(id) {
-  if (!confirm("O'chirilsinmi?")) return;
+  if (!confirm(t('confirm_delete'))) return;
   await apiFetch('/admin/categories/' + id, { method:'DELETE' });
   loadCatList();
 }
 
 // ===== RATINGS =====
 async function renderRatings(main) {
-  main.innerHTML = '<div class="page">' + pageHeader('Reytinglar', 'Mijozlar baholari') + '<div id="ratingsContent">' + skelTable(4) + '</div></div>';
+  main.innerHTML = '<div class="page">' + pageHeader(t('page_ratings'), t('page_ratings_sub')) + '<div id="ratingsContent">' + skelTable(4) + '</div></div>';
   var data = await apiFetch('/admin/orders?limit=500');
   if (!data) return;
   var rated = data.orders.filter(function(o){return o.rating;});
@@ -963,9 +963,9 @@ async function renderRatings(main) {
       '<div style="flex:1;min-width:200px">'+barsHtml+'</div>' +
     '</div>' +
     '<div class="rounded-xl border overflow-hidden" style="background:#131c2e;border-color:rgba(6,182,212,0.12)">' +
-      '<div class="px-5 py-4 border-b" style="border-color:rgba(6,182,212,0.12)"><span class="text-sm font-semibold">Baholangan buyurtmalar</span></div>' +
+      '<div class="px-5 py-4 border-b" style="border-color:rgba(6,182,212,0.12)"><span class="text-sm font-semibold">' + t('rat_rated_orders') + '</span></div>' +
       '<div class="overflow-x-auto"><table class="w-full border-collapse"><thead><tr>'+
-        ['Mijoz','Mahsulotlar','Baho','Vaqt'].map(function(h){return '<th style="'+thStyle+'">'+h+'</th>';}).join('')+
+        [t('ord_client'),t('ord_products'),t('rat_score'),t('ord_time')].map(function(h){return '<th style="'+thStyle+'">'+h+'</th>';}).join('')+
       '</tr></thead><tbody>'+ratedRows+'</tbody></table></div>' +
     '</div>';
   setPageCache('ratings');
@@ -973,7 +973,7 @@ async function renderRatings(main) {
 
 // ===== USERS =====
 async function renderUsers(main) {
-  main.innerHTML = '<div class="page">' + pageHeader("Foydalanuvchilar", "Ro'yxatdan o'tgan mijozlar") +
+  main.innerHTML = '<div class="page">' + pageHeader(t('page_users'), t('page_users_sub')) +
     '<div class="rounded-xl border overflow-hidden" style="background:#131c2e;border-color:rgba(6,182,212,0.12)">' +
       '<div id="usersTable" class="overflow-x-auto">' + skelTable(4) + '</div>' +
     '</div></div>';
@@ -995,7 +995,7 @@ async function renderUsers(main) {
   });
   document.getElementById('usersTable').innerHTML =
     '<table class="w-full border-collapse"><thead><tr>' +
-      ['#','Ism','Username','Telefon','Telegram ID','Sana'].map(function(h){return '<th style="'+thStyle+'">'+h+'</th>';}).join('') +
+      ['#',t('usr_name'),'Username',t('usr_phone'),'Telegram ID',t('date')].map(function(h){return '<th style="'+thStyle+'">'+h+'</th>';}).join('') +
     '</tr></thead><tbody>'+rows+'</tbody></table>';
   setPageCache('users');
 }
@@ -1014,9 +1014,9 @@ async function renderEmployees(main) {
       '<td style="padding:12px 8px;font-size:13px;color:#22d3ee">' + (e.username||'—') + '</td>' +
       '<td style="padding:12px 8px;font-size:13px;color:#22d3ee">' + fmtSalary(e.salary) + '</td>' +
       '<td style="padding:12px 8px;font-size:12px;color:#94a3b8">' + (e.workStart||'09:00') + ' – ' + (e.workEnd||'18:00') + '</td>' +
-      '<td style="padding:12px 8px"><span style="font-size:11px;padding:3px 8px;border-radius:99px;background:' + (e.active?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.15)') + ';color:' + (e.active?'#4ade80':'#f87171') + '">' + (e.active?'Faol':'Faol emas') + '</span></td>' +
+      '<td style="padding:12px 8px"><span style="font-size:11px;padding:3px 8px;border-radius:99px;background:' + (e.active?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.15)') + ';color:' + (e.active?'#4ade80':'#f87171') + '">' + (e.active?t('emp_active'):t('emp_inactive')) + '</span></td>' +
       '<td style="padding:12px 8px"><div style="display:flex;gap:6px">' +
-        '<button onclick="openEmpModal(' + JSON.stringify(JSON.stringify(e)) + ')" style="padding:5px 10px;background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee;border-radius:6px;font-size:11px;cursor:pointer">✏️ Tahrir</button>' +
+        '<button onclick="openEmpModal(' + JSON.stringify(JSON.stringify(e)) + ')" style="padding:5px 10px;background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee;border-radius:6px;font-size:11px;cursor:pointer">✏️ ' + t('edit') + '</button>' +
         '<button onclick="deleteEmp(\'' + e._id + '\')" style="padding:5px 10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;border-radius:6px;font-size:11px;cursor:pointer">🗑</button>' +
       '</div></td>' +
     '</tr>';
@@ -1025,21 +1025,21 @@ async function renderEmployees(main) {
   main.innerHTML =
     '<div class="fade-up">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">' +
-        '<div style="font-size:18px;font-weight:700;color:#f1f5f9">👷 Ishchilar <span style="font-size:13px;color:#64748b;font-weight:400">(' + (emps||[]).length + ' ta)</span></div>' +
-        '<button onclick="openEmpModal(null)" style="padding:9px 18px;background:linear-gradient(135deg,var(--sx-cyan, #06b6d4),#1d4ed8);border:none;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Qo\'shish</button>' +
+        '<div style="font-size:18px;font-weight:700;color:#f1f5f9">' + t('page_employees') + ' <span style="font-size:13px;color:#64748b;font-weight:400">(' + (emps||[]).length + ' ta)</span></div>' +
+        '<button onclick="openEmpModal(null)" style="padding:9px 18px;background:linear-gradient(135deg,var(--sx-cyan, #06b6d4),#1d4ed8);border:none;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">' + t('add') + '</button>' +
       '</div>' +
       '<div style="background:#1e293b;border:1px solid rgba(6,182,212,0.12);border-radius:12px;overflow:hidden">' +
         '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">' +
           '<thead><tr style="background:rgba(6,182,212,0.05)">' +
-            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">ISM</th>' +
-            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">TELEFON</th>' +
-            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">LOGIN</th>' +
-            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">MAOSH</th>' +
-            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">ISH VAQTI</th>' +
-            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">HOLAT</th>' +
-            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">AMAL</th>' +
+            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('emp_name') + '</th>' +
+            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('emp_phone') + '</th>' +
+            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('emp_login') + '</th>' +
+            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('emp_salary') + '</th>' +
+            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('emp_work_time') + '</th>' +
+            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('status') + '</th>' +
+            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('actions') + '</th>' +
           '</tr></thead>' +
-          '<tbody>' + (rows || '<tr><td colspan="7" style="padding:40px;text-align:center;color:#475569">Ishchilar yo\'q</td></tr>') + '</tbody>' +
+          '<tbody>' + (rows || '<tr><td colspan="7" style="padding:40px;text-align:center;color:#475569">' + t('emp_no_employees') + '</td></tr>') + '</tbody>' +
         '</table></div>' +
       '</div>' +
     '</div>';
@@ -1049,7 +1049,7 @@ async function renderEmployees(main) {
 async function openEmpModal(empJson) {
   var emp = empJson ? JSON.parse(empJson) : null;
   _empPhotoBase64 = emp && emp.photo ? emp.photo : null;
-  document.getElementById('empModalTitle').textContent = emp ? 'Ishchi tahrirlash' : 'Yangi ishchi';
+  document.getElementById('empModalTitle').textContent = emp ? t('emp_edit') : t('emp_new');
   document.getElementById('empModalBody').innerHTML = '' + skelTable(3) + '';
   document.getElementById('empModal').style.display = 'flex';
 
@@ -1134,10 +1134,10 @@ async function saveEmp(empId) {
   var branchId  = document.getElementById('empBranchId')?.value  || '';
   var weeklyOff = document.getElementById('empWeeklyOff')?.value || 'sunday';
 
-  if (!name)               { errEl.textContent = 'Ism kiritilmagan';    errEl.style.display='block'; return; }
-  if (!username)           { errEl.textContent = 'Login kiritilmagan';  errEl.style.display='block'; return; }
-  if (!empId && !password) { errEl.textContent = 'Parol kiritilmagan';  errEl.style.display='block'; return; }
-  if (!branchId)           { errEl.textContent = 'Filial tanlanmagan!'; errEl.style.display='block'; return; }
+  if (!name)               { errEl.textContent = t('emp_name_required');    errEl.style.display='block'; return; }
+  if (!username)           { errEl.textContent = t('emp_login_required');  errEl.style.display='block'; return; }
+  if (!empId && !password) { errEl.textContent = t('emp_password_required');  errEl.style.display='block'; return; }
+  if (!branchId)           { errEl.textContent = t('emp_no_branch'); errEl.style.display='block'; return; }
 
   var photoData = null;
   if (_empPhotoBase64) {
@@ -1159,14 +1159,14 @@ async function saveEmp(empId) {
   if (photoData) body.photo    = photoData;
 
   var btn = document.getElementById('empSaveBtn');
-  if (btn) { btn.textContent = 'Saqlanmoqda...'; btn.disabled = true; }
+  if (btn) { btn.textContent = t('saving'); btn.disabled = true; }
 
   var url    = empId ? '/admin/employees/' + empId : '/admin/employees';
   var method = empId ? 'PUT' : 'POST';
   var d = await apiFetch(url, { method: method, body: JSON.stringify(body) });
 
   if (btn) { btn.textContent = empId ? '💾 Saqlash' : '+ Qo\'shish'; btn.disabled = false; }
-  if (!d)        { errEl.textContent = 'Server javob bermadi'; errEl.style.display='block'; return; }
+  if (!d)        { errEl.textContent = t('server_error'); errEl.style.display='block'; return; }
   if (d.error)   { errEl.textContent = d.error;                errEl.style.display='block'; return; }
 
   closeEmpModal();
@@ -1175,7 +1175,7 @@ async function saveEmp(empId) {
 }
 
 async function deleteEmp(id) {
-  if (!confirm('Ishchini o\'chirishni tasdiqlaysizmi?')) return;
+  if (!confirm(t('emp_confirm_delete'))) return;
   var d = await apiFetch('/admin/employees/' + id, { method: 'DELETE' });
   if (d.ok) renderEmployees(document.getElementById('mainContent'));
   else alert('Xato: ' + (d.error||''));
@@ -1195,9 +1195,9 @@ async function renderWaiters(main) {
       '<td style="padding:12px 8px"><div style="font-size:14px;font-weight:600;color:#f1f5f9">' + e.name + '</div><div style="font-size:11px;color:#64748b">' + (e.phone||'—') + '</div></td>' +
       '<td style="padding:12px 8px;font-size:13px;color:#22d3ee">' + (e.username||'—') + '</td>' +
       '<td style="padding:12px 8px;font-size:13px;color:#f59e0b;font-weight:600">' + tables + '</td>' +
-      '<td style="padding:12px 8px"><span style="font-size:11px;padding:3px 8px;border-radius:99px;background:' + (e.active?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.15)') + ';color:' + (e.active?'#4ade80':'#f87171') + '">' + (e.active?'Faol':'Faol emas') + '</span></td>' +
+      '<td style="padding:12px 8px"><span style="font-size:11px;padding:3px 8px;border-radius:99px;background:' + (e.active?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.15)') + ';color:' + (e.active?'#4ade80':'#f87171') + '">' + (e.active?t('emp_active'):t('emp_inactive')) + '</span></td>' +
       '<td style="padding:12px 8px"><div style="display:flex;gap:6px">' +
-        '<button onclick="openWaiterModal(' + JSON.stringify(JSON.stringify(e)) + ')" style="padding:5px 10px;background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee;border-radius:6px;font-size:11px;cursor:pointer">✏️ Tahrir</button>' +
+        '<button onclick="openWaiterModal(' + JSON.stringify(JSON.stringify(e)) + ')" style="padding:5px 10px;background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee;border-radius:6px;font-size:11px;cursor:pointer">✏️ ' + t('edit') + '</button>' +
         '<button onclick="deleteWaiter(\'' + e._id + '\')" style="padding:5px 10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;border-radius:6px;font-size:11px;cursor:pointer">🗑</button>' +
       '</div></td>' +
     '</tr>';
@@ -1206,22 +1206,22 @@ async function renderWaiters(main) {
   main.innerHTML =
     '<div class="fade-up">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">' +
-        '<div style="font-size:18px;font-weight:700;color:#f1f5f9">🧑‍🍳 Ofitsiantlar <span style="font-size:13px;color:#64748b;font-weight:400">(' + waiters.length + ' ta)</span></div>' +
-        '<button onclick="openWaiterModal(null)" style="padding:9px 18px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;color:#000;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Ofitsiant qo\'shish</button>' +
+        '<div style="font-size:18px;font-weight:700;color:#f1f5f9">' + t('page_waiters') + ' <span style="font-size:13px;color:#64748b;font-weight:400">(' + waiters.length + ' ta)</span></div>' +
+        '<button onclick="openWaiterModal(null)" style="padding:9px 18px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;color:#000;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">' + t('wt_add') + '</button>' +
       '</div>' +
       '<div style="background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.15);border-radius:12px;padding:14px 18px;margin-bottom:16px;font-size:13px;color:#fbbf24">' +
-        '💡 Ofitsiant — <strong>/waiter/</strong> panelidan foydalanadi. Stol biriktirsangiz, shu stolga kelgan buyurtmalar avtomatik ofitsiantga birikadi.' +
+        '💡 ' + t('wt_hint') + '' +
       '</div>' +
       '<div style="background:#1e293b;border:1px solid rgba(6,182,212,0.12);border-radius:12px;overflow:hidden">' +
         '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">' +
           '<thead><tr style="background:rgba(245,158,11,0.05)">' +
-            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">ISM</th>' +
-            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">LOGIN</th>' +
-            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">STOLLAR</th>' +
-            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">HOLAT</th>' +
-            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">AMAL</th>' +
+            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('emp_name') + '</th>' +
+            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('emp_login') + '</th>' +
+            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('wt_tables') + '</th>' +
+            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('status') + '</th>' +
+            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('actions') + '</th>' +
           '</tr></thead>' +
-          '<tbody>' + (rows || '<tr><td colspan="5" style="padding:40px;text-align:center;color:#475569">Ofitsiantlar yo\'q — "Ofitsiant qo\'shish" tugmasini bosing</td></tr>') + '</tbody>' +
+          '<tbody>' + (rows || '<tr><td colspan="5" style="padding:40px;text-align:center;color:#475569">' + t('wt_no_waiters') + '</td></tr>') + '</tbody>' +
         '</table></div>' +
       '</div>' +
     '</div>';
@@ -1230,7 +1230,7 @@ async function renderWaiters(main) {
 
 function openWaiterModal(empJson) {
   var emp = empJson ? JSON.parse(empJson) : null;
-  document.getElementById('waiterModalTitle').textContent = emp ? 'Ofitsiantni tahrirlash' : 'Yangi ofitsiant';
+  document.getElementById('waiterModalTitle').textContent = emp ? t('wt_edit') : t('wt_new');
   var tablesVal = emp && emp.tables ? emp.tables.join(', ') : '';
   document.getElementById('waiterModalBody').innerHTML =
     '<div style="display:flex;flex-direction:column;gap:12px">' +
@@ -1263,22 +1263,22 @@ async function saveWaiter(empId) {
   var tablesRaw = (document.getElementById('wTables')?.value || '').trim();
   var tables   = tablesRaw ? tablesRaw.split(',').map(function(t){ return t.trim(); }).filter(Boolean) : [];
 
-  if (!name)               { errEl.textContent = 'Ism kiritilmagan';   errEl.style.display='block'; return; }
-  if (!username)           { errEl.textContent = 'Login kiritilmagan'; errEl.style.display='block'; return; }
-  if (!empId && !password) { errEl.textContent = 'Parol kiritilmagan'; errEl.style.display='block'; return; }
+  if (!name)               { errEl.textContent = t('emp_name_required');   errEl.style.display='block'; return; }
+  if (!username)           { errEl.textContent = t('emp_login_required'); errEl.style.display='block'; return; }
+  if (!empId && !password) { errEl.textContent = t('emp_password_required'); errEl.style.display='block'; return; }
 
   var body = { name: name, phone: phone, username: username, position: 'Ofitsiant', role: 'waiter', tables: tables };
   if (password) body.password = password;
 
   var btn = document.getElementById('wSaveBtn');
-  if (btn) { btn.textContent = 'Saqlanmoqda...'; btn.disabled = true; }
+  if (btn) { btn.textContent = t('saving'); btn.disabled = true; }
 
   var url    = empId ? '/admin/employees/' + empId : '/admin/employees';
   var method = empId ? 'PUT' : 'POST';
   var d = await apiFetch(url, { method: method, body: JSON.stringify(body) });
 
   if (btn) { btn.textContent = empId ? '💾 Saqlash' : '+ Qo\'shish'; btn.disabled = false; }
-  if (!d)      { errEl.textContent = 'Server javob bermadi'; errEl.style.display='block'; return; }
+  if (!d)      { errEl.textContent = t('server_error'); errEl.style.display='block'; return; }
   if (d.error) { errEl.textContent = d.error;                errEl.style.display='block'; return; }
 
   closeWaiterModal();
@@ -1286,7 +1286,7 @@ async function saveWaiter(empId) {
 }
 
 async function deleteWaiter(id) {
-  if (!confirm('Ofitsiantni o\'chirishni tasdiqlaysizmi?')) return;
+  if (!confirm(t('wt_confirm_delete'))) return;
   var d = await apiFetch('/admin/employees/' + id, { method: 'DELETE' });
   if (d.ok) renderWaiters(document.getElementById('mainContent'));
   else alert('Xato: ' + (d.error||''));
@@ -1304,9 +1304,9 @@ async function renderChefs(main) {
     return '<tr style="border-bottom:1px solid rgba(6,182,212,0.08)">' +
       '<td style="padding:12px 8px"><div style="font-size:14px;font-weight:600;color:#f1f5f9">' + e.name + '</div><div style="font-size:11px;color:#64748b">' + (e.phone||'—') + '</div></td>' +
       '<td style="padding:12px 8px;font-size:13px;color:#22d3ee">' + (e.username||'—') + '</td>' +
-      '<td style="padding:12px 8px"><span style="font-size:11px;padding:3px 8px;border-radius:99px;background:' + (e.active?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.15)') + ';color:' + (e.active?'#4ade80':'#f87171') + '">' + (e.active?'Faol':'Faol emas') + '</span></td>' +
+      '<td style="padding:12px 8px"><span style="font-size:11px;padding:3px 8px;border-radius:99px;background:' + (e.active?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.15)') + ';color:' + (e.active?'#4ade80':'#f87171') + '">' + (e.active?t('emp_active'):t('emp_inactive')) + '</span></td>' +
       '<td style="padding:12px 8px"><div style="display:flex;gap:6px">' +
-        '<button onclick="openChefModal(' + JSON.stringify(JSON.stringify(e)) + ')" style="padding:5px 10px;background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee;border-radius:6px;font-size:11px;cursor:pointer">✏️ Tahrir</button>' +
+        '<button onclick="openChefModal(' + JSON.stringify(JSON.stringify(e)) + ')" style="padding:5px 10px;background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee;border-radius:6px;font-size:11px;cursor:pointer">✏️ ' + t('edit') + '</button>' +
         '<button onclick="deleteChef(\'' + e._id + '\')" style="padding:5px 10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;border-radius:6px;font-size:11px;cursor:pointer">🗑</button>' +
       '</div></td>' +
     '</tr>';
@@ -1315,21 +1315,21 @@ async function renderChefs(main) {
   main.innerHTML =
     '<div class="fade-up">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">' +
-        '<div style="font-size:18px;font-weight:700;color:#f1f5f9">🍳 Oshpazlar <span style="font-size:13px;color:#64748b;font-weight:400">(' + chefs.length + ' ta)</span></div>' +
-        '<button onclick="openChefModal(null)" style="padding:9px 18px;background:linear-gradient(135deg,#f97316,#ea580c);border:none;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Oshpaz qo\'shish</button>' +
+        '<div style="font-size:18px;font-weight:700;color:#f1f5f9">' + t('page_chefs') + ' <span style="font-size:13px;color:#64748b;font-weight:400">(' + chefs.length + ' ta)</span></div>' +
+        '<button onclick="openChefModal(null)" style="padding:9px 18px;background:linear-gradient(135deg,#f97316,#ea580c);border:none;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">' + t('ch_add') + '</button>' +
       '</div>' +
       '<div style="background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.15);border-radius:12px;padding:14px 18px;margin-bottom:16px;font-size:13px;color:#fb923c">' +
-        '💡 Oshpaz — <strong>/kitchen/</strong> panelidan foydalanadi. Ofitsiant buyurtmani oshpazga yuborganda real-time ko\'rinadi.' +
+        '💡 ' + t('ch_hint') + '' +
       '</div>' +
       '<div style="background:#1e293b;border:1px solid rgba(6,182,212,0.12);border-radius:12px;overflow:hidden">' +
         '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">' +
           '<thead><tr style="background:rgba(249,115,22,0.05)">' +
-            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">ISM</th>' +
-            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">LOGIN</th>' +
-            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">HOLAT</th>' +
-            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">AMAL</th>' +
+            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('emp_name') + '</th>' +
+            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('emp_login') + '</th>' +
+            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('status') + '</th>' +
+            '<th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('actions') + '</th>' +
           '</tr></thead>' +
-          '<tbody>' + (rows || '<tr><td colspan="4" style="padding:40px;text-align:center;color:#475569">Oshpazlar yo\'q — "Oshpaz qo\'shish" tugmasini bosing</td></tr>') + '</tbody>' +
+          '<tbody>' + (rows || '<tr><td colspan="4" style="padding:40px;text-align:center;color:#475569">' + t('ch_no_chefs') + '</td></tr>') + '</tbody>' +
         '</table></div>' +
       '</div>' +
     '</div>';
@@ -1338,7 +1338,7 @@ async function renderChefs(main) {
 
 function openChefModal(empJson) {
   var emp = empJson ? JSON.parse(empJson) : null;
-  document.getElementById('chefModalTitle').textContent = emp ? 'Oshpazni tahrirlash' : 'Yangi oshpaz';
+  document.getElementById('chefModalTitle').textContent = emp ? t('ch_edit') : t('ch_new');
   document.getElementById('chefModalBody').innerHTML =
     '<div style="display:flex;flex-direction:column;gap:12px">' +
       empInp('chefName',     'ISM FAMILIYA', 'text',     emp ? (emp.name||'') : '') +
@@ -1363,22 +1363,22 @@ async function saveChef(empId) {
   var username = (document.getElementById('chefUsername')?.value || '').trim();
   var password = document.getElementById('chefPassword')?.value || '';
 
-  if (!name)               { errEl.textContent = 'Ism kiritilmagan';   errEl.style.display='block'; return; }
-  if (!username)           { errEl.textContent = 'Login kiritilmagan'; errEl.style.display='block'; return; }
-  if (!empId && !password) { errEl.textContent = 'Parol kiritilmagan'; errEl.style.display='block'; return; }
+  if (!name)               { errEl.textContent = t('emp_name_required');   errEl.style.display='block'; return; }
+  if (!username)           { errEl.textContent = t('emp_login_required'); errEl.style.display='block'; return; }
+  if (!empId && !password) { errEl.textContent = t('emp_password_required'); errEl.style.display='block'; return; }
 
   var body = { name: name, phone: phone, username: username, position: 'Oshpaz', role: 'chef' };
   if (password) body.password = password;
 
   var btn = document.getElementById('chefSaveBtn');
-  if (btn) { btn.textContent = 'Saqlanmoqda...'; btn.disabled = true; }
+  if (btn) { btn.textContent = t('saving'); btn.disabled = true; }
 
   var url    = empId ? '/admin/employees/' + empId : '/admin/employees';
   var method = empId ? 'PUT' : 'POST';
   var d = await apiFetch(url, { method: method, body: JSON.stringify(body) });
 
   if (btn) { btn.textContent = empId ? '💾 Saqlash' : '+ Qo\'shish'; btn.disabled = false; }
-  if (!d)      { errEl.textContent = 'Server javob bermadi'; errEl.style.display='block'; return; }
+  if (!d)      { errEl.textContent = t('server_error'); errEl.style.display='block'; return; }
   if (d.error) { errEl.textContent = d.error;                errEl.style.display='block'; return; }
 
   closeChefModal();
@@ -1386,7 +1386,7 @@ async function saveChef(empId) {
 }
 
 async function deleteChef(id) {
-  if (!confirm('Oshpazni o\'chirishni tasdiqlaysizmi?')) return;
+  if (!confirm(t('ch_confirm_delete'))) return;
   var d = await apiFetch('/admin/employees/' + id, { method: 'DELETE' });
   if (d.ok) renderChefs(document.getElementById('mainContent'));
   else alert('Xato: ' + (d.error||''));
@@ -1404,7 +1404,7 @@ async function renderAttendance(main, selectedBranch) {
 
   var url = '/admin/attendance/today' + (selectedBranch ? '?branchId=' + selectedBranch : '');
   var d = await apiFetch(url);
-  if (!d.ok) { main.innerHTML = '<div style="color:#f87171;padding:20px">Yuklanmadi</div>'; return; }
+  if (!d.ok) { main.innerHTML = '<div style="color:#f87171;padding:20px">' + t('load_error') + '</div>'; return; }
 
   var sum   = d.summary;
   var emps  = d.employees || [];
@@ -1412,7 +1412,7 @@ async function renderAttendance(main, selectedBranch) {
 
   var branchBtns =
     '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">' +
-      '<button onclick="renderAttendance(document.getElementById(\'mainContent\'),\'\')" style="padding:6px 16px;border-radius:8px;border:1px solid ' + (!selectedBranch ? 'var(--sx-cyan, #06b6d4)' : 'rgba(6,182,212,0.2)') + ';background:' + (!selectedBranch ? 'rgba(6,182,212,0.15)' : 'transparent') + ';color:' + (!selectedBranch ? '#22d3ee' : '#64748b') + ';font-size:12px;cursor:pointer;font-family:inherit">🏢 Barchasi</button>' +
+      '<button onclick="renderAttendance(document.getElementById(\'mainContent\'),\'\')" style="padding:6px 16px;border-radius:8px;border:1px solid ' + (!selectedBranch ? 'var(--sx-cyan, #06b6d4)' : 'rgba(6,182,212,0.2)') + ';background:' + (!selectedBranch ? 'rgba(6,182,212,0.15)' : 'transparent') + ';color:' + (!selectedBranch ? '#22d3ee' : '#64748b') + ';font-size:12px;cursor:pointer;font-family:inherit">🏢 ' + t('all') + '</button>' +
       branches.map(function(b) {
         var act = selectedBranch === b._id;
         return '<button onclick="renderAttendance(document.getElementById(\'mainContent\'),\'' + b._id + '\')" style="padding:6px 16px;border-radius:8px;border:1px solid ' + (act ? 'var(--sx-cyan, #06b6d4)' : 'rgba(6,182,212,0.2)') + ';background:' + (act ? 'rgba(6,182,212,0.15)' : 'transparent') + ';color:' + (act ? '#22d3ee' : '#64748b') + ';font-size:12px;cursor:pointer;font-family:inherit">' + b.name + '</button>';
@@ -1424,10 +1424,10 @@ async function renderAttendance(main, selectedBranch) {
     var lateTag = r.lateMinutes > 0
       ? '<span style="font-size:10px;background:rgba(245,158,11,0.15);color:#22d3ee;padding:2px 6px;border-radius:99px;margin-left:6px">+' + formatMins(r.lateMinutes) + '</span>'
       : '';
-    var workedStr = r.totalMinutes ? formatMins(r.totalMinutes) : (r.checkIn && !r.checkOut ? '<span style="color:var(--sx-cyan, #06b6d4)">Ishlayapti</span>' : '—');
+    var workedStr = r.totalMinutes ? formatMins(r.totalMinutes) : (r.checkIn && !r.checkOut ? '<span style="color:var(--sx-cyan, #06b6d4)">' + t('att_working') + '</span>' : '—');
     return '<tr style="border-bottom:1px solid rgba(6,182,212,0.07)">' +
       '<td style="padding:12px 10px"><div style="font-size:13px;font-weight:600;color:#f1f5f9">' + r.employee.name + lateTag + '</div><div style="font-size:11px;color:#64748b">' + (r.employee.position||'—') + '</div></td>' +
-      '<td style="padding:12px 10px"><span style="font-size:11px;padding:3px 9px;border-radius:99px;background:' + (r.status==='keldi'?'rgba(34,197,94,0.12)':r.status==='dam'?'rgba(167,139,250,0.12)':'rgba(239,68,68,0.12)') + ';color:' + (r.status==='keldi'?'#22c55e':r.status==='dam'?'#a78bfa':'#ef4444') + ';font-weight:600">' + (r.status==='keldi'?'✅ Keldi':r.status==='dam'?'🌴 Dam':'❌ Kelmadi') + '</span></td>' +
+      '<td style="padding:12px 10px"><span style="font-size:11px;padding:3px 9px;border-radius:99px;background:' + (r.status==='keldi'?'rgba(34,197,94,0.12)':r.status==='dam'?'rgba(167,139,250,0.12)':'rgba(239,68,68,0.12)') + ';color:' + (r.status==='keldi'?'#22c55e':r.status==='dam'?'#a78bfa':'#ef4444') + ';font-weight:600">' + (r.status==='keldi'?'✅ '+t('att_present'):r.status==='dam'?'🌴 '+t('att_dayoff'):'❌ '+t('att_absent')) + '</span></td>' +
       '<td style="padding:12px 10px;font-size:13px;color:#94a3b8">' + (r.checkIn||'—') + '</td>' +
       '<td style="padding:12px 10px;font-size:13px;color:#94a3b8">' + (r.checkOut||'—') + '</td>' +
       '<td style="padding:12px 10px;font-size:13px;color:#22c55e">' + workedStr + '</td>' +
@@ -1438,31 +1438,31 @@ async function renderAttendance(main, selectedBranch) {
   main.innerHTML =
     '<div class="fade-up">' +
       '<div style="font-size:13px;color:#64748b;margin-bottom:4px;text-transform:capitalize">' + today + '</div>' +
-      '<div style="font-size:18px;font-weight:700;color:#f1f5f9;margin-bottom:12px">📋 Bugungi davomat</div>' +
+      '<div style="font-size:18px;font-weight:700;color:#f1f5f9;margin-bottom:12px">📋 ' + t('page_attendance') + '</div>' +
       branchBtns +
       '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px">' +
-        attSumBox('👥', 'Jami', sum.total, 'var(--sx-cyan, #06b6d4)') +
-        attSumBox('✅', 'Keldi', sum.came, '#22c55e') +
-        attSumBox('⚠️', 'Kechikdi', sum.late, '#f59e0b') +
-        attSumBox('❌', 'Kelmadi', sum.absent, '#ef4444') +
+        attSumBox('👥', t('att_total'), sum.total, 'var(--sx-cyan, #06b6d4)') +
+        attSumBox('✅', t('att_present'), sum.came, '#22c55e') +
+        attSumBox('⚠️', t('att_late'), sum.late, '#f59e0b') +
+        attSumBox('❌', t('att_absent'), sum.absent, '#ef4444') +
       '</div>' +
       '<div style="background:#1e293b;border:1px solid rgba(6,182,212,0.12);border-radius:12px;overflow:hidden">' +
         '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">' +
           '<thead><tr style="background:rgba(6,182,212,0.05)">' +
-            '<th style="padding:10px;text-align:left;font-size:11px;color:#64748b;font-weight:600">ISHCHI</th>' +
-            '<th style="padding:10px;text-align:left;font-size:11px;color:#64748b;font-weight:600">HOLAT</th>' +
-            '<th style="padding:10px;text-align:left;font-size:11px;color:#64748b;font-weight:600">KELDI</th>' +
-            '<th style="padding:10px;text-align:left;font-size:11px;color:#64748b;font-weight:600">KETDI</th>' +
-            '<th style="padding:10px;text-align:left;font-size:11px;color:#64748b;font-weight:600">ISHLAGAN</th>' +
-            '<th style="padding:10px;text-align:left;font-size:11px;color:#64748b;font-weight:600">AMAL</th>' +
+            '<th style="padding:10px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('emp_name') + '</th>' +
+            '<th style="padding:10px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('status') + '</th>' +
+            '<th style="padding:10px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('att_checkin') + '</th>' +
+            '<th style="padding:10px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('att_checkout') + '</th>' +
+            '<th style="padding:10px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('att_worked') + '</th>' +
+            '<th style="padding:10px;text-align:left;font-size:11px;color:#64748b;font-weight:600">' + t('actions') + '</th>' +
           '</tr></thead>' +
-          '<tbody>' + (rows || '<tr><td colspan="6" style="padding:40px;text-align:center;color:#475569">Ishchilar yo\'q</td></tr>') + '</tbody>' +
+          '<tbody>' + (rows || '<tr><td colspan="6" style="padding:40px;text-align:center;color:#475569">' + t('emp_no_employees') + '</td></tr>') + '</tbody>' +
         '</table></div>' +
       '</div>' +
       '<div id="manualModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center;padding:16px">' +
         '<div style="background:#1e293b;border:1px solid rgba(6,182,212,0.15);border-radius:16px;padding:24px;width:100%;max-width:380px">' +
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">' +
-            '<div id="manualTitle" style="font-size:15px;font-weight:700;color:#f1f5f9">Qo\'lda kiritish</div>' +
+            '<div id="manualTitle" style="font-size:15px;font-weight:700;color:#f1f5f9">' + t('att_manual') + '</div>' +
             '<button onclick="closeManualModal()" style="background:none;border:none;color:#64748b;font-size:20px;cursor:pointer">✕</button>' +
           '</div>' +
           '<div id="manualBody"></div>' +
@@ -1485,7 +1485,7 @@ function openManualModal(empId, empName) {
   var today = new Date().toISOString().split('T')[0];
   document.getElementById('manualBody').innerHTML =
     '<div style="display:flex;flex-direction:column;gap:12px">' +
-      '<div><label style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:1px;display:block;margin-bottom:5px">HOLAT</label>' +
+      '<div><label style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:1px;display:block;margin-bottom:5px">' + t('status') + '</label>' +
         '<select id="manualStatus" style="width:100%;padding:10px;background:#0f172a;border:1px solid rgba(6,182,212,0.15);border-radius:8px;color:#f1f5f9;font-size:13px">' +
           '<option value="keldi">✅ Keldi</option><option value="kelmadi">❌ Kelmadi</option><option value="kasal">🤒 Kasal</option><option value="tatil">🏖 Ta\'til</option>' +
         '</select></div>' +
@@ -1524,7 +1524,7 @@ async function renderEmpReport(main) {
   main.innerHTML =
     '<div class="fade-up">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">' +
-        '<div style="font-size:18px;font-weight:700;color:#f1f5f9">💰 Hisobot & Maosh</div>' +
+        '<div style="font-size:18px;font-weight:700;color:#f1f5f9">💰 ' + t('page_reports') + '</div>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
           '<select id="reportBranch" style="padding:8px 12px;background:#1e293b;border:1px solid rgba(6,182,212,0.2);border-radius:8px;color:#f1f5f9;font-size:13px;font-family:inherit"><option value="">🏢 Barcha filiallar</option></select>' +
           '<input type="month" id="reportMonth" value="' + month + '" style="padding:8px 12px;background:#1e293b;border:1px solid rgba(6,182,212,0.2);border-radius:8px;color:#f1f5f9;font-size:13px">' +
@@ -1568,8 +1568,8 @@ async function loadReport() {
   var d = await apiFetch('/admin/attendance/report?month=' + month + (branchId ? '&branchId=' + branchId : ''));
 
   if (!d || !d.ok || !d.report) {
-    var errMsg = 'Hisobot yuklanmadi';
-    if (d && d.error === 'MODULE_DISABLED') errMsg = d.message || 'Hisobot moduli yoqilmagan';
+    var errMsg = t('rep_error');
+    if (d && d.error === 'MODULE_DISABLED') errMsg = d.message || t('rep_module_disabled');
     else if (d && d.error) errMsg = d.error;
     content.innerHTML = '<div style="text-align:center;padding:40px"><div style="font-size:36px;margin-bottom:12px">📊</div><div style="color:#f87171;font-size:14px">' + errMsg + '</div></div>';
     return;
@@ -1627,7 +1627,7 @@ async function loadReport() {
         miniStat('⚠️', s.lateCount + ' kech', '#f59e0b') +
         miniStat('❌', s.absentCount + ' yoq', '#ef4444') +
       '</div>' +
-      '<div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:#64748b">Davomat</span><span style="font-size:11px;font-weight:600;color:' + pctColor + '">' + pct + '%</span></div>' +
+      '<div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:#64748b">' + t('rep_attendance') + '</span><span style="font-size:11px;font-weight:600;color:' + pctColor + '">' + pct + '%</span></div>' +
         '<div style="background:#0f172a;border-radius:99px;height:6px"><div style="height:100%;width:' + pct + '%;background:' + pctColor + ';border-radius:99px"></div></div>' +
       '</div>' +
     '</div>';
@@ -1766,8 +1766,8 @@ async function renderBranches(main) {
   main.innerHTML =
     '<div class="fade-up">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">' +
-        '<div style="font-size:18px;font-weight:700;color:#f1f5f9">🏢 Filiallar <span style="font-size:13px;color:#64748b;font-weight:400">(' + branches.length + ' ta)</span></div>' +
-        '<button onclick="openBranchModal(null)" style="padding:9px 18px;background:linear-gradient(135deg,var(--sx-cyan, #06b6d4),#1d4ed8);border:none;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Filial qo\'shish</button>' +
+        '<div style="font-size:18px;font-weight:700;color:#f1f5f9">' + t('page_branches') + ' <span style="font-size:13px;color:#64748b;font-weight:400">(' + branches.length + ' ta)</span></div>' +
+        '<button onclick="openBranchModal(null)" style="padding:9px 18px;background:linear-gradient(135deg,var(--sx-cyan, #06b6d4),#1d4ed8);border:none;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">' + t('br_add') + '</button>' +
       '</div>' +
       (branches.length ? '<div style="display:flex;flex-direction:column;gap:10px">' + cards + '</div>' :
         '<div style="text-align:center;padding:60px;color:#475569">' +
@@ -1781,7 +1781,7 @@ async function renderBranches(main) {
 
 function openBranchModal(branchJson) {
   var b = branchJson ? JSON.parse(branchJson) : null;
-  document.getElementById('branchModalTitle').textContent = b ? 'Filial tahrirlash' : 'Yangi filial';
+  document.getElementById('branchModalTitle').textContent = b ? t('br_edit') : t('br_new');
   document.getElementById('branchModalBody').innerHTML =
     '<div style="display:flex;flex-direction:column;gap:14px">' +
       empInp('bName',    'FILIAL NOMI',    'text',   b ? (b.name||'')    : '') +
@@ -1864,14 +1864,14 @@ async function saveBranch(id) {
   var radius  = Number(document.getElementById('bRadius').value) || 100;
   var lat     = parseFloat(document.getElementById('bLat').value) || null;
   var lng     = parseFloat(document.getElementById('bLng').value) || null;
-  if (!name) { errEl.textContent = 'Filial nomi kiritilmagan'; errEl.style.display='block'; return; }
+  if (!name) { errEl.textContent = t('br_no_name'); errEl.style.display='block'; return; }
   var d = await apiFetch(id ? '/admin/branches/' + id : '/admin/branches', { method: id ? 'PUT' : 'POST', body: JSON.stringify({ name: name, address: address, lat: lat, lng: lng, radius: radius }) });
   if (d.ok) { closeBranchModal(); renderBranches(document.getElementById('mainContent')); }
   else { errEl.textContent = d.error || 'Xato yuz berdi'; errEl.style.display = 'block'; }
 }
 
 async function deleteBranch(id) {
-  if (!confirm('Filialni o\'chirishni tasdiqlaysizmi?')) return;
+  if (!confirm(t('br_confirm_delete'))) return;
   var d = await apiFetch('/admin/branches/' + id, { method: 'DELETE' });
   if (d.ok) renderBranches(document.getElementById('mainContent'));
 }

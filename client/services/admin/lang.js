@@ -109,10 +109,53 @@ var LANGS = {
 
     // UMUMIY
     all: "Barchasi", save: "Saqlash", cancel: "Bekor", delete: "O'chirish",
-    edit: "Tahrirlash", add: "Qo'shish", search: "Qidirish", loading: "Yuklanmoqda...",
+    edit: "Tahrirlash", add: "+ Qo'shish", search: "Qidirish", loading: "Yuklanmoqda...",
+    saving: "Saqlanmoqda...", confirm_delete: "O'chirilsinmi?",
     no_data: "Ma'lumot yo'q", total: "Jami", name: "Nomi", price: "Narxi",
     status: "Holat", date: "Sana", actions: "Amallar", confirm: "Tasdiqlash", close: "Yopish",
     som: "so'm", ta: "ta", pieces: "dona", minute: "daqiqa", hour: "soat",
+    name_required: "Nom majburiy", server_error: "Server javob bermadi", load_error: "Yuklanmadi",
+
+    // Orders qo'shimcha
+    ord_list: "Ro'yxat", ord_change: "O'zgartir",
+
+    // Products qo'shimcha
+    prod_add: "+ Mahsulot qo'shish",
+    prod_edit_title: "Mahsulotni tahrirlash",
+    prod_new: "Yangi mahsulot",
+    prod_hidden: "Yashirilgan",
+    prod_name_price_required: "Nom va narx majburiy",
+
+    // Categories qo'shimcha
+    cat_drag_hint: "tartibini o'zgartirish uchun sudrang",
+    cat_order: "Tartib",
+    cat_visible: "Ko'rinadi",
+
+    // Ratings qo'shimcha
+    rat_rated_orders: "Baholangan buyurtmalar",
+
+    // Users qo'shimcha
+    usr_name: "Ism", usr_phone: "Telefon",
+
+    // Employees qo'shimcha
+    emp_active: "Faol", emp_inactive: "Faol emas",
+    emp_work_time: "Ish vaqti",
+    emp_name_required: "Ism kiritilmagan",
+    emp_login_required: "Login kiritilmagan",
+    emp_password_required: "Parol kiritilmagan",
+    emp_photo_label: "Ishchi rasmi (Yuz ID uchun)",
+    emp_upload_photo: "Rasm yuklash", emp_camera: "Kamera",
+    emp_photo_loaded: "Rasm yuklangan",
+
+    // Attendance qo'shimcha
+    att_dayoff: "Dam", att_working: "Ishlayapti",
+    att_checkin: "Keldi", att_checkout: "Ketdi", att_worked: "Ishlagan",
+    att_manual: "Qo'lda kiritish",
+    att_came_time: "Kelgan vaqt", att_left_time: "Ketgan vaqt", att_note: "Izoh",
+
+    // Report qo'shimcha
+    rep_error: "Hisobot yuklanmadi",
+    rep_module_disabled: "Hisobot moduli yoqilmagan",
 
     // AI
     ai_title: "AI Yordamchi", ai_placeholder: "Har qanday savol bering...",
@@ -220,10 +263,53 @@ var LANGS = {
 
     // ОБЩЕЕ
     all: "Все", save: "Сохранить", cancel: "Отмена", delete: "Удалить",
-    edit: "Редактировать", add: "Добавить", search: "Поиск", loading: "Загрузка...",
+    edit: "Редактировать", add: "+ Добавить", search: "Поиск", loading: "Загрузка...",
+    saving: "Сохранение...", confirm_delete: "Удалить?",
     no_data: "Нет данных", total: "Итого", name: "Название", price: "Цена",
     status: "Статус", date: "Дата", actions: "Действия", confirm: "Подтвердить", close: "Закрыть",
     som: "сум", ta: "шт", pieces: "шт", minute: "минута", hour: "час",
+    name_required: "Название обязательно", server_error: "Сервер не отвечает", load_error: "Ошибка загрузки",
+
+    // Orders доп
+    ord_list: "Список", ord_change: "Изменить",
+
+    // Products доп
+    prod_add: "+ Добавить продукт",
+    prod_edit_title: "Редактировать продукт",
+    prod_new: "Новый продукт",
+    prod_hidden: "Скрыт",
+    prod_name_price_required: "Название и цена обязательны",
+
+    // Categories доп
+    cat_drag_hint: "перетащите для изменения порядка",
+    cat_order: "Порядок",
+    cat_visible: "Видимый",
+
+    // Ratings доп
+    rat_rated_orders: "Оценённые заказы",
+
+    // Users доп
+    usr_name: "Имя", usr_phone: "Телефон",
+
+    // Employees доп
+    emp_active: "Активен", emp_inactive: "Неактивен",
+    emp_work_time: "Рабочее время",
+    emp_name_required: "Имя не указано",
+    emp_login_required: "Логин не указан",
+    emp_password_required: "Пароль не указан",
+    emp_photo_label: "Фото сотрудника (Face ID)",
+    emp_upload_photo: "Загрузить фото", emp_camera: "Камера",
+    emp_photo_loaded: "Фото загружено",
+
+    // Attendance доп
+    att_dayoff: "Выходной", att_working: "На работе",
+    att_checkin: "Пришёл", att_checkout: "Ушёл", att_worked: "Отработал",
+    att_manual: "Ручной ввод",
+    att_came_time: "Время прихода", att_left_time: "Время ухода", att_note: "Заметка",
+
+    // Report доп
+    rep_error: "Ошибка загрузки отчёта",
+    rep_module_disabled: "Модуль отчётов не активирован",
 
     // AI
     ai_title: "AI Помощник", ai_placeholder: "Задайте любой вопрос...",

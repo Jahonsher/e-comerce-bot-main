@@ -518,3 +518,4 @@ window._servixTranslations = {
     time_last_month: "Прошлый месяц",
   },
 };
+

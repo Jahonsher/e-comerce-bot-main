@@ -11,6 +11,119 @@ var typeChart   = null;
 var currentOrderFilter = 'all';
 var dragSrc = null;
 
+// ===== TIL TIZIMI (i18n) =====
+var _lang = localStorage.getItem('servix_lang') || 'uz';
+
+var _i18n = {
+  uz: {
+    // Sidebar
+    nav_main: "Asosiy", nav_dashboard: "Dashboard", nav_orders: "Buyurtmalar",
+    nav_management: "Boshqaruv", nav_products: "Mahsulotlar", nav_categories: "Kategoriyalar",
+    nav_notifications: "Bildirishnomalar", nav_ratings: "Reytinglar", nav_users: "Foydalanuvchilar",
+    nav_staff: "ISHCHILAR", nav_branches: "Filiallar", nav_employees: "Ishchilar",
+    nav_attendance: "Davomat", nav_reports: "Hisobot & Maosh",
+    nav_service: "XIZMAT", nav_waiters: "Ofitsiantlar", nav_chefs: "Oshpazlar",
+    btn_logout: "Chiqish",
+    // Dashboard
+    dash_title: "Dashboard", dash_sub: "Bugungi holat va statistika",
+    dash_today: "Bugun", dash_yesterday: "Kecha", dash_week: "Hafta",
+    dash_month: "Oy", dash_prevMonth: "O'tgan oy", dash_show: "Ko'rsatish",
+    dash_orders: "Buyurtmalar", dash_revenue: "Daromad",
+    dash_online: "Online / Restoranda", dash_avg: "O'rtacha chek",
+    dash_rating: "Reyting", dash_users: "Foydalanuvchilar",
+    dash_trend: "Kunlik trend", dash_type: "Buyurtma turi",
+    dash_top: "Ko'p sotilgan", dash_recent: "Oxirgi buyurtmalar",
+    // Page headers
+    page_menu: "Mahsulotlar boshqaruvi", page_menu_sub: "Mahsulotlarni qo'shish, tahrirlash, o'chirish",
+    page_orders: "Buyurtmalar", page_orders_sub: "Barcha buyurtmalar",
+    page_categories: "Kategoriyalar", page_employees: "Ishchilar",
+    page_attendance: "Davomat", page_branches: "Filiallar",
+    page_ratings: "Reytinglar", page_users: "Foydalanuvchilar",
+    page_notifications: "Bildirishnomalar",
+    // Common
+    all: "Barchasi", save: "Saqlash", cancel: "Bekor", delete: "O'chirish",
+    edit: "Tahrirlash", add: "Qo'shish", search: "Qidirish", loading: "Yuklanmoqda...",
+    no_data: "Ma'lumot yo'q", total: "Jami", name: "Nomi", price: "Narxi",
+    status: "Holat", date: "Sana", actions: "Amallar",
+    // AI
+    ai_title: "AI Yordamchi", ai_placeholder: "Har qanday savol bering...",
+    ai_send: "Yuborish", ai_download: "Excelga yuklab olish",
+  },
+  ru: {
+    // Sidebar
+    nav_main: "Основное", nav_dashboard: "Панель", nav_orders: "Заказы",
+    nav_management: "Управление", nav_products: "Продукты", nav_categories: "Категории",
+    nav_notifications: "Уведомления", nav_ratings: "Рейтинги", nav_users: "Пользователи",
+    nav_staff: "СОТРУДНИКИ", nav_branches: "Филиалы", nav_employees: "Сотрудники",
+    nav_attendance: "Посещаемость", nav_reports: "Отчёт и зарплата",
+    nav_service: "СЕРВИС", nav_waiters: "Официанты", nav_chefs: "Повара",
+    btn_logout: "Выход",
+    // Dashboard
+    dash_title: "Панель управления", dash_sub: "Текущее состояние и статистика",
+    dash_today: "Сегодня", dash_yesterday: "Вчера", dash_week: "Неделя",
+    dash_month: "Месяц", dash_prevMonth: "Прошлый месяц", dash_show: "Показать",
+    dash_orders: "Заказы", dash_revenue: "Доход",
+    dash_online: "Онлайн / В ресторане", dash_avg: "Средний чек",
+    dash_rating: "Рейтинг", dash_users: "Пользователи",
+    dash_trend: "Дневной тренд", dash_type: "Тип заказа",
+    dash_top: "Популярные", dash_recent: "Последние заказы",
+    // Page headers
+    page_menu: "Управление продуктами", page_menu_sub: "Добавление, редактирование, удаление",
+    page_orders: "Заказы", page_orders_sub: "Все заказы",
+    page_categories: "Категории", page_employees: "Сотрудники",
+    page_attendance: "Посещаемость", page_branches: "Филиалы",
+    page_ratings: "Рейтинги", page_users: "Пользователи",
+    page_notifications: "Уведомления",
+    // Common
+    all: "Все", save: "Сохранить", cancel: "Отмена", delete: "Удалить",
+    edit: "Редактировать", add: "Добавить", search: "Поиск", loading: "Загрузка...",
+    no_data: "Нет данных", total: "Итого", name: "Название", price: "Цена",
+    status: "Статус", date: "Дата", actions: "Действия",
+    // AI
+    ai_title: "AI Помощник", ai_placeholder: "Задайте любой вопрос...",
+    ai_send: "Отправить", ai_download: "Скачать Excel",
+  }
+};
+
+function t(key) {
+  return (_i18n[_lang] && _i18n[_lang][key]) || (_i18n.uz[key]) || key;
+}
+
+function setLang(lang) {
+  _lang = lang;
+  localStorage.setItem('servix_lang', lang);
+
+  // Tugmalar stilini yangilash
+  var uzBtn = document.getElementById('langUz');
+  var ruBtn = document.getElementById('langRu');
+  if (uzBtn && ruBtn) {
+    uzBtn.style.background = lang === 'uz' ? 'rgba(6,182,212,0.15)' : 'transparent';
+    uzBtn.style.color = lang === 'uz' ? '#22d3ee' : '#64748b';
+    ruBtn.style.background = lang === 'ru' ? 'rgba(6,182,212,0.15)' : 'transparent';
+    ruBtn.style.color = lang === 'ru' ? '#22d3ee' : '#64748b';
+  }
+
+  // Sidebar va barcha data-i18n elementlarni yangilash
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    var key = el.getAttribute('data-i18n');
+    if (_i18n[_lang] && _i18n[_lang][key]) {
+      el.textContent = _i18n[_lang][key];
+    }
+  });
+
+  // AI chat
+  var aiInput = document.getElementById('aiInput');
+  if (aiInput) aiInput.placeholder = t('ai_placeholder');
+  var aiSendBtn = document.getElementById('aiSendBtn');
+  if (aiSendBtn) aiSendBtn.textContent = t('ai_send');
+
+  // Hozirgi sahifani qayta yuklash (content tilini yangilash uchun)
+  if (_currentPage) {
+    clearPageCache(_currentPage);
+    showPage(_currentPage);
+  }
+}
+
 // ===== AUTH =====
 async function doLogin() {
   var username = document.getElementById('loginUser').value.trim();
@@ -154,6 +267,9 @@ function _startApp() {
   app.style.display = '';
   document.getElementById('sidebarRestName').textContent = adminInfo.restaurantName || 'Restoran';
   document.getElementById('adminUsername').textContent   = '@' + (adminInfo.username || '');
+
+  // Tilni yuklash
+  setLang(_lang);
 
   // ===== MODULLAR — serverdan yangi holat olish =====
   apiFetch('/admin/me').then(function(d) {
@@ -458,22 +574,20 @@ var _dashTo = '';
 
 async function renderDashboard(main) {
   main.innerHTML = '<div class="page">' +
-    pageHeader('Dashboard', 'Bugungi holat va statistika') +
-    // FILTER BAR
+    pageHeader(t('dash_title'), t('dash_sub')) +
     '<div class="dash-filter-bar rounded-xl border p-4 mb-5 flex gap-2 items-center" style="background:#131c2e;border-color:rgba(6,182,212,0.12);overflow-x:auto">' +
-      '<span class="text-xs uppercase tracking-wider mr-2" style="color:#64748b">Davr:</span>' +
-      '<button class="dash-period-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition-all" data-period="today" style="border-color:rgba(6,182,212,0.12);color:#64748b">Bugun</button>' +
-      '<button class="dash-period-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition-all" data-period="yesterday" style="border-color:rgba(6,182,212,0.12);color:#64748b">Kecha</button>' +
-      '<button class="dash-period-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition-all" data-period="week" style="border-color:rgba(6,182,212,0.12);color:#64748b">Hafta</button>' +
-      '<button class="dash-period-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition-all active" data-period="month" style="border-color:rgba(6,182,212,0.12);color:#64748b">Oy</button>' +
-      '<button class="dash-period-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition-all" data-period="prevMonth" style="border-color:rgba(6,182,212,0.12);color:#64748b">O\'tgan oy</button>' +
+      '<span class="text-xs uppercase tracking-wider mr-2" style="color:#64748b">📅</span>' +
+      '<button class="dash-period-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition-all" data-period="today" style="border-color:rgba(6,182,212,0.12);color:#64748b">' + t('dash_today') + '</button>' +
+      '<button class="dash-period-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition-all" data-period="yesterday" style="border-color:rgba(6,182,212,0.12);color:#64748b">' + t('dash_yesterday') + '</button>' +
+      '<button class="dash-period-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition-all" data-period="week" style="border-color:rgba(6,182,212,0.12);color:#64748b">' + t('dash_week') + '</button>' +
+      '<button class="dash-period-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition-all active" data-period="month" style="border-color:rgba(6,182,212,0.12);color:#64748b">' + t('dash_month') + '</button>' +
+      '<button class="dash-period-btn px-3 py-1.5 rounded-lg border text-xs font-medium transition-all" data-period="prevMonth" style="border-color:rgba(6,182,212,0.12);color:#64748b">' + t('dash_prevMonth') + '</button>' +
       '<span class="mx-2" style="color:rgba(6,182,212,0.2)">|</span>' +
       '<input type="date" id="dashFrom" class="inp px-2 py-1 text-xs rounded-lg" style="width:130px;background:#1a2235;border:1px solid rgba(6,182,212,0.15);color:#e2e8f0"/>' +
       '<span class="text-xs" style="color:#64748b">—</span>' +
       '<input type="date" id="dashTo" class="inp px-2 py-1 text-xs rounded-lg" style="width:130px;background:#1a2235;border:1px solid rgba(6,182,212,0.15);color:#e2e8f0"/>' +
-      '<button id="dashCustomBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold text-white" style="background:linear-gradient(135deg,#8b5cf6,#06b6d4)">Ko\'rsatish</button>' +
+      '<button id="dashCustomBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold text-white" style="background:linear-gradient(135deg,#8b5cf6,#06b6d4)">' + t('dash_show') + '</button>' +
     '</div>' +
-    // CONTENT
     '<div id="dashContent">' + skelStats(5) +
       '<div class="grid gap-4 mb-5" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">' +
         '<div class="skel-card"><div class="skel h-4 w-40 mb-4"></div><div class="skel h-52 rounded-lg"></div></div>' +

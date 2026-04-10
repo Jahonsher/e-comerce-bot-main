@@ -185,26 +185,26 @@ tailwind.config = {
       </div>
       <div id="sidebarRestName" class="text-xs mt-2" style="color:#64748b">Admin Panel</div>
     </div>
-    <nav class="py-3 flex-1">
-      <div class="px-5 py-3 text-xs uppercase tracking-widest opacity-40" style="color:#64748b">Asosiy</div>
-      <div class="sidebar-item active" data-page="dashboard"><span>📊</span> Dashboard</div>
-      <div class="sidebar-item" data-page="orders"><span>📦</span> Buyurtmalar</div>
-      <div class="px-5 py-3 text-xs uppercase tracking-widest opacity-40" style="color:#64748b">Boshqaruv</div>
-      <div class="sidebar-item" data-page="products"><span>🍽</span> Menyu</div>
-      <div class="sidebar-item" data-page="categories"><span>🗂</span> Kategoriyalar</div>
-      <div class="sidebar-item" data-page="notifications"><span>🔔</span> Bildirishnomalar <span id="notifBadge" class="ml-auto text-[10px] font-bold rounded-full px-1.5 py-0.5" style="background:rgba(239,68,68,0.2);color:#ef4444;display:none">0</span></div>
-      <div class="sidebar-item" data-page="ratings"><span>⭐</span> Reytinglar</div>
-      <div class="sidebar-item" data-page="users"><span>👥</span> Foydalanuvchilar</div>
+    <nav class="py-3 flex-1" id="sidebarNav">
+      <div class="px-5 py-3 text-xs uppercase tracking-widest opacity-40" style="color:#64748b" data-i18n="nav_main">Asosiy</div>
+      <div class="sidebar-item active" data-page="dashboard"><span>📊</span> <span data-i18n="nav_dashboard">Dashboard</span></div>
+      <div class="sidebar-item" data-page="orders"><span>📦</span> <span data-i18n="nav_orders">Buyurtmalar</span></div>
+      <div class="px-5 py-3 text-xs uppercase tracking-widest opacity-40" style="color:#64748b" data-i18n="nav_management">Boshqaruv</div>
+      <div class="sidebar-item" data-page="products"><span>📋</span> <span data-i18n="nav_products">Mahsulotlar</span></div>
+      <div class="sidebar-item" data-page="categories"><span>🗂</span> <span data-i18n="nav_categories">Kategoriyalar</span></div>
+      <div class="sidebar-item" data-page="notifications"><span>🔔</span> <span data-i18n="nav_notifications">Bildirishnomalar</span> <span id="notifBadge" class="ml-auto text-[10px] font-bold rounded-full px-1.5 py-0.5" style="background:rgba(239,68,68,0.2);color:#ef4444;display:none">0</span></div>
+      <div class="sidebar-item" data-page="ratings"><span>⭐</span> <span data-i18n="nav_ratings">Reytinglar</span></div>
+      <div class="sidebar-item" data-page="users"><span>👥</span> <span data-i18n="nav_users">Foydalanuvchilar</span></div>
       <div style="height:1px;background:rgba(6,182,212,0.08);margin:8px 0"></div>
-      <div style="font-size:9px;font-weight:700;color:#334155;letter-spacing:2px;padding:4px 20px">ISHCHILAR</div>
-      <div class="sidebar-item" data-page="branches"><span>🏢</span> Filiallar</div>
-      <div class="sidebar-item" data-page="employees"><span>👷</span> Ishchilar</div>
-      <div class="sidebar-item" data-page="attendance"><span>📋</span> Davomat</div>
-      <div class="sidebar-item" data-page="empReport"><span>💰</span> Hisobot & Maosh</div>
+      <div style="font-size:9px;font-weight:700;color:#334155;letter-spacing:2px;padding:4px 20px" data-i18n="nav_staff">ISHCHILAR</div>
+      <div class="sidebar-item" data-page="branches"><span>🏢</span> <span data-i18n="nav_branches">Filiallar</span></div>
+      <div class="sidebar-item" data-page="employees"><span>👷</span> <span data-i18n="nav_employees">Ishchilar</span></div>
+      <div class="sidebar-item" data-page="attendance"><span>📋</span> <span data-i18n="nav_attendance">Davomat</span></div>
+      <div class="sidebar-item" data-page="empReport"><span>💰</span> <span data-i18n="nav_reports">Hisobot & Maosh</span></div>
       <div style="height:1px;background:rgba(6,182,212,0.08);margin:8px 0"></div>
-      <div style="font-size:9px;font-weight:700;color:#334155;letter-spacing:2px;padding:4px 20px">XIZMAT</div>
-      <div class="sidebar-item" data-page="waiters"><span>🧑‍🍳</span> Ofitsiantlar</div>
-      <div class="sidebar-item" data-page="chefs"><span>🍳</span> Oshpazlar</div>
+      <div style="font-size:9px;font-weight:700;color:#334155;letter-spacing:2px;padding:4px 20px" data-i18n="nav_service">XIZMAT</div>
+      <div class="sidebar-item" data-page="waiters"><span>🧑‍🍳</span> <span data-i18n="nav_waiters">Ofitsiantlar</span></div>
+      <div class="sidebar-item" data-page="chefs"><span>🍳</span> <span data-i18n="nav_chefs">Oshpazlar</span></div>
     </nav>
     <!-- AI CHAT FLOATING BUTTON -->
     <div class="px-4 pb-2">
@@ -213,8 +213,13 @@ tailwind.config = {
       </button>
     </div>
     <div class="p-4 border-t" style="border-color:rgba(6,182,212,0.12)">
+      <!-- Til tanlash -->
+      <div style="display:flex;gap:4px;margin-bottom:8px">
+        <button id="langUz" onclick="setLang('uz')" style="flex:1;padding:5px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;border:1px solid rgba(6,182,212,0.15);background:rgba(6,182,212,0.15);color:#22d3ee">🇺🇿 O'zbek</button>
+        <button id="langRu" onclick="setLang('ru')" style="flex:1;padding:5px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;border:1px solid rgba(6,182,212,0.15);background:transparent;color:#64748b">🇷🇺 Русский</button>
+      </div>
       <div id="adminUsername" class="text-xs mb-2" style="color:#64748b"></div>
-      <button id="logoutBtn" class="w-full py-2 rounded-lg text-xs font-semibold border transition-all hover:bg-red-900/30" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.2);color:#ef4444">Chiqish</button>
+      <button id="logoutBtn" class="w-full py-2 rounded-lg text-xs font-semibold border transition-all hover:bg-red-900/30" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.2);color:#ef4444" data-i18n="btn_logout">Chiqish</button>
     </div>
   </aside>
   <main id="mainContent" class="main-wrap ml-56 p-7 min-h-screen" style="overflow:hidden;max-width:100%"></main>

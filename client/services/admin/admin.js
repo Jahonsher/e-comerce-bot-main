@@ -11,118 +11,8 @@ var typeChart   = null;
 var currentOrderFilter = 'all';
 var dragSrc = null;
 
-// ===== TIL TIZIMI (i18n) =====
-var _lang = localStorage.getItem('servix_lang') || 'uz';
-
-var _i18n = {
-  uz: {
-    // Sidebar
-    nav_main: "Asosiy", nav_dashboard: "Dashboard", nav_orders: "Buyurtmalar",
-    nav_management: "Boshqaruv", nav_products: "Mahsulotlar", nav_categories: "Kategoriyalar",
-    nav_notifications: "Bildirishnomalar", nav_ratings: "Reytinglar", nav_users: "Foydalanuvchilar",
-    nav_staff: "ISHCHILAR", nav_branches: "Filiallar", nav_employees: "Ishchilar",
-    nav_attendance: "Davomat", nav_reports: "Hisobot & Maosh",
-    nav_service: "XIZMAT", nav_waiters: "Ofitsiantlar", nav_chefs: "Oshpazlar",
-    btn_logout: "Chiqish",
-    // Dashboard
-    dash_title: "Dashboard", dash_sub: "Bugungi holat va statistika",
-    dash_today: "Bugun", dash_yesterday: "Kecha", dash_week: "Hafta",
-    dash_month: "Oy", dash_prevMonth: "O'tgan oy", dash_show: "Ko'rsatish",
-    dash_orders: "Buyurtmalar", dash_revenue: "Daromad",
-    dash_online: "Online / Restoranda", dash_avg: "O'rtacha chek",
-    dash_rating: "Reyting", dash_users: "Foydalanuvchilar",
-    dash_trend: "Kunlik trend", dash_type: "Buyurtma turi",
-    dash_top: "Ko'p sotilgan", dash_recent: "Oxirgi buyurtmalar",
-    // Page headers
-    page_menu: "Mahsulotlar boshqaruvi", page_menu_sub: "Mahsulotlarni qo'shish, tahrirlash, o'chirish",
-    page_orders: "Buyurtmalar", page_orders_sub: "Barcha buyurtmalar",
-    page_categories: "Kategoriyalar", page_employees: "Ishchilar",
-    page_attendance: "Davomat", page_branches: "Filiallar",
-    page_ratings: "Reytinglar", page_users: "Foydalanuvchilar",
-    page_notifications: "Bildirishnomalar",
-    // Common
-    all: "Barchasi", save: "Saqlash", cancel: "Bekor", delete: "O'chirish",
-    edit: "Tahrirlash", add: "Qo'shish", search: "Qidirish", loading: "Yuklanmoqda...",
-    no_data: "Ma'lumot yo'q", total: "Jami", name: "Nomi", price: "Narxi",
-    status: "Holat", date: "Sana", actions: "Amallar",
-    // AI
-    ai_title: "AI Yordamchi", ai_placeholder: "Har qanday savol bering...",
-    ai_send: "Yuborish", ai_download: "Excelga yuklab olish",
-  },
-  ru: {
-    // Sidebar
-    nav_main: "Основное", nav_dashboard: "Панель", nav_orders: "Заказы",
-    nav_management: "Управление", nav_products: "Продукты", nav_categories: "Категории",
-    nav_notifications: "Уведомления", nav_ratings: "Рейтинги", nav_users: "Пользователи",
-    nav_staff: "СОТРУДНИКИ", nav_branches: "Филиалы", nav_employees: "Сотрудники",
-    nav_attendance: "Посещаемость", nav_reports: "Отчёт и зарплата",
-    nav_service: "СЕРВИС", nav_waiters: "Официанты", nav_chefs: "Повара",
-    btn_logout: "Выход",
-    // Dashboard
-    dash_title: "Панель управления", dash_sub: "Текущее состояние и статистика",
-    dash_today: "Сегодня", dash_yesterday: "Вчера", dash_week: "Неделя",
-    dash_month: "Месяц", dash_prevMonth: "Прошлый месяц", dash_show: "Показать",
-    dash_orders: "Заказы", dash_revenue: "Доход",
-    dash_online: "Онлайн / В ресторане", dash_avg: "Средний чек",
-    dash_rating: "Рейтинг", dash_users: "Пользователи",
-    dash_trend: "Дневной тренд", dash_type: "Тип заказа",
-    dash_top: "Популярные", dash_recent: "Последние заказы",
-    // Page headers
-    page_menu: "Управление продуктами", page_menu_sub: "Добавление, редактирование, удаление",
-    page_orders: "Заказы", page_orders_sub: "Все заказы",
-    page_categories: "Категории", page_employees: "Сотрудники",
-    page_attendance: "Посещаемость", page_branches: "Филиалы",
-    page_ratings: "Рейтинги", page_users: "Пользователи",
-    page_notifications: "Уведомления",
-    // Common
-    all: "Все", save: "Сохранить", cancel: "Отмена", delete: "Удалить",
-    edit: "Редактировать", add: "Добавить", search: "Поиск", loading: "Загрузка...",
-    no_data: "Нет данных", total: "Итого", name: "Название", price: "Цена",
-    status: "Статус", date: "Дата", actions: "Действия",
-    // AI
-    ai_title: "AI Помощник", ai_placeholder: "Задайте любой вопрос...",
-    ai_send: "Отправить", ai_download: "Скачать Excel",
-  }
-};
-
-function t(key) {
-  return (_i18n[_lang] && _i18n[_lang][key]) || (_i18n.uz[key]) || key;
-}
-
-function setLang(lang) {
-  _lang = lang;
-  localStorage.setItem('servix_lang', lang);
-
-  // Tugmalar stilini yangilash
-  var uzBtn = document.getElementById('langUz');
-  var ruBtn = document.getElementById('langRu');
-  if (uzBtn && ruBtn) {
-    uzBtn.style.background = lang === 'uz' ? 'rgba(6,182,212,0.15)' : 'transparent';
-    uzBtn.style.color = lang === 'uz' ? '#22d3ee' : '#64748b';
-    ruBtn.style.background = lang === 'ru' ? 'rgba(6,182,212,0.15)' : 'transparent';
-    ruBtn.style.color = lang === 'ru' ? '#22d3ee' : '#64748b';
-  }
-
-  // Sidebar va barcha data-i18n elementlarni yangilash
-  document.querySelectorAll('[data-i18n]').forEach(function(el) {
-    var key = el.getAttribute('data-i18n');
-    if (_i18n[_lang] && _i18n[_lang][key]) {
-      el.textContent = _i18n[_lang][key];
-    }
-  });
-
-  // AI chat
-  var aiInput = document.getElementById('aiInput');
-  if (aiInput) aiInput.placeholder = t('ai_placeholder');
-  var aiSendBtn = document.getElementById('aiSendBtn');
-  if (aiSendBtn) aiSendBtn.textContent = t('ai_send');
-
-  // Hozirgi sahifani qayta yuklash (content tilini yangilash uchun)
-  if (_currentPage) {
-    clearPageCache(_currentPage);
-    showPage(_currentPage);
-  }
-}
+// ===== TIL TIZIMI — lang.js dan yuklangan =====
+// LANGS, t(), setLang(), getLang() — /static/lang.js da aniqlangan
 
 // ===== AUTH =====
 async function doLogin() {
@@ -641,19 +531,19 @@ async function loadDashboardData() {
 
   container.innerHTML =
     '<div class="grid gap-4 mb-6" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">' +
-      statCard('📦', 'Buyurtmalar', s.orders || 0, periodLabel) +
-      statCard('💰', 'Daromad', Number(s.revenue || 0).toLocaleString() + " so'm", periodLabel) +
-      statCard('🌐', 'Online / Restoranda', (s.online || 0) + ' / ' + (s.dineIn || 0), periodLabel) +
-      statCard('🧾', 'O\'rtacha chek', Number(s.avgCheck || 0).toLocaleString() + " so'm", periodLabel) +
-      statCard('⭐', 'Reyting', (d.rating && d.rating.avg) || '—', (d.rating ? d.rating.count : 0) + ' ta baho') +
-      statCard('👥', 'Foydalanuvchilar', d.totalUsers || 0, 'Jami') +
+      statCard('📦', t('dash_orders'), s.orders || 0, periodLabel) +
+      statCard('💰', t('dash_revenue'), Number(s.revenue || 0).toLocaleString() + " " + t('som'), periodLabel) +
+      statCard('🌐', t('dash_online'), (s.online || 0) + ' / ' + (s.dineIn || 0), periodLabel) +
+      statCard('🧾', t('dash_avg'), Number(s.avgCheck || 0).toLocaleString() + " " + t('som'), periodLabel) +
+      statCard('⭐', t('dash_rating'), (d.rating && d.rating.avg) || '—', (d.rating ? d.rating.count : 0) + ' ' + t('ta')) +
+      statCard('👥', t('dash_users'), d.totalUsers || 0, t('total')) +
     '</div>' +
     '<div class="grid gap-4 mb-5" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">' +
-      '<div class="rounded-xl border p-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)"><div class="text-sm font-semibold mb-4">📈 Kunlik trend</div><div style="position:relative;height:220px"><canvas id="weeklyChart"></canvas></div></div>' +
-      '<div class="rounded-xl border p-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)"><div class="text-sm font-semibold mb-4">🔵 Buyurtma turi</div><div style="position:relative;height:220px"><canvas id="typeChart"></canvas></div></div>' +
+      '<div class="rounded-xl border p-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)"><div class="text-sm font-semibold mb-4">📈 ' + t('dash_trend') + '</div><div style="position:relative;height:220px"><canvas id="weeklyChart"></canvas></div></div>' +
+      '<div class="rounded-xl border p-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)"><div class="text-sm font-semibold mb-4">🔵 ' + t('dash_type') + '</div><div style="position:relative;height:220px"><canvas id="typeChart"></canvas></div></div>' +
     '</div>' +
-    '<div class="rounded-xl border p-5 mb-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)"><div class="text-sm font-semibold mb-4">🏆 Ko\'p sotilgan (TOP 10)</div><div id="topChart"></div></div>' +
-    '<div class="rounded-xl border overflow-hidden mb-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)"><div class="px-5 py-4 border-b" style="border-color:rgba(6,182,212,0.12)"><span class="text-sm font-semibold">Oxirgi buyurtmalar</span></div><div id="recentOrders" class="overflow-x-auto"></div></div>';
+    '<div class="rounded-xl border p-5 mb-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)"><div class="text-sm font-semibold mb-4">🏆 ' + t('dash_top') + '</div><div id="topChart"></div></div>' +
+    '<div class="rounded-xl border overflow-hidden mb-5" style="background:#131c2e;border-color:rgba(6,182,212,0.12)"><div class="px-5 py-4 border-b" style="border-color:rgba(6,182,212,0.12)"><span class="text-sm font-semibold">' + t('dash_recent') + '</span></div><div id="recentOrders" class="overflow-x:auto"></div></div>';
 
   // Grafiklar
   if (weeklyChart) weeklyChart.destroy();
@@ -703,7 +593,7 @@ async function loadDashboardData() {
         '<td style="' + tdStyle + '">' + statusBadge(o.status) + '</td>' +
         '<td style="' + tdStyle + ';color:#64748b;font-size:12px">' + fmtDate(o.createdAt) + '</td></tr>';
     });
-    recentEl.innerHTML = '<table class="w-full border-collapse"><thead><tr><th style="' + thStyle + '">Mijoz</th><th style="' + thStyle + '">Mahsulotlar</th><th style="' + thStyle + '">Jami</th><th style="' + thStyle + '">Status</th><th style="' + thStyle + '">Vaqt</th></tr></thead><tbody>' + rows + '</tbody></table>';
+    recentEl.innerHTML = '<table class="w-full border-collapse"><thead><tr><th style="' + thStyle + '">' + t('ord_client') + '</th><th style="' + thStyle + '">' + t('ord_products') + '</th><th style="' + thStyle + '">' + t('ord_total') + '</th><th style="' + thStyle + '">' + t('ord_status') + '</th><th style="' + thStyle + '">' + t('ord_time') + '</th></tr></thead><tbody>' + rows + '</tbody></table>';
   }
 
   setPageCache('dashboard');
@@ -715,7 +605,7 @@ async function renderOrders(main, filter) {
   currentOrderFilter = filter;
 
   main.innerHTML = '<div class="page">' +
-    pageHeader('Buyurtmalar', 'Barcha buyurtmalar') +
+    pageHeader(t('page_orders'), t('page_orders_sub')) +
     '<div class="rounded-xl border overflow-hidden" style="background:#131c2e;border-color:rgba(6,182,212,0.12)">' +
       '<div class="flex justify-between items-center flex-wrap gap-2 px-5 py-4 border-b" style="border-color:rgba(6,182,212,0.12)">' +
         '<span class="text-sm font-semibold">Royxat</span>' +
@@ -783,7 +673,7 @@ async function renderProducts(main) {
   var skelGrid = '';
   for (var s = 0; s < 6; s++) skelGrid += '<div class="skel-card"><div class="skel h-36 rounded-lg mb-3"></div><div class="skel h-4 w-3/4 mb-2"></div><div class="skel h-3 w-1/2 mb-2"></div><div class="skel h-8 rounded-lg mt-3"></div></div>';
   main.innerHTML = '<div class="page">' +
-    pageHeader('Menyu boshqaruvi', "Taomlarni qo'shish, tahrirlash, o'chirish") +
+    pageHeader(t('page_menu'), t('page_menu_sub')) +
     '<div class="flex justify-end mb-4"><button id="addProductBtn" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white" style="background:var(--sx-cyan, #06b6d4)">+ Taom qo\'shish</button></div>' +
     '<div id="productsGrid" class="grid gap-4" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">' + skelGrid + '</div>' +
   '</div>';

@@ -9,6 +9,9 @@ const path = require("path");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { Server } = require("socket.io");
+const helmet = require("helmet");
+const mongoSanitize = require("express-mongo-sanitize");
+const hpp = require("hpp");
 
 // Models
 const Admin = require("./models/Admin");
@@ -36,10 +39,90 @@ const io = new Server(httpServer, {
 
 app.set("io", io);
 
-// Middleware
-app.use(cors());
+// ===== SECURITY MIDDLEWARE =====
+
+// 1. Helmet — HTTP security headerlar (XSS, clickjacking, sniffing himoya)
+app.use(helmet({
+  contentSecurityPolicy: false, // CSP — Telegram WebApp bilan conflict bo'lmasligi uchun
+  crossOriginEmbedderPolicy: false,
+}));
+
+// 2. CORS — ruxsat berilgan domenlar
+const allowedOrigins = [
+  "https://servix-admin.vercel.app",
+  "https://e-comerce-bot-main-production.up.railway.app",
+  "http://localhost:3000",
+  "http://localhost:5000",
+  "http://localhost:5173",
+];
+app.use(cors({
+  origin: function(origin, cb) {
+    // Telegram WebApp va server-side requestlar uchun origin bo'lmasligi mumkin
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) return cb(null, true);
+    // Telegram WebApp domenlarini ham qo'shish
+    if (origin && origin.indexOf("telegram") !== -1) return cb(null, true);
+    if (origin && origin.indexOf("vercel") !== -1) return cb(null, true);
+    cb(null, true); // Hozircha barcha originlarni qabul qilamiz (production da cheklash kerak)
+  },
+  credentials: true,
+}));
+
+// 3. Body parser
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
+
+// 4. NoSQL Injection himoyasi — $gt, $ne, $or kabi operatorlarni bloklash
+app.use(mongoSanitize({
+  replaceWith: "_",
+  onSanitize: ({ req, key }) => {
+    logger.warn(`[SECURITY] NoSQL injection bloklandi: ${key} | IP: ${req.ip}`);
+  },
+}));
+
+// 5. HPP — HTTP Parameter Pollution himoyasi
+app.use(hpp());
+
+// 6. XSS himoyasi — custom middleware (xss-clean deprecated, o'zimiz yozamiz)
+app.use((req, res, next) => {
+  // Request body dagi xavfli HTML/JS ni tozalash
+  if (req.body && typeof req.body === 'object') {
+    cleanXSS(req.body);
+  }
+  next();
+});
+
+function cleanXSS(obj) {
+  for (var key in obj) {
+    if (typeof obj[key] === 'string') {
+      // <script>, onclick=, javascript: kabi xavfli matnlarni tozalash
+      obj[key] = obj[key]
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+        .replace(/javascript\s*:/gi, '');
+    } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+      cleanXSS(obj[key]);
+    }
+  }
+}
+
+// 7. Request size limiti — DDoS himoyasi
+app.use((req, res, next) => {
+  // 20MB dan katta requestlarni bloklash
+  if (req.headers['content-length'] && parseInt(req.headers['content-length']) > 20 * 1024 * 1024) {
+    logger.warn(`[SECURITY] Katta request bloklandi: ${req.headers['content-length']} bytes | IP: ${req.ip}`);
+    return res.status(413).json({ error: "Request hajmi juda katta" });
+  }
+  next();
+});
+
+// 8. Suspicious path blocker — path traversal himoyasi
+app.use((req, res, next) => {
+  if (req.path.indexOf('..') !== -1 || req.path.indexOf('%2e%2e') !== -1) {
+    logger.warn(`[SECURITY] Path traversal bloklandi: ${req.path} | IP: ${req.ip}`);
+    return res.status(400).json({ error: "Noto'g'ri so'rov" });
+  }
+  next();
+});
 
 // Static files (services strukturasi)
 app.use("/static", express.static(path.join(__dirname, "..", "client", "shared")));

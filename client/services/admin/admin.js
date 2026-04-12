@@ -747,8 +747,8 @@ async function loadProductsGrid() {
       '<div class="p-4">' +
         '<div class="font-semibold text-base">' + p.name + '</div>' +
         (p.name_ru ? '<div class="text-xs mt-0.5" style="color:#64748b">'+p.name_ru+'</div>' : '') +
-        '<div class="font-medium mt-1" style="color:#22d3ee">' + Number(p.price).toLocaleString() + " + t('som') + '</div>" +
-        '<div class="text-xs uppercase tracking-wide mt-1 mb-3" style="color:#64748b">' + p.category + (p.active===false?' · '+t('prod_hidden'):''") + '</div>' +
+        '<div class="font-medium mt-1" style="color:#22d3ee">' + Number(p.price).toLocaleString() + ' ' + t('som') + '</div>' +
+        '<div class="text-xs uppercase tracking-wide mt-1 mb-3" style="color:#64748b">' + p.category + (p.active===false ? ' · ' + t('prod_hidden') : '') + '</div>' +
         '<div class="flex gap-2">' +
           '<button class="edit-btn flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all" style="background:rgba(6,182,212,0.12);border-color:rgba(6,182,212,0.3);color:#22d3ee">✏️ ' + t('edit') + '</button>' +
           '<button class="del-btn py-1.5 px-2.5 rounded-lg text-xs border transition-all" style="background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.2);color:#ef4444">🗑</button>' +

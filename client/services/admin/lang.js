@@ -157,6 +157,19 @@ var LANGS = {
     rep_error: "Hisobot yuklanmadi",
     rep_module_disabled: "Hisobot moduli yoqilmagan",
 
+    // Login
+    login_btn: "Kirish", checking: "Tekshirilmoqda...",
+
+    // Vaqt
+    time_now: "Hozir",
+
+    // Ombor
+    inv_confirm_remove: "Mahsulotni ombordan olib tashlash?",
+
+    // AI qo'shimcha
+    ai_minimize: "Kichraytirish", ai_expand: "Kengaytirish",
+    ai_report_title: "ServiX AI Hisobot", ai_business: "Biznes", ai_question: "Savol",
+
     // AI
     ai_title: "AI Yordamchi", ai_placeholder: "Har qanday savol bering...",
     ai_send: "Yuborish", ai_download: "Excelga yuklab olish", ai_clear: "Tozalash",
@@ -310,6 +323,19 @@ var LANGS = {
     // Report доп
     rep_error: "Ошибка загрузки отчёта",
     rep_module_disabled: "Модуль отчётов не активирован",
+
+    // Login
+    login_btn: "Войти", checking: "Проверка...",
+
+    // Время
+    time_now: "Сейчас",
+
+    // Склад
+    inv_confirm_remove: "Удалить продукт со склада?",
+
+    // AI доп
+    ai_minimize: "Уменьшить", ai_expand: "Развернуть",
+    ai_report_title: "Отчёт ServiX AI", ai_business: "Бизнес", ai_question: "Вопрос",
 
     // AI
     ai_title: "AI Помощник", ai_placeholder: "Задайте любой вопрос...",

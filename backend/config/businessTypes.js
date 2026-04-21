@@ -141,33 +141,405 @@ const BUSINESS_TYPES = {
   },
 
   // ========================================
-  // KELAJAKDAGI BIZNES TURLARI (SHABLON)
+  // TURIZM
   // ========================================
-  //
-  // salon: {
-  //   label: { uz: "Salon", ru: "Салон" },
-  //   icon: "💇",
-  //   description: { uz: "Go'zallik saloni, barbershop", ru: "Салон красоты, барбершоп" },
-  //   modules: {
-  //     services: { label: { uz: "Xizmatlar", ru: "Услуги" }, icon: "✂️", default: true, core: true },
-  //     booking: { label: { uz: "Bron", ru: "Бронирование" }, icon: "📅", default: true, core: true },
-  //     masters: { label: { uz: "Masterlar", ru: "Мастера" }, icon: "👨‍🎨", default: true, core: true },
-  //     clients: { label: { uz: "Mijozlar", ru: "Клиенты" }, icon: "👥", default: true, core: false },
-  //     employees: { ... }, attendance: { ... }, branches: { ... }, notifications: { ... },
-  //   },
-  // },
-  //
-  // shop: {
-  //   label: { uz: "Do'kon", ru: "Магазин" },
-  //   icon: "🏪",
-  //   modules: { ... }
-  // },
-  //
-  // clinic: {
-  //   label: { uz: "Klinika", ru: "Клиника" },
-  //   icon: "🏥",
-  //   modules: { ... }
-  // },
+  tourism: {
+    label: { uz: "Turizm", ru: "Туризм" },
+    icon: "✈️",
+    description: {
+      uz: "Tur agentlik, mehmonxona, sayohat xizmatlari",
+      ru: "Турагентство, гостиница, туристические услуги",
+    },
+    modules: {
+      // CORE
+      menu: {
+        label: { uz: "Turlar / Xizmatlar", ru: "Туры / Услуги" },
+        icon: "🗺️",
+        default: true,
+        core: true,
+        description: { uz: "Tur paketlar va xizmatlar boshqaruvi", ru: "Управление турпакетами и услугами" },
+      },
+      categories: {
+        label: { uz: "Kategoriyalar", ru: "Категории" },
+        icon: "📂",
+        default: true,
+        core: true,
+        description: { uz: "Tur kategoriyalari (davlatlar, shaharlar)", ru: "Категории туров (страны, города)" },
+      },
+      orders: {
+        label: { uz: "Bronlar", ru: "Бронирования" },
+        icon: "📋",
+        default: true,
+        core: true,
+        description: { uz: "Mijozlar bronlarini boshqarish", ru: "Управление бронированиями клиентов" },
+      },
+      // STANDARD
+      users: {
+        label: { uz: "Mijozlar", ru: "Клиенты" },
+        icon: "👥",
+        default: true,
+        core: false,
+        description: { uz: "Mijozlar bazasi", ru: "База клиентов" },
+      },
+      ratings: {
+        label: { uz: "Sharhlar", ru: "Отзывы" },
+        icon: "⭐",
+        default: true,
+        core: false,
+        description: { uz: "Mijozlar sharhlari va baholari", ru: "Отзывы и оценки клиентов" },
+      },
+      employees: {
+        label: { uz: "Xodimlar", ru: "Сотрудники" },
+        icon: "👨‍💼",
+        default: true,
+        core: false,
+        description: { uz: "Menejerlar va gidlar", ru: "Менеджеры и гиды" },
+      },
+      attendance: {
+        label: { uz: "Davomat", ru: "Посещаемость" },
+        icon: "📅",
+        default: true,
+        core: false,
+        description: { uz: "Xodimlar davomati", ru: "Посещаемость сотрудников" },
+      },
+      branches: {
+        label: { uz: "Filiallar", ru: "Филиалы" },
+        icon: "🏢",
+        default: true,
+        core: false,
+        description: { uz: "Filiallar va ofislar", ru: "Филиалы и офисы" },
+      },
+      salary: {
+        label: { uz: "Hisobot & Maosh", ru: "Отчёт и зарплата" },
+        icon: "💰",
+        default: true,
+        core: false,
+        description: { uz: "Moliyaviy hisobotlar", ru: "Финансовые отчёты" },
+      },
+      notifications: {
+        label: { uz: "Bildirishnomalar", ru: "Уведомления" },
+        icon: "🔔",
+        default: true,
+        core: false,
+        description: { uz: "Tizim bildirishnomalari", ru: "Системные уведомления" },
+      },
+      telegramBot: {
+        label: { uz: "Telegram Bot", ru: "Телеграм Бот" },
+        icon: "🤖",
+        default: true,
+        core: false,
+        description: { uz: "Telegram orqali bron va aloqa", ru: "Бронирование и связь через Telegram" },
+      },
+      aiAgent: {
+        label: { uz: "AI Yordamchi", ru: "AI Помощник" },
+        icon: "🤖",
+        default: false,
+        core: false,
+        description: { uz: "AI tahlil va maslahat", ru: "AI анализ и рекомендации" },
+      },
+    },
+  },
+
+  // ========================================
+  // SALON
+  // ========================================
+  salon: {
+    label: { uz: "Salon", ru: "Салон" },
+    icon: "💇",
+    description: {
+      uz: "Go'zallik saloni, barbershop, SPA",
+      ru: "Салон красоты, барбершоп, SPA",
+    },
+    modules: {
+      menu: {
+        label: { uz: "Xizmatlar", ru: "Услуги" },
+        icon: "✂️",
+        default: true,
+        core: true,
+        description: { uz: "Xizmatlar ro'yxati va narxlar", ru: "Список услуг и цены" },
+      },
+      categories: {
+        label: { uz: "Kategoriyalar", ru: "Категории" },
+        icon: "📂",
+        default: true,
+        core: true,
+        description: { uz: "Xizmat kategoriyalari", ru: "Категории услуг" },
+      },
+      orders: {
+        label: { uz: "Buyurtmalar", ru: "Заказы" },
+        icon: "📋",
+        default: true,
+        core: true,
+        description: { uz: "Bron va buyurtmalar", ru: "Бронирования и заказы" },
+      },
+      users: {
+        label: { uz: "Mijozlar", ru: "Клиенты" },
+        icon: "👥",
+        default: true,
+        core: false,
+        description: { uz: "Mijozlar bazasi", ru: "База клиентов" },
+      },
+      ratings: {
+        label: { uz: "Baholar", ru: "Оценки" },
+        icon: "⭐",
+        default: true,
+        core: false,
+        description: { uz: "Mijoz baholari", ru: "Оценки клиентов" },
+      },
+      employees: {
+        label: { uz: "Masterlar", ru: "Мастера" },
+        icon: "👨‍🎨",
+        default: true,
+        core: false,
+        description: { uz: "Masterlar boshqaruvi", ru: "Управление мастерами" },
+      },
+      attendance: {
+        label: { uz: "Davomat", ru: "Посещаемость" },
+        icon: "📅",
+        default: true,
+        core: false,
+        description: { uz: "Masterlar davomati", ru: "Посещаемость мастеров" },
+      },
+      branches: {
+        label: { uz: "Filiallar", ru: "Филиалы" },
+        icon: "🏢",
+        default: true,
+        core: false,
+        description: { uz: "Salon filiallari", ru: "Филиалы салона" },
+      },
+      salary: {
+        label: { uz: "Hisobot & Maosh", ru: "Отчёт и зарплата" },
+        icon: "💰",
+        default: true,
+        core: false,
+        description: { uz: "Moliyaviy hisobotlar", ru: "Финансовые отчёты" },
+      },
+      notifications: {
+        label: { uz: "Bildirishnomalar", ru: "Уведомления" },
+        icon: "🔔",
+        default: true,
+        core: false,
+        description: { uz: "Tizim bildirishnomalari", ru: "Системные уведомления" },
+      },
+      telegramBot: {
+        label: { uz: "Telegram Bot", ru: "Телеграм Бот" },
+        icon: "🤖",
+        default: true,
+        core: false,
+        description: { uz: "Telegram orqali bron", ru: "Бронирование через Telegram" },
+      },
+      aiAgent: {
+        label: { uz: "AI Yordamchi", ru: "AI Помощник" },
+        icon: "🤖",
+        default: false,
+        core: false,
+        description: { uz: "AI tahlil va maslahat", ru: "AI анализ и рекомендации" },
+      },
+    },
+  },
+
+  // ========================================
+  // DO'KON
+  // ========================================
+  shop: {
+    label: { uz: "Do'kon", ru: "Магазин" },
+    icon: "🏪",
+    description: {
+      uz: "Chakana do'kon, supermarket, onlayn do'kon",
+      ru: "Розничный магазин, супермаркет, онлайн-магазин",
+    },
+    modules: {
+      menu: {
+        label: { uz: "Mahsulotlar", ru: "Продукты" },
+        icon: "📦",
+        default: true,
+        core: true,
+        description: { uz: "Mahsulotlar katalogi", ru: "Каталог продуктов" },
+      },
+      categories: {
+        label: { uz: "Kategoriyalar", ru: "Категории" },
+        icon: "📂",
+        default: true,
+        core: true,
+        description: { uz: "Mahsulot kategoriyalari", ru: "Категории продуктов" },
+      },
+      orders: {
+        label: { uz: "Buyurtmalar", ru: "Заказы" },
+        icon: "🛒",
+        default: true,
+        core: true,
+        description: { uz: "Buyurtmalar boshqaruvi", ru: "Управление заказами" },
+      },
+      users: {
+        label: { uz: "Mijozlar", ru: "Клиенты" },
+        icon: "👥",
+        default: true,
+        core: false,
+        description: { uz: "Mijozlar bazasi", ru: "База клиентов" },
+      },
+      ratings: {
+        label: { uz: "Baholar", ru: "Оценки" },
+        icon: "⭐",
+        default: true,
+        core: false,
+        description: { uz: "Mahsulot baholari", ru: "Оценки продуктов" },
+      },
+      employees: {
+        label: { uz: "Xodimlar", ru: "Сотрудники" },
+        icon: "👨‍💼",
+        default: true,
+        core: false,
+        description: { uz: "Sotuvchilar va xodimlar", ru: "Продавцы и сотрудники" },
+      },
+      attendance: {
+        label: { uz: "Davomat", ru: "Посещаемость" },
+        icon: "📅",
+        default: true,
+        core: false,
+        description: { uz: "Xodimlar davomati", ru: "Посещаемость сотрудников" },
+      },
+      inventory: {
+        label: { uz: "Ombor", ru: "Склад" },
+        icon: "📦",
+        default: true,
+        core: false,
+        description: { uz: "Ombor nazorati", ru: "Управление складом" },
+      },
+      branches: {
+        label: { uz: "Filiallar", ru: "Филиалы" },
+        icon: "🏢",
+        default: true,
+        core: false,
+        description: { uz: "Do'kon filiallari", ru: "Филиалы магазина" },
+      },
+      salary: {
+        label: { uz: "Hisobot & Maosh", ru: "Отчёт и зарплата" },
+        icon: "💰",
+        default: true,
+        core: false,
+        description: { uz: "Moliyaviy hisobotlar", ru: "Финансовые отчёты" },
+      },
+      notifications: {
+        label: { uz: "Bildirishnomalar", ru: "Уведомления" },
+        icon: "🔔",
+        default: true,
+        core: false,
+        description: { uz: "Tizim bildirishnomalari", ru: "Системные уведомления" },
+      },
+      telegramBot: {
+        label: { uz: "Telegram Bot", ru: "Телеграм Бот" },
+        icon: "🤖",
+        default: true,
+        core: false,
+        description: { uz: "Telegram orqali buyurtma", ru: "Заказы через Telegram" },
+      },
+      aiAgent: {
+        label: { uz: "AI Yordamchi", ru: "AI Помощник" },
+        icon: "🤖",
+        default: false,
+        core: false,
+        description: { uz: "AI tahlil va maslahat", ru: "AI анализ и рекомендации" },
+      },
+    },
+  },
+
+  // ========================================
+  // KLINIKA
+  // ========================================
+  clinic: {
+    label: { uz: "Klinika", ru: "Клиника" },
+    icon: "🏥",
+    description: {
+      uz: "Tibbiyot markazi, stomatologiya, laboratoriya",
+      ru: "Медцентр, стоматология, лаборатория",
+    },
+    modules: {
+      menu: {
+        label: { uz: "Xizmatlar", ru: "Услуги" },
+        icon: "💊",
+        default: true,
+        core: true,
+        description: { uz: "Tibbiy xizmatlar va narxlar", ru: "Медицинские услуги и цены" },
+      },
+      categories: {
+        label: { uz: "Bo'limlar", ru: "Отделения" },
+        icon: "📂",
+        default: true,
+        core: true,
+        description: { uz: "Klinika bo'limlari", ru: "Отделения клиники" },
+      },
+      orders: {
+        label: { uz: "Qabullar", ru: "Приёмы" },
+        icon: "📋",
+        default: true,
+        core: true,
+        description: { uz: "Bemorlar qabulini boshqarish", ru: "Управление приёмами пациентов" },
+      },
+      users: {
+        label: { uz: "Bemorlar", ru: "Пациенты" },
+        icon: "🧑‍⚕️",
+        default: true,
+        core: false,
+        description: { uz: "Bemorlar bazasi", ru: "База пациентов" },
+      },
+      ratings: {
+        label: { uz: "Sharhlar", ru: "Отзывы" },
+        icon: "⭐",
+        default: true,
+        core: false,
+        description: { uz: "Bemorlar sharhlari", ru: "Отзывы пациентов" },
+      },
+      employees: {
+        label: { uz: "Shifokorlar", ru: "Врачи" },
+        icon: "👨‍⚕️",
+        default: true,
+        core: false,
+        description: { uz: "Shifokorlar va tibbiy xodimlar", ru: "Врачи и медперсонал" },
+      },
+      attendance: {
+        label: { uz: "Davomat", ru: "Посещаемость" },
+        icon: "📅",
+        default: true,
+        core: false,
+        description: { uz: "Xodimlar davomati", ru: "Посещаемость сотрудников" },
+      },
+      branches: {
+        label: { uz: "Filiallar", ru: "Филиалы" },
+        icon: "🏢",
+        default: true,
+        core: false,
+        description: { uz: "Klinika filiallari", ru: "Филиалы клиники" },
+      },
+      salary: {
+        label: { uz: "Hisobot & Maosh", ru: "Отчёт и зарплата" },
+        icon: "💰",
+        default: true,
+        core: false,
+        description: { uz: "Moliyaviy hisobotlar", ru: "Финансовые отчёты" },
+      },
+      notifications: {
+        label: { uz: "Bildirishnomalar", ru: "Уведомления" },
+        icon: "🔔",
+        default: true,
+        core: false,
+        description: { uz: "Tizim bildirishnomalari", ru: "Системные уведомления" },
+      },
+      telegramBot: {
+        label: { uz: "Telegram Bot", ru: "Телеграм Бот" },
+        icon: "🤖",
+        default: true,
+        core: false,
+        description: { uz: "Telegram orqali qabul", ru: "Запись через Telegram" },
+      },
+      aiAgent: {
+        label: { uz: "AI Yordamchi", ru: "AI Помощник" },
+        icon: "🤖",
+        default: false,
+        core: false,
+        description: { uz: "AI tahlil va maslahat", ru: "AI анализ и рекомендации" },
+      },
+    },
+  },
 };
 
 /**

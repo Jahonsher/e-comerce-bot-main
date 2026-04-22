@@ -12,4 +12,7 @@ const categorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+categorySchema.index({ restaurantId: 1, order: 1 });
+categorySchema.index({ restaurantId: 1, active: 1 });
+
 module.exports = mongoose.model("Category", categorySchema);

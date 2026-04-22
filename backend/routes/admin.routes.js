@@ -8,6 +8,7 @@ const { moduleGuard } = require("../middleware/moduleGuard");
 const { loginLimiter, broadcastLimiter } = require("../middleware/rateLimit");
 const { validate, sanitize } = require("../middleware/validate");
 const { isBotBlocked } = require("../middleware/auth");
+const { cacheMiddleware, invalidateCache } = require("../middleware/cache");
 const { createNotification } = require("../services/notification.service");
 const botService = require("../services/bot.service");
 const logger = require("../utils/logger");
@@ -67,9 +68,11 @@ router.get("/me", authMiddleware, async (req, res) => {
 });
 
 // ===== PRODUCTS =====
-router.get("/products", authMiddleware, moduleGuard("menu"), async (req, res) => {
+router.get("/products", authMiddleware, moduleGuard("menu"),
+  cacheMiddleware((req) => "products:" + req.admin.restaurantId, 30000),
+  async (req, res) => {
   try {
-    res.json(await Product.find({ restaurantId: req.admin.restaurantId }).sort({ id: 1 }));
+    res.json(await Product.find({ restaurantId: req.admin.restaurantId }).sort({ id: 1 }).lean());
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -84,6 +87,7 @@ router.post("/products", authMiddleware, moduleGuard("menu"), async (req, res) =
 
     const { _id, __v, id, ...bodyData } = req.body;
     const product = await Product.create({ ...bodyData, id: newId, restaurantId: rId });
+    invalidateCache("products:" + rId);
     res.json({ ok: true, product });
   } catch (e) {
     logger.error("POST /admin/products:", e.message);
@@ -97,6 +101,7 @@ router.put("/products/:id", authMiddleware, moduleGuard("menu"), async (req, res
       { id: Number(req.params.id), restaurantId: req.admin.restaurantId },
       req.body, { new: true }
     );
+    invalidateCache("products:" + req.admin.restaurantId);
     res.json({ ok: true, product });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -106,6 +111,7 @@ router.put("/products/:id", authMiddleware, moduleGuard("menu"), async (req, res
 router.delete("/products/:id", authMiddleware, moduleGuard("menu"), async (req, res) => {
   try {
     await Product.findOneAndDelete({ id: Number(req.params.id), restaurantId: req.admin.restaurantId });
+    invalidateCache("products:" + req.admin.restaurantId);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -113,9 +119,11 @@ router.delete("/products/:id", authMiddleware, moduleGuard("menu"), async (req, 
 });
 
 // ===== CATEGORIES =====
-router.get("/categories", authMiddleware, moduleGuard("categories"), async (req, res) => {
+router.get("/categories", authMiddleware, moduleGuard("categories"),
+  cacheMiddleware((req) => "categories:" + req.admin.restaurantId, 60000),
+  async (req, res) => {
   try {
-    res.json(await Category.find({ restaurantId: req.admin.restaurantId }).sort({ order: 1 }));
+    res.json(await Category.find({ restaurantId: req.admin.restaurantId }).sort({ order: 1 }).lean());
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -126,6 +134,7 @@ router.post("/categories", authMiddleware, moduleGuard("categories"), async (req
     const rId = req.admin.restaurantId;
     const last = await Category.findOne({ restaurantId: rId }).sort({ order: -1 });
     const cat = await Category.create({ ...req.body, order: last ? last.order + 1 : 1, restaurantId: rId });
+    invalidateCache("categories:" + rId);
     res.json({ ok: true, cat });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -135,6 +144,7 @@ router.post("/categories", authMiddleware, moduleGuard("categories"), async (req
 router.put("/categories/:id", authMiddleware, moduleGuard("categories"), async (req, res) => {
   try {
     const cat = await Category.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    invalidateCache("categories:" + req.admin.restaurantId);
     res.json({ ok: true, cat });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -144,6 +154,7 @@ router.put("/categories/:id", authMiddleware, moduleGuard("categories"), async (
 router.delete("/categories/:id", authMiddleware, moduleGuard("categories"), async (req, res) => {
   try {
     await Category.findByIdAndDelete(req.params.id);
+    invalidateCache("categories:" + req.admin.restaurantId);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -153,6 +164,7 @@ router.delete("/categories/:id", authMiddleware, moduleGuard("categories"), asyn
 router.put("/categories/reorder/save", authMiddleware, moduleGuard("categories"), async (req, res) => {
   try {
     await Promise.all(req.body.order.map((item) => Category.findByIdAndUpdate(item.id, { order: item.order })));
+    invalidateCache("categories:" + req.admin.restaurantId);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });

@@ -12,6 +12,7 @@ const { Server } = require("socket.io");
 const helmet = require("helmet");
 const mongoSanitize = require("express-mongo-sanitize");
 const hpp = require("hpp");
+const compression = require("compression");
 
 // Models
 const Admin = require("./models/Admin");
@@ -45,6 +46,16 @@ app.set("io", io);
 app.use(helmet({
   contentSecurityPolicy: false, // CSP — Telegram WebApp bilan conflict bo'lmasligi uchun
   crossOriginEmbedderPolicy: false,
+}));
+
+// 1.5. COMPRESSION — javoblar hajmini 60-70% kamaytiradi (sayt tezroq ishlaydi)
+app.use(compression({
+  level: 6, // 1-9, 6 — optimal (tezlik va siqish balansi)
+  threshold: 1024, // 1KB dan katta bo'lsa siqiladi
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) return false;
+    return compression.filter(req, res);
+  },
 }));
 
 // 2. CORS — ruxsat berilgan domenlar

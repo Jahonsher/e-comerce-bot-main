@@ -25,6 +25,9 @@ const orderSchema = new mongoose.Schema(
 );
 
 orderSchema.index({ restaurantId: 1, createdAt: -1 });
+orderSchema.index({ restaurantId: 1, status: 1 });
+orderSchema.index({ restaurantId: 1, status: 1, createdAt: -1 });
 orderSchema.index({ telegramId: 1, restaurantId: 1 });
+orderSchema.index({ restaurantId: 1, rating: 1 });
 
 module.exports = mongoose.model("Order", orderSchema);

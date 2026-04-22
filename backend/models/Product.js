@@ -15,5 +15,7 @@ const productSchema = new mongoose.Schema(
 );
 
 productSchema.index({ id: 1, restaurantId: 1 }, { unique: true });
+productSchema.index({ restaurantId: 1, category: 1, active: 1 });
+productSchema.index({ restaurantId: 1, active: 1 });
 
 module.exports = mongoose.model("Product", productSchema);
